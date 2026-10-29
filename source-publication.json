@@ -3,12 +3,12 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.63",
+  "Tag": "wip-1.64",
   "ModVersion": "1.4",
-  "CollectionVersion": "1.63",
+  "CollectionVersion": "1.64",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "2DF2A9D193786BC163CE4EA9E9B6232EE0819F421B726E8CA65CB59859AB0AD7",
+  "UploadManifestSha256": "E62B8E2B4F740DC36F534BFD4140B7ED7918454ED930F7A73CB028DD35FC94F5",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.21/media/java/PZOptPreloader.jar",
     "Size": 77949,
@@ -33,7 +33,7 @@
     {
       "Path": "build.json",
       "Size": 10412,
-      "Sha256": "A66CD23F4E7C01896C88F5DF14DFF5CBFE0ECD67F80DFFBD8FFF20A16D8CD454"
+      "Sha256": "D99944974540F52FB410C290CD830EC541EE48CD35B10AE5C4A75D4571A55F1F"
     },
     {
       "Path": "build.ps1",
