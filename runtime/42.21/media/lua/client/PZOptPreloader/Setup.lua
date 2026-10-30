@@ -5,6 +5,7 @@ require "ISUI/ISProgressBar"
 
 local SetupPanel = ISPanel:derive("PZOptPreloaderSetupPanel")
 local activePanel
+local dismissedThisSession = false
 local prefix = "IGUI_PZOptPreloader_Setup_"
 
 local function plainText(value)
@@ -30,7 +31,7 @@ function SetupPanel:createChildren()
     local fontHeight = getTextManager():getFontHeight(UIFont.Small)
     local buttonHeight = math.max(30, fontHeight + 12)
     local row = buttonHeight + 6
-    local buttonsY = self.height - 16 - row * 4
+    local buttonsY = self.height - 16 - row * 5
     self.description = ISRichTextPanel:new(16, 46, self.width - 32, buttonsY - 92)
     self.description:initialise()
     self.description.autosetheight = false
@@ -51,7 +52,8 @@ function SetupPanel:createChildren()
     self.disableButton = button(0, self.updateMode and "Later" or "Disable", SetupPanel.onPrimary)
     self.manualButton = button(1, "ManualButton", SetupPanel.onManual)
     self.autoButton = button(2, self.updateMode and "UpdateButton" or "AutoButton", SetupPanel.onAutomatic)
-    self.closeButton = button(3, "Close", SetupPanel.onClose)
+    self.keepButton = button(3, "KeepPrevious", SetupPanel.onKeepPrevious)
+    self.closeButton = button(4, "Close", SetupPanel.onClose)
     self:refresh()
 end
 
@@ -61,7 +63,9 @@ function SetupPanel:refresh()
     local issue = bridge.issue()
     local busy = bridge.busy()
     local detail = bridge.detail()
-    local signature = state .. "\n" .. issue .. "\n" .. detail .. "\n" .. tostring(self.manual)
+    local canKeep = bridge.canKeepPrevious()
+    local previousVersion = bridge.previousVersion()
+    local signature = state .. "\n" .. issue .. "\n" .. detail .. "\n" .. tostring(self.manual) .. tostring(canKeep) .. previousVersion
     if signature ~= self.lastContent then
         self.lastContent = signature
         local key = state == "idle" and issue or state
@@ -69,13 +73,14 @@ function SetupPanel:refresh()
             key = issue
         end
         local text = plainText(getText(prefix .. key))
-        if state ~= "complete" and state ~= "disabled" then
+        if state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback" then
             text = text .. " <BR> " .. plainText(getText(prefix .. (self.updateMode and "UpdateIntro" or "Intro")))
         end
         if self.updateMode then
             text = text .. " <BR> " .. plainText(getText(prefix .. "Versions", bridge.installedVersion(), bridge.offeredVersion()))
         end
         text = text .. " <BR> " .. plainText(getText(prefix .. "Target")) .. " <LINE> " .. plainText(self.targetPath)
+        if canKeep then text = text .. " <BR> " .. plainText(getText(prefix .. "PreviousAvailable", previousVersion)) end
         if self.manual then
             text = text .. " <BR> " .. plainText(getText(prefix .. "Manual"))
         end
@@ -101,9 +106,11 @@ function SetupPanel:refresh()
         if title ~= self.disableButton.title then self.disableButton:setTitle(title) end
     end
     self.manualButton:setEnable(not busy and state ~= "disabled")
-    self.autoButton:setEnable(not busy and state ~= "complete" and state ~= "disabled")
-    self.closeButton:setEnable(not busy)
-    self.closeButton:setVisible(self.updateMode or self.manual == true or state == "complete" or state == "disabled")
+    self.autoButton:setEnable(not busy and state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback")
+    self.keepButton:setVisible(canKeep)
+    self.keepButton:setEnable(canKeep and not busy)
+    self.closeButton:setEnable(true)
+    self.closeButton:setVisible(true)
 end
 
 function SetupPanel:update()
@@ -138,7 +145,7 @@ end
 
 function SetupPanel:onManual()
     self.manual = true
-    if openUrl then openUrl(self.bridge.releasesUrl()) end
+    self.bridge.openReleases()
     self:refresh()
 end
 
@@ -147,9 +154,14 @@ function SetupPanel:onAutomatic()
     self:refresh()
 end
 
+function SetupPanel:onKeepPrevious()
+    self.bridge.keepPrevious()
+    self:refresh()
+end
+
 function SetupPanel:onClose()
-    if self.bridge.busy() then return end
-    if self.updateMode then self.bridge.dismissUpdate() end
+    dismissedThisSession = true
+    self.bridge.dismiss()
     self:removeFromUIManager()
     activePanel = nil
 end
@@ -157,11 +169,11 @@ end
 local function showSetup()
     local bridge = PZOptPreloader and PZOptPreloader.Installation
     if not bridge or not bridge.needsSetup or not bridge.needsSetup() then return end
-    if activePanel then return end
+    if dismissedThisSession or activePanel then return end
     activePanel = SetupPanel:new(bridge)
     activePanel:initialise()
     activePanel:addToUIManager()
-    activePanel:setCapture(true)
+    activePanel:setCapture(false)
     activePanel:setAlwaysOnTop(true)
 end
 

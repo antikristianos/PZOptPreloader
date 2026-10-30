@@ -107,6 +107,8 @@ public final class Installer {
 
     static Release findRelease(String revision, Transport transport, BooleanSupplier cancelled) throws Exception {
         String expected = "pzopt-" + revision + "-classes.zip";
+        String legacy = "pzopt-"+Compatibility.LEGACY+"-classes.zip";
+        Release fallback=null;
         for (int page = 1; page <= 10; page++) {
             checkCancelled(cancelled);
             try (Response response = transport.get(URI.create(API + page))) {
@@ -121,11 +123,15 @@ public final class Installer {
                     if (assets == null) continue;
                     for (int assetIndex = 0; assetIndex < assets.length(); assetIndex++) {
                         JSONObject asset = assets.getJSONObject(assetIndex);
-                        if (!expected.equals(asset.optString("name"))) continue;
+                        String name=asset.optString("name");
+                        boolean nativeAsset=expected.equals(name);
+                        String releaseTag=release.optString("tag_name","");
+                        boolean knownLegacy=Compatibility.CURRENT.equals(revision)&&legacy.equals(name)&&releaseTag.matches(".*-d1bbdcf[a-fA-F0-9]{0,33}$");
+                        if(!nativeAsset&&!knownLegacy)continue;
                         URI uri = URI.create(asset.getString("browser_download_url"));
                         if (!"https".equals(uri.getScheme()) || !"github.com".equals(uri.getHost())
                                 || !uri.getPath().startsWith("/xD3I/PZ_Optimization/releases/download/")
-                                || !uri.getPath().endsWith("/" + expected) || uri.getUserInfo() != null)
+                                || !uri.getPath().endsWith("/" + name) || uri.getUserInfo() != null)
                             throw new IOException("Unexpected release download URL");
                         String digest = asset.optString("digest", "");
                         if (!digest.matches("sha256:[a-fA-F0-9]{64}")) throw new Failure("checksum", "Release has no SHA-256 digest");
@@ -136,20 +142,25 @@ public final class Installer {
                         String commit = suffix.find() ? suffix.group(1).toLowerCase(Locale.ROOT) : "";
                         String published = release.optString("published_at", "");
                         long epoch = published.isBlank() ? 0 : Instant.parse(published).getEpochSecond();
-                        return new Release(uri, digest.substring(7).toLowerCase(Locale.ROOT), size, tag, commit, epoch);
+                        Release selected=new Release(uri,digest.substring(7).toLowerCase(Locale.ROOT),size,tag,commit,epoch);
+                        if(nativeAsset)return selected;
+                        if(fallback==null)fallback=selected;
                     }
                 }
                 if (releases.length() < 30) break;
             }
         }
+        if(fallback!=null)return fallback;
         throw new Failure("noRelease", "No compatible release archive found for game revision " + revision);
     }
 
     static Release checkUpdate(Payload installed) throws Exception {
-        return findRelease(installed.build.getProperty("revision"), Installer::request, () -> false);
+        String actual=String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
+        return findRelease(actual, Installer::request, () -> false);
     }
 
     static boolean isNewer(Payload installed, Release release) throws IOException {
+        if(Compatibility.LEGACY.equals(installed.build.getProperty("revision"))&&release.uri.getPath().endsWith("/pzopt-"+Compatibility.CURRENT+"-classes.zip"))return true;
         Properties receipt = receipt(installed);
         if (!receipt.isEmpty()) {
             if (release.digest.equals(receipt.getProperty("sha256"))) return false;

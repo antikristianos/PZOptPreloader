@@ -9,9 +9,84 @@
       "Sha256": "C531D35EB4908622AB341563990038F6FFB4EF7E675D19D4D6E539606475D560"
     },
     {
+      "Path": "antikristianos/pzoptpreloader/ClassReferences$1.class",
+      "Size": 1760,
+      "Sha256": "D0C73C1E9BECC08320A0DFE985204C057FAF3C90BF68BEE24C94BFFB36DECCEE"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ClassReferences$2$1.class",
+      "Size": 2291,
+      "Sha256": "B710A16AD1749B712E73D846CFFB1E7C140F3C80DF33953D98B26BB14498D1A2"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ClassReferences$2.class",
+      "Size": 2187,
+      "Sha256": "D28BAC56E8F935552C1C2E74B84F612B99711C86F1553A6C3CAADD801D1A30B0"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ClassReferences$Header.class",
+      "Size": 2078,
+      "Sha256": "EE26311AFE78CF73DE4444F0734CA60D690B3B2BFDD3CD295FDD68D7BA33DB27"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ClassReferences.class",
+      "Size": 7555,
+      "Sha256": "330FD6970430FE21C5F94CA38F13E16164FBE738936D075995C8C9ABBD970F78"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/Compatibility$1$1.class",
+      "Size": 1934,
+      "Sha256": "9EAAA2DCD0D60DA2E194317B40847D8524E9A900DAFA03F801C747D18A016FD5"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/Compatibility$1.class",
+      "Size": 1209,
+      "Sha256": "686135C32317DE4F63A1A2902AB1BFF2B4C304FF3864761AD29D7E6F5722B852"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/Compatibility.class",
+      "Size": 11648,
+      "Sha256": "B3D49FCE0DA927C2980083DB1595C1310C28975774973C4A075072C3D6D38427"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode$1$1.class",
+      "Size": 3858,
+      "Sha256": "5F6A7C8AF2D943E91DA972441D07B24C14F5ABD85D490706B83A07164144C086"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode$1.class",
+      "Size": 2657,
+      "Sha256": "B4BD51B35E23EC6492FE8B24444BEEDCD50DA6B94D1CB463507CC40F97A0E890"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode$Field.class",
+      "Size": 1845,
+      "Sha256": "C19C5FF869574AF89B009382FB4019F5F77EBDDC4923CF2AFBE3805A654AC4CA"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode$Handler.class",
+      "Size": 1640,
+      "Sha256": "14576A7694E534DC1C1D5D950EF37753205BFF7E40CE7360EA905A15C89F1B52"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode$Instruction.class",
+      "Size": 7919,
+      "Sha256": "AA66E2DFA55389CF66DF5BDA53758F720DBB2A48F1EDA11E441EA07D018761D6"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode$Method.class",
+      "Size": 4303,
+      "Sha256": "37CFF1A3CD8AA8AA0D8C8A1D62C05040FC7269F4CC2BA10BEB645D8CA8C5C9C3"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/InputCode.class",
+      "Size": 1697,
+      "Sha256": "F061B721D2260BC19795A9A5CCC5744987C4945396224B8F95BCDBCCA88E538A"
+    },
+    {
       "Path": "antikristianos/pzoptpreloader/Installation.class",
-      "Size": 9738,
-      "Sha256": "BC64D37238110289744D60A1A3015E8681DCFCF3E38DE1986766F7BEE90D71DA"
+      "Size": 12198,
+      "Sha256": "C4BE5144040C2048B520763F469AF6519E931BF453A8093D45D7C8C2E196C346"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Installer$1.class",
@@ -41,7 +116,7 @@
     {
       "Path": "antikristianos/pzoptpreloader/Installer$SourceUse.class",
       "Size": 844,
-      "Sha256": "18DE79CFF87E2D6AAD2805545529749F8FAF81724B610BCF1DACF0182C95F7A5"
+      "Sha256": "8045475412947732C02CEB777C88F804F197121BF06E1332109C5BE7145C42FA"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Installer$Transport.class",
@@ -50,8 +125,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/Installer.class",
-      "Size": 23128,
-      "Sha256": "7D254CD0C034C5680CCA35C8DA18A6E254750E6A42ECAE1A64809A4CEF162B8D"
+      "Size": 23862,
+      "Sha256": "5077F6E8C943CB8DFBA9215275CFF28DE9D43D25F13D94AA9C948385F59C1EDD"
     },
     {
       "Path": "antikristianos/pzoptpreloader/LambdaAdapter$1$1.class",
@@ -92,6 +167,16 @@
       "Path": "antikristianos/pzoptpreloader/LauncherAot.class",
       "Size": 17289,
       "Sha256": "2C1FED8CE0CFE90B9B4742815634B36A3286A8DD65E7E38DABA73A6A344F062F"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/LegacySort.class",
+      "Size": 2047,
+      "Sha256": "F5D396ABBD5FF2D6FAD30F7B4A886E376B0B37F55421F52CA8904AA9686E92F4"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ListStorage.class",
+      "Size": 2230,
+      "Sha256": "7CE5D61CF687298AE864DB6499634D252CE3018634E1F56A2D209272AC399D7C"
     },
     {
       "Path": "antikristianos/pzoptpreloader/LoadedFields$Key.class",
@@ -135,18 +220,63 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/Payload$SourceUnavailable.class",
-      "Size": 466,
-      "Sha256": "133DB0584189B127E26B6312C5BF53E035D3563DF37720808996E318C50BFDFF"
+      "Size": 642,
+      "Sha256": "73FE927E3592EF329F4FD0E16C5CFFA1118CE75CB10A9340CCB2463198A7D749"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Payload.class",
-      "Size": 13274,
-      "Sha256": "719BD8C4CB74ACD497BD1271D1BDE9CB3A5B72155667824BFB1532EBF9435F5C"
+      "Size": 15707,
+      "Sha256": "DA16A0C18328D921B16D468DF41834FC68F1D83A05B86CC6782243C81DE8E32E"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PayloadFile.class",
       "Size": 2421,
       "Sha256": "A018992B218A7E909AD75A6A5A9657E5B17376D7ED18239B8AE2B270BB74AF7C"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$1.class",
+      "Size": 964,
+      "Sha256": "CC75AD6668C3CC886A9A2C3170C887D4D788BAA165154E5E3BCAF04686A89204"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$2$1.class",
+      "Size": 881,
+      "Sha256": "1BED0FB85C55D01534D10785DAF630A7D9530A70D1EEF71CCFE1D6EEB8860247"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$2.class",
+      "Size": 1769,
+      "Sha256": "C7CB672D0D1005D83A7909AA009F033102ABBD60C6905DC788D95186C8B74FDA"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$3$1.class",
+      "Size": 887,
+      "Sha256": "BD68DB5305875D52D5C2AB8C4E541BD28958D57EE7F534A050E56438DBBB387A"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$3.class",
+      "Size": 1857,
+      "Sha256": "1F2C44C395BD4765C9B411B76108CEF3B938D2867DFB5AFCDB2E5801617610CD"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$4.class",
+      "Size": 1165,
+      "Sha256": "D086CA6FBDE509D81C4CDE1EF91A643631BA0AD18D540B2E7089CEE230DB611D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$Hierarchy$Header.class",
+      "Size": 1924,
+      "Sha256": "F6FC3001C9B6E3724A63C0147C8D5A7A8B1F859D4D929C91B8A361B0D22FA523"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes$Hierarchy.class",
+      "Size": 6235,
+      "Sha256": "1465DDAC700C8306D33EAB4B214DEC2E21B36920D5C7021E6494A04F9F0E00FE"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/PortRecipes.class",
+      "Size": 14524,
+      "Sha256": "2EEC8A2C8BB3DF26A5EF00AC1FCCFF5D9139848F13E991EC95788544B28DC475"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PreMain.class",
@@ -155,28 +285,28 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/RainRippleRepair$1$1.class",
-      "Size": 1567,
-      "Sha256": "5EF44D6431F33E839102FE56433C601FD2D7FB658BA229B7FD2E9CEB0A8E913C"
+      "Size": 1715,
+      "Sha256": "8B780FC5972FAC0C72706EDA15C07B02330B7AF6A3515E5800C166CF87CBA1E7"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RainRippleRepair$1.class",
       "Size": 1310,
-      "Sha256": "6129A2CBE019B2AC0522A8587171BFE071A5FDA0F83EA2B207C9B777B069237C"
+      "Sha256": "B7FC12BAFC25DC851B026853A85853F1B6983AD3EE4F77FE2356CE47263BAF90"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RainRippleRepair$2$1.class",
-      "Size": 1223,
-      "Sha256": "D20E2BC044729BB4B1BC635DB6EE2EA9B757C48803287B6DA8A849E979B375BF"
+      "Size": 1300,
+      "Sha256": "69417693A60E694685B0668430C4A19A57191F3BA6C8A45C52A056A5CBC9485C"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RainRippleRepair$2.class",
       "Size": 1066,
-      "Sha256": "CDBCEBA3D4B98C908141676E9A52355DAE9CD79D656D1D8905B0B9BBA1535216"
+      "Sha256": "8E2AEAF48118EDF5D1277E1605D655B278D052E3A7C5F8548891A158A142C057"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RainRippleRepair.class",
-      "Size": 1873,
-      "Sha256": "005488926AB3755591C9935374C4827ED3ADC6533ED9DD753437A9C92B281106"
+      "Size": 3166,
+      "Sha256": "F90F65F2D7F94D1582082D96D1298755A9FE60F11FE3B23D90B60942D93BB3BC"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RainTileRepair$1$1.class",
@@ -211,22 +341,22 @@
     {
       "Path": "antikristianos/pzoptpreloader/RuntimeState$1$1.class",
       "Size": 3584,
-      "Sha256": "909A063306EC308D1B0D5EC1E9D0457B12991704B1D21F10E01C676C85C2DE51"
+      "Sha256": "B67DF53227D407655C09214FB96603F9472A1752DE2810EF86776300570DE367"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RuntimeState$1.class",
       "Size": 1813,
-      "Sha256": "2BB00187EE061B860963461319C9B55E06F1E4BBD175C563AF6BA2F7C85D6876"
+      "Sha256": "FC4ED0FD3D9F92716096282F7F4300CBDCF2622078E807CF1ADC0C188A2F3F11"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RuntimeState$Transformer.class",
-      "Size": 2360,
-      "Sha256": "56ECADCDDC22BE6735F3D938AE18420406833A716B9C58E451DC6A83CD811336"
+      "Size": 2303,
+      "Sha256": "59342D39D1241AE39B265621845AF6E523A2A0ECB53CFC80BAE208804B0B375F"
     },
     {
       "Path": "antikristianos/pzoptpreloader/RuntimeState.class",
-      "Size": 12940,
-      "Sha256": "8BBE36897F791B0FCCB543D044F36FF1DD37B783378BE21903B05CA2FFE9232D"
+      "Size": 13809,
+      "Sha256": "D71FDA66BFC70F5342C366D6F9A8636C540DDC2EABF077C0976670C93D31923C"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ServerLua.class",
@@ -234,9 +364,34 @@
       "Sha256": "1FE5A11101EBFA023C9A424D829C6A83E9F4B3816C0E8C4C61281466116A43C4"
     },
     {
+      "Path": "antikristianos/pzoptpreloader/SharedSceneSlices$1.class",
+      "Size": 4872,
+      "Sha256": "F10C227E97A77F3E0E83327744E319787B7AF2EA43AA01DC627A146EAA3A3268"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/SharedSceneSlices$2.class",
+      "Size": 3105,
+      "Sha256": "990A70F1C9D94E6252E3C4E0A1F784EAF4FAF0B8B791243B3866214D1CAECCFD"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/SharedSceneSlices.class",
+      "Size": 11354,
+      "Sha256": "43554B12FD08933F9C354785AE627A5436226B499B2AC9E8E849A7BEA5A27A5F"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/SourceHistory$Previous.class",
+      "Size": 1647,
+      "Sha256": "A4E060A3EAFA082296A7B61E66B55201E79338A2939B848366068EE0036ED399"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/SourceHistory.class",
+      "Size": 16727,
+      "Sha256": "9F87DBDBDCBA44F0AF2FD1D0B0A7E1A186A6910258C0E8282DFB1E468C77B1FC"
+    },
+    {
       "Path": "antikristianos/pzoptpreloader/SourcePaths.class",
-      "Size": 2923,
-      "Sha256": "B1971B0D6D62FAB4F16E1A91E3F6B76A89ADD0042B90DDA5C40AB0D3417FD893"
+      "Size": 6873,
+      "Sha256": "317E174B0B554A57F02A2507574146118B3D1460E16E54FB25EC8FEC1CDA5AD1"
     },
     {
       "Path": "antikristianos/pzoptpreloader/StartPreset.class",
@@ -276,47 +431,87 @@
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$1$1.class",
       "Size": 1293,
-      "Sha256": "43094A88846C87E7ABB0025BE6F715E067BAC1398347A847116E22CAFD10E6DD"
+      "Sha256": "6305FB3AB39EBE7E0D4F2538EE014F9DA28A57251EE2F3A760B98DAC0DE1CEDD"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$1.class",
       "Size": 1461,
-      "Sha256": "6EF1F5532411075AE2EBD7C9878209CCB8E0BC30953740E08E1E6C4E89F3273B"
+      "Sha256": "5F623753DE4C4DE2B36F613B0AE544313B7F2F6FAD4398903C0091E59C01B3B8"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$2.class",
       "Size": 981,
-      "Sha256": "E6FDD52E69403E63A9556ED0105D08BA3B53F7365E6DCA18F9B3D640A6581A9F"
+      "Sha256": "293933E5A38A04976307CAE547E556F95D576780571AA0B0263D6DCC78ED7670"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$3$1.class",
       "Size": 1456,
-      "Sha256": "1C0685E74ECDC5326BDF6F4066C0174E5F1B0C74131FD83DA87346C8E303FE01"
+      "Sha256": "3B062B4D11C17BF89FF2123C538D61EEFF97CD297DD631A5E871CB04FB845575"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$3.class",
       "Size": 1172,
-      "Sha256": "802AC92EB74C0618F3976931605FDDA65B3DE3E41F474C8538972C2FE4B3D303"
+      "Sha256": "1A9818A023E0DD478DA58ACCBAFF132002D15670EA7EDB18188765DADFD84224"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$Key.class",
       "Size": 1620,
-      "Sha256": "CAB3E1FBF61774179A53D7C681E8B93FCC271EA4F904DBE313EFF50B6D29D923"
+      "Sha256": "FF70FE29871D6A9CAFAFC828729717DF7DC1EB22FA021DAEEB3050A2B6C2CE17"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair.class",
-      "Size": 3730,
-      "Sha256": "121A20E37712E6B4337A8CF57F742DF523E1B755389ABA156409B0DEAEE46EF1"
+      "Size": 3945,
+      "Sha256": "9B4DAE807321B712C5EB349D4A03F234850B7B6D81BEA4B2191886283A5F37C3"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/VisualExclusions$1.class",
+      "Size": 499,
+      "Sha256": "57FF6E015FC5B9E7108AF3175872636CED91DAD03A26A3C8686F02B771D7C413"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/VisualExclusions$2.class",
+      "Size": 1475,
+      "Sha256": "5FDE70820E445A5566340DB4E1B54D63CFF8324BE5EAD5D5427ED64FFF9436B1"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/VisualExclusions$3$1.class",
+      "Size": 1535,
+      "Sha256": "643E63393F0619639C2EEC6B85ADED34F3D68D02E3683DF969C4CF77536505C8"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/VisualExclusions$3.class",
+      "Size": 1138,
+      "Sha256": "5DA231ED277D208195808EB4DA5078ECF470B212B469C26ED91C0DC107D97C2A"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/VisualExclusions.class",
+      "Size": 9005,
+      "Sha256": "1F8D91E8FFA3870006B21DF8BC870B3BF4B4D2570B2E35565A98DB05A46CD66D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/compatibility-42.21-42.22.json",
+      "Size": 1433611,
+      "Sha256": "3485434D71056FC8D8663CFA2F80F42E816C7E029AB60CDC16E8B87E3EE749B6"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/legacy-port-42.22.json",
+      "Size": 6585664,
+      "Sha256": "4D18823DF750C468F3C961E4ADA4FC2066CBC793C688E684259FB72DAD724E4D"
     },
     {
       "Path": "antikristianos/pzoptpreloader/presets/client.properties",
-      "Size": 730,
-      "Sha256": "B35A4044FDDDDC855F2122C6F33EE5A4FF3FF0A2262E3B0EF4B11C9AC629A035"
+      "Size": 701,
+      "Sha256": "48DBDFE8AC5875D4B24DA01A8E3CC33C3D95CEEE04C919658DDDD85284ED7481"
     },
     {
       "Path": "antikristianos/pzoptpreloader/presets/server.properties",
       "Size": 256,
       "Sha256": "97DB211E73F537E26C951C66588EB4A389E6E525FC1AA2E5FD74A63BD0552C2F"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/removed-visuals.lua",
+      "Size": 3308,
+      "Sha256": "0922024B1C56EDF89F10F943245A7529D38292F4229949E2F8497C04F9734C1E"
     }
   ],
   "Dependencies": [

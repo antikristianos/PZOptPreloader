@@ -1,6 +1,6 @@
 name=[B42] PZ Optimization Preloader (WIP)
 id=PZOptPreloader_WIP
-modversion=1.4.1
+modversion=1.4.2
 description=Loads subscribed PZ Optimization files through ZombieBuddy without manual installation. Clients load the full catalog, options and automatic Windows AOT setup. Servers load selected parser, item, fishing, map, world-generation and Lua optimizations. Activate this preloader and fully restart; keep PZ_Optimization disabled.
 author=Antikristianos
 icon=../common/icon.png

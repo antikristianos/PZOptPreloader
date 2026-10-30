@@ -10,14 +10,17 @@ public final class VehicleZoneRepair {
     public static final String TARGET = "zombie/iso/IsoMetaGrid";
     // Normalized method code from installed PZOpt c20a058c, reviewed against PR #70.
     public static final String AFFECTED_METHOD = "45e930e96d5be46add70f51d512c85acb1ba5878c007bfdc1f1fbbd444ff71dd";
+    // Same 174 input instructions and local Zone slot after the verified B42.22 port; recomputed frames differ.
+    public static final String PORTED_METHOD="9aada177e120f77e9c68febaea6aa68780f2a9905ec2fb1f4c8fd5592e937df8";
+    private static boolean affected(String hash){return AFFECTED_METHOD.equals(hash)||PORTED_METHOD.equals(hash);}
     public record Key(int x, int y, int width, int height) { }
     public static Object key(Zone zone) { return new Key(zone.getX(), zone.getY(), zone.w, zone.h); }
 
     /** Return only a verified repaired method, composed into the stock server class. */
     public static byte[] serverDefinition(byte[] downloaded, byte[] stock) {
-        if (!AFFECTED_METHOD.equals(fingerprint(downloaded))) return null;
+        if (!affected(fingerprint(downloaded))) return null;
         byte[] repaired = patch(TARGET, downloaded);
-        if (AFFECTED_METHOD.equals(fingerprint(repaired))) return null;
+        if (affected(fingerprint(repaired))) return null;
         ClassReader reader = new ClassReader(stock);
         ClassWriter writer = new ClassWriter(0);
         int[] replaced = {0};
@@ -56,7 +59,7 @@ public final class VehicleZoneRepair {
     public static byte[] patch(String name, byte[] bytes) {
         if (!TARGET.equals(name)) return bytes;
         String fingerprint = fingerprint(bytes);
-        if (!AFFECTED_METHOD.equals(fingerprint)) {
+        if (!affected(fingerprint)) {
             System.out.println("[PZOptPreloader] PR70: no matching affected method; upstream retained (" + fingerprint + ")");
             return bytes;
         }

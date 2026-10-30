@@ -3,7 +3,6 @@
     "IGUI_PZOptPreloader_Setup_Title":  "PZ Optimization setup",
     "IGUI_PZOptPreloader_Setup_missing":  "The required PZ_Optimization files were not found.",
     "IGUI_PZOptPreloader_Setup_invalid":  "The available PZ_Optimization files are incomplete or unreadable.",
-    "IGUI_PZOptPreloader_Setup_incompatible":  "The available PZ_Optimization files target a different game revision.",
     "IGUI_PZOptPreloader_Setup_Intro":  "Download PZ_Optimization from GitHub and extract it into the folder below. Optimization is inactive until the files are installed and the game is fully restarted.",
     "IGUI_PZOptPreloader_Setup_Manual":  "Choose the matching pzopt-...-classes.zip release asset, not Source code. Extract its contents directly into the target folder: pzopt/build-info.properties must be inside it. Do not run install.ps1 or install.sh. Then fully restart the game.",
     "IGUI_PZOptPreloader_Setup_Disable":  "Cancel and disable preloader",
@@ -29,5 +28,10 @@
     "IGUI_PZOptPreloader_Setup_UpdateButton":  "Download and prepare update",
     "IGUI_PZOptPreloader_Setup_Later":  "Later",
     "IGUI_PZOptPreloader_Setup_Versions":  "Installed: %1\nAvailable: %2",
-    "IGUI_PZOptPreloader_Setup_CancelUpdate":  "Cancel update"
+    "IGUI_PZOptPreloader_Setup_CancelUpdate":  "Cancel update",
+    "IGUI_PZOptPreloader_Setup_KeepPrevious":  "Keep previous version",
+    "IGUI_PZOptPreloader_Setup_PreviousAvailable":  "A previously loaded version is available: %1",
+    "IGUI_PZOptPreloader_Setup_retained":  "The previous version remains active. This incompatible release will not be offered again; newer releases will still be checked.",
+    "IGUI_PZOptPreloader_Setup_rollback":  "The retained version is selected for the next full game start. Fully quit and restart Project Zomboid.",
+    "IGUI_PZOptPreloader_Setup_incompatible":  "These PZ_Optimization files cannot be used with this game version."
 }

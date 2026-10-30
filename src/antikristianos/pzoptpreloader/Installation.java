@@ -8,11 +8,14 @@ import me.zed_0xff.zombie_buddy.Exposer;
 @Exposer.LuaClass(name="PZOptPreloader.Installation")
 public final class Installation {
     private static volatile boolean setupNeeded;
+    private static volatile boolean dismissed;
     private static volatile boolean cancelled;
     private static volatile String reason = "missing";
     private static volatile Installer.Progress progress = new Installer.Progress("idle", 0, 0, "");
     private static Thread worker;
     private static boolean startupChecked;
+    private static volatile SourceHistory.Previous previous;
+    private static volatile Payload.SourceUnavailable rejectedSource;
     private static volatile boolean updateMode;
     private static volatile String installedVersion = "";
     private static volatile String offeredVersion = "";
@@ -26,7 +29,9 @@ public final class Installation {
     }
 
     public static void unavailable(Payload.SourceUnavailable error) {
-        setupNeeded = true; reason = error.reason;
+        setupNeeded = true; reason = error.reason; rejectedSource=error;
+        try{previous=SourceHistory.previous(SourcePaths.configDirectory(),revision());}
+        catch(Exception unavailable){System.err.println("[PZOptPreloader] previous original source unavailable: "+unavailable);}
         progress = new Installer.Progress("idle", 0, 0, error.getMessage());
         System.err.println("[PZOptPreloader] source unavailable: " + error.getMessage());
     }
@@ -37,8 +42,7 @@ public final class Installation {
         try {
             Payload installed = RuntimeState.payload != null ? RuntimeState.payload : new Payload(Payload.discover());
             if (RuntimeState.detectServer(System.getProperty("sun.java.command", ""))
-                    || !Files.isDirectory(SourcePaths.installationDirectory())
-                    || !installed.root.equals(SourcePaths.installationDirectory().toRealPath())) {
+                    || !SourceHistory.configUpdates(installed)) {
                 updateStatus = "Workshop/custom/server source; update check skipped"; return;
             }
             installedVersion = Installer.installedLabel(installed);
@@ -47,11 +51,14 @@ public final class Installation {
             Thread check = new Thread(() -> {
                 try {
                     Installer.Release release = Installer.checkUpdate(installed);
+                    if(SourceHistory.ignoredRelease(SourcePaths.configDirectory(),revision(),release.digest())){
+                        updateStatus="previous version retained for this incompatible release";return;
+                    }
                     if (Installer.isNewer(installed, release)) {
                         offerUpdate(release);
                         if (Files.isDirectory(SourcePaths.pendingDirectory())) {
                             try {
-                                Payload pending = new Payload(Payload.verifiedSource(SourcePaths.pendingDirectory(), installed.build.getProperty("revision")));
+                                Payload pending = new Payload(Payload.verifiedSource(SourcePaths.pendingDirectory(),revision()));
                                 if (!Installer.isNewer(pending, release)) progress = new Installer.Progress("complete", 1, 1, SourcePaths.pendingDirectory().toString());
                             } catch (IOException ignored) { }
                         }
@@ -79,7 +86,7 @@ public final class Installation {
     }
 
     public static boolean needsSetup() {
-        return setupNeeded && !disabled() && !RuntimeState.detectServer(System.getProperty("sun.java.command", ""));
+        return setupNeeded && !dismissed && !disabled() && !RuntimeState.detectServer(System.getProperty("sun.java.command", ""));
     }
     public static String state() { return progress.phase(); }
     public static String issue() { return reason; }
@@ -91,7 +98,8 @@ public final class Installation {
     public static String installedVersion() { return installedVersion; }
     public static String offeredVersion() { return offeredVersion; }
     public static String updateStatus() { return updateStatus; }
-    public static void dismissUpdate() { if (updateMode && !busy()) setupNeeded = false; }
+    public static void dismiss() { dismissed = true; }
+    public static void dismissUpdate() { if (updateMode && !busy()) dismiss(); }
     public static synchronized void cancelDownload() {
         if (progress.phase().equals("publish") || progress.phase().equals("complete")) return;
         cancelled = true;
@@ -101,6 +109,40 @@ public final class Installation {
     static synchronized void reportProgress(Installer.Progress next) {
         if (cancelled) throw new java.util.concurrent.CancellationException("Installation cancelled before publication");
         progress = next;
+    }
+    /** Fixed upstream URL: Vanilla's Lua openUrl deliberately rejects non-Indie-Stone URLs. */
+    public static boolean openReleases() { return browseReleases(zombie.network.DesktopBrowser::openURL); }
+    static boolean browseReleases(java.util.function.Predicate<String> opener) {
+        try {
+            boolean opened = opener.test(Installer.RELEASES_URL);
+            if (!opened) System.err.println("[PZOptPreloader] browser did not open " + Installer.RELEASES_URL);
+            return opened;
+        } catch (RuntimeException error) {
+            System.err.println("[PZOptPreloader] cannot open releases page: " + error);
+            return false;
+        }
+    }
+    private static String revision()throws ReflectiveOperationException{
+        return String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
+    }
+    public static boolean canKeepPrevious(){
+        return !busy()&&!progress.phase().equals("retained")&&!progress.phase().equals("rollback")
+            && ((updateMode&&offeredRelease!=null&&RuntimeState.payload!=null&&progress.phase().equals("failed")
+                && (reason.equals("incompatible")||reason.equals("invalid"))) || (previous!=null&&rejectedSource!=null));
+    }
+    public static String previousVersion(){return updateMode?installedVersion:previous==null?"":previous.label();}
+    public static synchronized boolean keepPrevious(){
+        if(!canKeepPrevious()||disabled())return false;
+        try{
+            if(updateMode){
+                SourceHistory.ignoreRelease(SourcePaths.configDirectory(),revision(),offeredRelease.digest());
+                progress=new Installer.Progress("retained",0,0,"");updateStatus="previous retained";
+            }else{
+                SourceHistory.choose(SourcePaths.configDirectory(),revision(),rejectedSource,previous);
+                progress=new Installer.Progress("rollback",0,0,"");
+            }
+            return true;
+        }catch(Exception error){reason="failed";progress=new Installer.Progress("failed",0,0,error.toString());return false;}
     }
     public static String releasesUrl() { return Installer.RELEASES_URL; }
     public static synchronized boolean busy() { return worker != null && worker.isAlive(); }
@@ -117,7 +159,7 @@ public final class Installation {
                 else Installer.install(SourcePaths.installationDirectory(), revision, report, () -> cancelled);
             } catch (Exception error) {
                 if (!cancelled) {
-                    reason = error instanceof Installer.Failure failure ? failure.reason : "failed";
+                    reason = error instanceof Payload.SourceUnavailable source ? source.reason : error instanceof Installer.Failure failure ? failure.reason : "failed";
                     progress = new Installer.Progress("failed", 0, 0, error.getMessage() == null ? error.toString() : error.getMessage());
                     System.err.println("[PZOptPreloader] install failed: " + error);
                 }
