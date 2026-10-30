@@ -18,17 +18,26 @@ public final class RuntimeState {
     public static final Map<String, byte[]> definitions = new ConcurrentHashMap<>();
     private static Instrumentation instrumentation;
     private static JarFile helperJar;
+    private static Installer.SourceUse sourceUse;
     private static boolean installed;
 
     public static synchronized void install() throws Exception {
         if (installed) return;
-        if (!Boolean.parseBoolean(System.getProperty("pzoptpreloader.enabled", "true"))) {
-            status = "disabled by pzoptpreloader.enabled=false"; return;
+        if (Installation.disabled()) {
+            status = "disabled by user setting"; return;
         }
         server = detectServer(System.getProperty("sun.java.command", ""));
         if (!server) AotBridge.validate();
-        Payload candidate = new Payload(Payload.discover());
         String actual = String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
+        if (!server) {
+            try { Installer.activatePending(SourcePaths.configDirectory(), actual); }
+            catch (IOException error) { System.err.println("[PZOptPreloader] pending update retained: " + error); }
+        }
+        if (Files.isDirectory(SourcePaths.installationDirectory())) sourceUse = Installer.useSource(SourcePaths.configDirectory());
+        Payload candidate = new Payload(Payload.discover());
+        if (sourceUse != null && !candidate.root.equals(SourcePaths.installationDirectory().toRealPath())) {
+            sourceUse.close(); sourceUse = null;
+        }
         if (!actual.equals(candidate.build.getProperty("revision"))) {
             throw new IllegalStateException("PZ Optimization targets revision " + candidate.build.getProperty("revision") + ", installed game is " + actual);
         }

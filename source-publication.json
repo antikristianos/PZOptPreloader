@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.68",
-  "ModVersion": "1.4",
-  "CollectionVersion": "1.68",
+  "Tag": "wip-1.69",
+  "ModVersion": "1.4.1",
+  "CollectionVersion": "1.69",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "CB5CC17BE069B1AA5973B6D905B90782CFE06F9C72D99F08DA2BBDD6EC1C5A7B",
+  "UploadManifestSha256": "DFEAC7322F6FEF00E049A20FC4A75376BF7768A66A5B73FBA875D3548A27FD32",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.21/media/java/PZOptPreloader.jar",
-    "Size": 77949,
-    "Sha256": "0C521D2EF935E2BD045F08863B898FF88F9AD64811EBD93D7642C3D1BE0C45AA"
+    "Size": 101883,
+    "Sha256": "3507F8B3AFEC9663F7792A4D1AFF6E2BD5BEF2F951EC6583C3DA2FAC4C36B1E6"
   },
   "Sources": [
     {
@@ -22,18 +22,18 @@
     },
     {
       "Path": "MANIFEST.MF",
-      "Size": 109,
-      "Sha256": "719A8BB801323CBBF4C416947CCC0996FB0CCC062EE39B7F658F971D4A96206D"
+      "Size": 111,
+      "Sha256": "2794D20C3941C44C81964587211E70A6BADA8C26A021975ACD470B2CAEA45937"
     },
     {
       "Path": "README.md",
-      "Size": 1270,
-      "Sha256": "A6D6D3F091418551FF5A1C6150A5735803946687707534CACBF4817075FFA016"
+      "Size": 1272,
+      "Sha256": "9AB8BCA38A13A22BCC0B49147B89F070A3E2307D796E21B3ABF240C3CFEA4BF8"
     },
     {
       "Path": "build.json",
-      "Size": 10412,
-      "Sha256": "D99944974540F52FB410C290CD830EC541EE48CD35B10AE5C4A75D4571A55F1F"
+      "Size": 12509,
+      "Sha256": "34A9C36DC2F15C301785A64144D250B7E3A84A3AEE53BE6FBFED7F78B113F470"
     },
     {
       "Path": "build.ps1",
@@ -56,19 +56,34 @@
       "Sha256": "21AF04AE7DAF46A1F5093950A2FE100CD57C0919005C8F0D5FCBCF095D8C7A18"
     },
     {
+      "Path": "runtime/42.21/media/lua/client/PZOptPreloader/Setup.lua",
+      "Size": 7325,
+      "Sha256": "1CBE975551A588A013EDE5B3E9FC517203D724175044C1D252BA10CA76660845"
+    },
+    {
       "Path": "runtime/42.21/media/lua/shared/Translate/EN/IG_UI.json",
-      "Size": 310,
-      "Sha256": "CC1BA08E2DC381D5BB32DB6366381A8380BB75BD5748B342A2A52EB06CBD45FC"
+      "Size": 3465,
+      "Sha256": "BA1FCA40EF68454CEF95B635E5AE541CA9546E5E0069FCFC26C96C4DD740B586"
     },
     {
       "Path": "runtime/42.21/mod.info",
-      "Size": 659,
-      "Sha256": "36C1A58C64D4029E44B342B82AC3BB82DB5D439302ABF9FA33F4B4101A2BC061"
+      "Size": 661,
+      "Sha256": "1AB34A10B08EE5AE805779C173DF19BD830D5FBF61EC29D1061BB8C3DBDCF5B4"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
       "Size": 2970,
       "Sha256": "F78D884884076F7B73AD103C2613D6B7FA6E91ECED7CA5FD5577A5B57F7A47EF"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/Installation.java",
+      "Size": 7886,
+      "Sha256": "1D723725A963EF98564D8C38B6E3F4E187886EAB3F016A6394CA7F235064BF77"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/Installer.java",
+      "Size": 19997,
+      "Sha256": "6E6C0E59055ED720F31439F9118BE2F381A605A0CA1807A992433FE202302CBA"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/LambdaAdapter.java",
@@ -77,8 +92,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/LauncherAot.java",
-      "Size": 14176,
-      "Sha256": "7E428AA75CB616F4D4D943A555DC38B976D2FBAA297C3A5D9D0A109D96CA6433"
+      "Size": 14186,
+      "Sha256": "B5A0E82E312B10293E9F70E3913813EC308BD189D0C32387C59998157BDF4EB8"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/LoadedFields.java",
@@ -87,8 +102,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/Main.java",
-      "Size": 3241,
-      "Sha256": "55A05988134F15A460C6B28E18B5DC584295A482BCDDECB3B02681769219E937"
+      "Size": 3363,
+      "Sha256": "CE609EF5BC2B93FDCF568020E11E80ECFB5406963E68505B45626F4407335DC6"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/NativeLibraries.java",
@@ -102,8 +117,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/Payload.java",
-      "Size": 7051,
-      "Sha256": "CAC258114E697B7D132D0DEECD58152506865CFADDC5D575C9FA6A179D502401"
+      "Size": 9385,
+      "Sha256": "8DB0784EBA94649434BB00EDDEC7A376912DBC2A44BFB7893B0414E09ADB52F4"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PayloadFile.java",
@@ -112,8 +127,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PreMain.java",
-      "Size": 456,
-      "Sha256": "A902BCC26CE9F36975C64ACCD6A5F4C6B29BE32673D6E764003F604334D6459F"
+      "Size": 640,
+      "Sha256": "E99F12AC35A67A76F59930066B5385843492AE7894842A8DB4ACA38A12DA0905"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/RainRippleRepair.java",
@@ -132,13 +147,18 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/RuntimeState.java",
-      "Size": 13130,
-      "Sha256": "8CC8C5D2E2F2BE237257314F1A4F37957AD111CF53B6E9A4D79CD6994D9093DC"
+      "Size": 13647,
+      "Sha256": "21B17B194CDC3458E96C44F079E8F7EEF45B08AAD6E2194F81E54126008B9877"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ServerLua.java",
       "Size": 2309,
       "Sha256": "CA608FEE82FB97DD7E846F555C476C31B62C4C5F9F638A51EC4A9365FA1DF89D"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/SourcePaths.java",
+      "Size": 1651,
+      "Sha256": "288705D834066A92D2C939C36EE32BFEEFB60BF24E0BE2D459291E2B317FC432"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/StartPreset.java",

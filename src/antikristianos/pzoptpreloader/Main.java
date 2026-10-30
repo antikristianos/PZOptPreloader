@@ -7,6 +7,8 @@ import java.nio.file.Path;
 public final class Main {
     public static void main(String[] args) {
         System.out.println("[PZOptPreloader] " + RuntimeState.status);
+        Installation.startup();
+        if (Installation.disabled()) return;
         // Buddy registers a verified, trusted signed preloader before invoking Main.
         // Prioritize immediately; first registration must not depend on a later game-init callback.
         prioritizeNextBoot();
@@ -14,6 +16,7 @@ public final class Main {
     }
     @SuppressWarnings("unchecked")
     public static void prioritizeNextBoot() {
+        if (Installation.disabled()) return;
         try {
             Class<?> loader = Class.forName("me.zed_0xff.zombie_buddy.Loader");
             Field field = loader.getDeclaredField("g_config"); field.setAccessible(true);

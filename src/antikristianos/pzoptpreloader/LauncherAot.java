@@ -24,8 +24,8 @@ public final class LauncherAot {
     public static synchronized void startup() {
         if (checked) return;
         checked = true;
-        if (RuntimeState.status.startsWith("FAILED")) { status = "preloader failed; launcher untouched"; return; }
-        if (!Boolean.parseBoolean(System.getProperty("pzoptpreloader.enabled", "true"))
+        if (RuntimeState.status.startsWith("FAILED") || RuntimeState.status.startsWith("source unavailable:")) { status = "preloader unavailable; launcher untouched"; return; }
+        if (Installation.disabled()
                 || !Boolean.parseBoolean(System.getProperty("pzoptpreloader.aotAuto", "true"))) {
             status = "automatic setup disabled"; return;
         }

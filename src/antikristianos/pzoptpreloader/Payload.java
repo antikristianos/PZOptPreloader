@@ -38,6 +38,14 @@ public final class Payload {
             }
         }
         for (String target : targets) if (!classes.containsKey(target)) throw new IOException("Missing override: " + target);
+        Path manifest = root.resolve("pzopt-files.txt");
+        if (Files.isRegularFile(manifest)) {
+            for (String line : Files.readAllLines(manifest)) {
+                if (line.isBlank() || line.startsWith("#")) continue;
+                Path required = root.resolve(line.replace('\\', '/')).normalize();
+                if (!required.startsWith(root) || !Files.isRegularFile(required)) throw new IOException("Missing or unsafe manifest file: " + line);
+            }
+        }
     }
 
     public boolean selected(String name, boolean server) {
@@ -91,24 +99,56 @@ public final class Payload {
     }
 
     public static Path discover() throws Exception {
+        String revision = String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
         String explicit = System.getProperty("pzoptpreloader.source");
-        if (explicit != null && !explicit.isBlank()) return normalizeSource(Path.of(explicit));
+        if (explicit != null && !explicit.isBlank()) return verifiedSource(Path.of(explicit), revision);
         LinkedHashSet<Path> anchors = new LinkedHashSet<>();
         anchors.add(Path.of(System.getProperty("user.dir")));
         anchors.add(Path.of(Payload.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
         for (String entry : System.getProperty("java.class.path", "").split(File.pathSeparator)) {
             if (!entry.isBlank()) anchors.add(Path.of(entry).toAbsolutePath());
         }
+        LinkedHashSet<Path> candidates = new LinkedHashSet<>();
         for (Path anchor : anchors) for (Path path = anchor; path != null; path = path.getParent()) {
-            for (Path candidate : List.of(
+            candidates.addAll(List.of(
                 path.resolve("workshop/content/108600/3805285544"),
                 path.resolve("steamapps/workshop/content/108600/3805285544"),
                 path.resolve("content/108600/3805285544"),
-                path.resolve("3805285544"))) {
-                try { return normalizeSource(candidate); } catch (IOException ignored) { }
+                path.resolve("3805285544")));
+        }
+        return discover(candidates, SourcePaths.installationDirectory(), revision);
+    }
+
+    public static Path discover(Collection<Path> workshopCandidates, Path configSource, String revision) throws IOException {
+        LinkedHashSet<Path> candidates = new LinkedHashSet<>(workshopCandidates);
+        candidates.add(configSource);
+        SourceUnavailable failure = new SourceUnavailable("missing", "No PZ Optimization payload found; install the matching GitHub release in " + configSource);
+        for (Path candidate : candidates) {
+            try { return verifiedSource(candidate, revision); }
+            catch (SourceUnavailable error) {
+                if (!error.reason.equals("missing")) failure = error;
             }
         }
-        throw new IOException("PZ Optimization Workshop download 3805285544 not found; subscribe/download it, or set pzoptpreloader.source");
+        throw failure;
+    }
+
+    public static Path verifiedSource(Path candidate, String revision) throws SourceUnavailable {
+        Path root;
+        try { root = normalizeSource(candidate); }
+        catch (IOException error) { throw new SourceUnavailable("missing", error.getMessage()); }
+        try {
+            Payload payload = new Payload(root);
+            if (!revision.equals(payload.build.getProperty("revision")))
+                throw new SourceUnavailable("incompatible", "PZ Optimization targets revision " + payload.build.getProperty("revision") + "; installed game is " + revision + "; source=" + root);
+            if (!payload.classes.containsKey("pzopt/Overrides")) throw new IOException("Missing pzopt/Overrides.class");
+            return root;
+        } catch (SourceUnavailable error) { throw error; }
+        catch (IOException | RuntimeException error) { throw new SourceUnavailable("invalid", error.toString()); }
+    }
+
+    public static final class SourceUnavailable extends IOException {
+        public final String reason;
+        public SourceUnavailable(String reason, String message) { super(message); this.reason = reason; }
     }
 
     private static Path normalizeSource(Path candidate) throws IOException {
