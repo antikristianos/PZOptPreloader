@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.73",
-  "ModVersion": "1.4.5",
-  "CollectionVersion": "1.73",
+  "Tag": "wip-1.74",
+  "ModVersion": "1.5",
+  "CollectionVersion": "1.74",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "2ABF9D7AF3EF37A06138798DA34248FB098D85FDFBDB9DAA6B4D0E1EDC4D139D",
+  "UploadManifestSha256": "6635C9922F3B93194AD831FAE10CB92BFD22908005B4DCD304C78185535870CF",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.22/media/java/PZOptPreloader.jar",
-    "Size": 1930987,
-    "Sha256": "3CF9172013961B26373A713245C73A7544069E711DFCA385387C22A0D0A23FA2"
+    "Size": 1930985,
+    "Sha256": "0B3EAB31B64FAB5D6797AE24A18FF35486528ED2DE150B3542474EEBBA171C91"
   },
   "Sources": [
     {
@@ -22,13 +22,13 @@
     },
     {
       "Path": "MANIFEST.MF",
-      "Size": 111,
-      "Sha256": "7C31E24A1B2E4A120B4A0D55BB39373F547A052E4816F1B55915E2CD0682E431"
+      "Size": 109,
+      "Sha256": "BD47BB48BF100028C11C59763C4C4FB69BCF3EA0F1A422A89B3C299BC85C9B48"
     },
     {
       "Path": "README.md",
-      "Size": 1489,
-      "Sha256": "F96C2FB5B01533BA2949A05F1D782CF9DAB2F2930B73033877B2FC42799498AC"
+      "Size": 1487,
+      "Sha256": "FF99C108A37DBBDAF31B093EE5D0FF328653F434524CBF0C50F5E74320C0E998"
     },
     {
       "Path": "build.json",
@@ -87,8 +87,8 @@
     },
     {
       "Path": "runtime/42.22/mod.info",
-      "Size": 679,
-      "Sha256": "7FD273900DB83FA00077D180F301F05A7A34B02A13722C5101D5E160CE68B350"
+      "Size": 671,
+      "Sha256": "7E9B8E24166DFA493B269404726E31512CB8DF652182B9B22D5CBE0C49E7C81C"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
