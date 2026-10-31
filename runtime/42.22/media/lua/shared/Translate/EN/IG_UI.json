@@ -33,5 +33,8 @@
     "IGUI_PZOptPreloader_Setup_PreviousAvailable":  "A previously loaded version is available: %1",
     "IGUI_PZOptPreloader_Setup_retained":  "The previous version remains active. This incompatible release will not be offered again; newer releases will still be checked.",
     "IGUI_PZOptPreloader_Setup_rollback":  "The retained version is selected for the next full game start. Fully quit and restart Project Zomboid.",
-    "IGUI_PZOptPreloader_Setup_incompatible":  "These PZ_Optimization files cannot be used with this game version."
+    "IGUI_PZOptPreloader_Setup_incompatible":  "These PZ_Optimization files cannot be used with this game version.",
+    "IGUI_PZPeek_Visibility":  "Faded tree visibility",
+    "IGUI_PZPeek_VisibilityTooltip":  "Visibility of ordinary faded trees: 0%% invisible, 100%% opaque. Applies indoors and outdoors. Jumbo tree crowns follow Peek a View. Default: 30%%.",
+    "IGUI_PZPeek_VisibilityHelp":  "Default: 30%%. 0%% = invisible, 100%% = opaque. Ordinary trees only."
 }

@@ -7,6 +7,7 @@ local function removedKey(value)
         or key:find("^devpixellight") or key:find("^devgodrays")
 end
 local survivingSections = {}
+local survivingTitles = {}
 local function hasSection(prefix)
     for title in pairs(survivingSections) do
         if title:sub(1, #prefix) == prefix then return true end
@@ -43,7 +44,10 @@ if PzoptOptionSections then
     filterData(pages, {}, false)
     for _, sections in ipairs(pages) do
         for _, section in ipairs(sections) do
-            if section.title then survivingSections[section.title] = true end
+            if section.title then
+                survivingSections[section.title] = true
+                survivingTitles[#survivingTitles + 1] = section.title
+            end
         end
     end
 end
@@ -52,6 +56,22 @@ if PzoptSettingsLayout then
     -- Titles are taken from surviving installed data; no excluded feature remains advertised here.
     for _, group in ipairs(PzoptSettingsLayout.groups or {}) do
         for _, category in ipairs(group.cats or {}) do
+            for _, subcategory in ipairs(category.subs or {}) do
+                -- The original combined category also contains independent held-item lighting.
+                -- After removing its pixel renderer, name it after the first surviving section.
+                local title = string.lower(subcategory.title or "")
+                if title:find("^per%-pixel lighting") then
+                    for _, prefix in ipairs(subcategory.sections or {}) do
+                        for _, surviving in ipairs(survivingTitles) do
+                            if surviving:sub(1, #prefix) == prefix then
+                                subcategory.title = surviving:match("^(.-)%s*%(") or surviving
+                                break
+                            end
+                        end
+                        if not string.lower(subcategory.title or ""):find("^per%-pixel lighting") then break end
+                    end
+                end
+            end
             if category.id == "light" then
                 local titles = {}
                 for _, subcategory in ipairs(category.subs or {}) do titles[#titles + 1] = subcategory.title end
