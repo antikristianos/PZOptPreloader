@@ -56,7 +56,10 @@ public final class PeekIntegration {
             }
             if(!patchesInstalled) {
                 antikristianos.pzpeek42.Main.prepareAfterModsLoaded();
-                PatchEngine.applyPatches("antikristianos.pzpeek42",PeekIntegration.class.getClassLoader());
+                // Agent-appended JARs are absent from ClassGraph's application-loader
+                // classpath. Buddy's null-loader path scans its registered mod JARs.
+                verifyPatchDiscovery(PatchEngine.collectPatches("antikristianos.pzpeek42",null));
+                PatchEngine.applyPatches("antikristianos.pzpeek42",null);
                 patchesInstalled=true;
             }
             antikristianos.pzpeek42.Main.initializeAfterModsLoaded();
@@ -67,6 +70,17 @@ public final class PeekIntegration {
             status="inactive: "+error;
             System.err.println("[PZOptPreloader/PeekAView] "+status);
         }
+    }
+    private static void verifyPatchDiscovery(List<Class<?>> discovered) throws ClassNotFoundException {
+        Set<Class<?>> expected=new HashSet<>();
+        for(String name:List.of("PatchTrees","PatchTargets","PatchPerformance","PatchDrawGeometry")) {
+            Class<?> group=Class.forName("antikristianos.pzpeek42."+name,false,PeekIntegration.class.getClassLoader());
+            if(group.isAnnotationPresent(me.zed_0xff.zombie_buddy.Patch.class))expected.add(group);
+            for(Class<?> nested:group.getDeclaredClasses())
+                if(nested.isAnnotationPresent(me.zed_0xff.zombie_buddy.Patch.class))expected.add(nested);
+        }
+        if(!new HashSet<>(discovered).equals(expected))
+            throw new IllegalStateException("Incomplete optional patch discovery: expected "+expected.size()+", found "+discovered.size());
     }
     public static boolean sessionReady(){return ready;}
     public static boolean selected(){return ready && selected;}

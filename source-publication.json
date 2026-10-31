@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.72",
-  "ModVersion": "1.4.4",
-  "CollectionVersion": "1.72",
+  "Tag": "wip-1.73",
+  "ModVersion": "1.4.5",
+  "CollectionVersion": "1.73",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "71D9A818C1A610E46FA0C6ADF41135294E5921CED347FE4149EAB70D6D33575F",
+  "UploadManifestSha256": "2ABF9D7AF3EF37A06138798DA34248FB098D85FDFBDB9DAA6B4D0E1EDC4D139D",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.22/media/java/PZOptPreloader.jar",
-    "Size": 1930253,
-    "Sha256": "75F0A45C5DCCB57E332D311716686F2633497248465393693FC6774B651945F0"
+    "Size": 1930987,
+    "Sha256": "3CF9172013961B26373A713245C73A7544069E711DFCA385387C22A0D0A23FA2"
   },
   "Sources": [
     {
@@ -23,17 +23,17 @@
     {
       "Path": "MANIFEST.MF",
       "Size": 111,
-      "Sha256": "DB6F5843408E165A1CE944EBD9DF64F7EDF2DBDE6F4530A2DBDA996E759E41B4"
+      "Sha256": "7C31E24A1B2E4A120B4A0D55BB39373F547A052E4816F1B55915E2CD0682E431"
     },
     {
       "Path": "README.md",
       "Size": 1489,
-      "Sha256": "C764FF57B1EE685A0E3000B7239B4008E64EC23FC7DAC239F86A0617A1B34FDE"
+      "Sha256": "F96C2FB5B01533BA2949A05F1D782CF9DAB2F2930B73033877B2FC42799498AC"
     },
     {
       "Path": "build.json",
       "Size": 36465,
-      "Sha256": "1556A861FBD7E066D0E156C400B25CD756A5F630F027D35FD19B07A2CDDDFE90"
+      "Sha256": "BA8F349ABD7DDE17996348C7C22A52EB0FC4DAB6B5AEC88C7E4AD02801282784"
     },
     {
       "Path": "build.ps1",
@@ -88,7 +88,7 @@
     {
       "Path": "runtime/42.22/mod.info",
       "Size": 679,
-      "Sha256": "DCB41BDD0ADC84911B9BF3C7F36E9EE1E371814F578E3B948BFDCD738DAE0BAE"
+      "Sha256": "7FD273900DB83FA00077D180F301F05A7A34B02A13722C5101D5E160CE68B350"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
@@ -177,8 +177,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PeekIntegration.java",
-      "Size": 4329,
-      "Sha256": "51C758957B89B290BFA7F866EF2A32329EB23C13BC27AF29FF0C711440F59ABA"
+      "Size": 5419,
+      "Sha256": "3BC8DF400ACFE1C135C4AE47237152B01857E5830FCC661899AE2FCEDB50CB36"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PeekNativeApi.java",
