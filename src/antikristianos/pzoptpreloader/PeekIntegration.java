@@ -25,6 +25,11 @@ public final class PeekIntegration {
     public static synchronized void afterModSet(Object[] arguments) {
         if(!supported() || arguments.length!=1 || !(arguments[0] instanceof List<?> || arguments[0] instanceof String) || arguments[0] instanceof String && ready)return;
         captureFinalMods();
+        // Installed Buddy completes the selected Java-mod pass before this native
+        // loadMods call returns. Core.ResetLua initializes Lua BEFORE loadMods,
+        // so waiting for another LuaManager.init would leave the bridge paused
+        // while the option scripts are loaded. Complete this selection now.
+        afterJavaMods();
     }
     private static void captureFinalMods() {
         List<String> loaded=ZomboidFileSystem.instance.getModIDs();
