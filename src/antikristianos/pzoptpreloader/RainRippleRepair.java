@@ -5,9 +5,19 @@ import net.bytebuddy.jar.asm.*;
 /** Retain the native puddle exclusion mask in the downloaded rain slope generator. */
 public final class RainRippleRepair {
     public static final String TARGET = "pzopt/RainRipples";
-    public static final String BEFORE = "   vec2 g = pzRainSlope(fc) * pzRainP.z;";
-    public static final String AFTER = "   vec2 g = pzRainSlope(fc) * pzRainP.z * clamp(puddlesDirNone, 0.0, 1.0);";
+    public static final String BEFORE_HASH = "5320978367e05d69792c820042846edf964cbce0e1c2dbf2c8a08b3f7fd0992e";
+    public static final String AFTER_HASH = "06fbf294048ba600c2309fdf110e37aa64ed628afba0445bba6e3b97a02a389e";
     private RainRippleRepair() { }
+    public static String literalHash(Object value) {
+        return value instanceof String text ? Compatibility.hash(text.getBytes(java.nio.charset.StandardCharsets.UTF_8)) : "";
+    }
+    /** Inserts only our new mask expression into the separately installed original line. */
+    public static String masked(String original) {
+        if(!BEFORE_HASH.equals(literalHash(original)))throw new IllegalArgumentException("Unreviewed rain slope input");
+        int end=original.lastIndexOf(';');
+        if(end<0)throw new IllegalArgumentException("Missing rain slope statement boundary");
+        return original.substring(0,end)+" * clamp(puddlesDirNone, 0.0, 1.0)"+original.substring(end);
+    }
 
     public static byte[] patch(String name, byte[] bytes) {
         if (!TARGET.equals(name)) return bytes;
@@ -25,10 +35,10 @@ public final class RainRippleRepair {
                 if (!n.equals("<clinit>") || !d.equals("()V")) return null;
                 return new MethodVisitor(Opcodes.ASM9) {
                     @Override public void visitLdcInsn(Object value) {
-                        if (BEFORE.equals(value)) shape[2]++;
-                        if (AFTER.equals(value)) shape[3]++;
-                        if ("vec3 pzRain(vec2 fc) {".equals(value)) shape[4]++;
-                        if ("   pzRainG = vec2(g.x - g.y, g.x + g.y) * 0.7071;".equals(value)) shape[5]++;
+                        if (BEFORE_HASH.equals(literalHash(value))) shape[2]++;
+                        if (AFTER_HASH.equals(literalHash(value))) shape[3]++;
+                        if ("dfa35e62f293c9324b5a0d5b3e55edb277ae71af55ad430773982fecf6936980".equals(literalHash(value))) shape[4]++;
+                        if ("6e90506d48a00cfb39dfdca1f4c3a48e08f875a8e02ae04850d908aa7b78b3f0".equals(literalHash(value))) shape[5]++;
                     }
                     @Override public void visitFieldInsn(int opcode, String owner, String field, String descriptor) {
                         if (opcode == Opcodes.PUTSTATIC && owner.equals(TARGET) && field.equals("GLSL")
@@ -48,7 +58,7 @@ public final class RainRippleRepair {
                 MethodVisitor target = super.visitMethod(access, n, d, s, e);
                 if (!n.equals("<clinit>") || !d.equals("()V")) return target;
                 return new MethodVisitor(Opcodes.ASM9, target) {
-                    @Override public void visitLdcInsn(Object value) { super.visitLdcInsn(BEFORE.equals(value) ? AFTER : value); }
+                    @Override public void visitLdcInsn(Object value) { super.visitLdcInsn(BEFORE_HASH.equals(literalHash(value)) ? masked((String)value) : value); }
                 };
             }
         }, 0);

@@ -18,25 +18,35 @@ public final class RuntimeState {
     public static final Map<String, byte[]> definitions = new ConcurrentHashMap<>();
     private static Instrumentation instrumentation;
     private static JarFile helperJar;
+    private static Installer.SourceUse sourceUse;
     private static boolean installed;
 
     public static synchronized void install() throws Exception {
         if (installed) return;
-        if (!Boolean.parseBoolean(System.getProperty("pzoptpreloader.enabled", "true"))) {
-            status = "disabled by pzoptpreloader.enabled=false"; return;
+        if (Installation.disabled()) {
+            status = "disabled by user setting"; return;
         }
         server = detectServer(System.getProperty("sun.java.command", ""));
         if (!server) AotBridge.validate();
-        Payload candidate = new Payload(Payload.discover());
         String actual = String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
-        if (!actual.equals(candidate.build.getProperty("revision"))) {
-            throw new IllegalStateException("PZ Optimization targets revision " + candidate.build.getProperty("revision") + ", installed game is " + actual);
+        if (!server) {
+            try { Installer.activatePending(SourcePaths.configDirectory(), actual); }
+            catch (IOException error) { System.err.println("[PZOptPreloader] pending update retained: " + error); }
         }
+        if (Files.isDirectory(SourcePaths.installationDirectory())) sourceUse = Installer.useSource(SourcePaths.configDirectory());
+        Payload candidate;
+        try{
+            candidate=Payload.discovered();
+            if(sourceUse!=null&&!candidate.root.equals(SourcePaths.installationDirectory().toRealPath()))releaseSource();
+            candidate.prepare(actual);
+        }catch(Throwable failed){releaseSource();throw failed;}
         if (server) candidate.prepareServerVehicleZones();
         Field field = Class.forName("me.zed_0xff.zombie_buddy.Loader").getDeclaredField("g_instrumentation");
         field.setAccessible(true); instrumentation = (Instrumentation) field.get(null);
         if (instrumentation == null) throw new IllegalStateException("ZombieBuddy instrumentation is unavailable");
+        if(!Compatibility.LEGACY.equals(actual))ListStorage.install(instrumentation);
         Map<Class<?>, LambdaAdapter.Prepared> pending = new LinkedHashMap<>();
+        try{
         for (Class<?> cls : instrumentation.getAllLoadedClasses()) {
             String name = cls.getName().replace('.', '/');
             if (!candidate.selected(name, server)) continue;
@@ -46,13 +56,16 @@ public final class RuntimeState {
             }
         }
         helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
+        }catch(Exception failed){
+            releaseSource();throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed.getMessage(),candidate.root);
+        }
         payload = candidate;
         instrumentation.appendToSystemClassLoaderSearch(helperJar);
         instrumentation.addTransformer(new Transformer(), false);
         // Define every member of the chosen families before other transformers resolve their types.
         // JVM instrumentation suppresses recursive transformation during a transformer callback.
         Set<String> buddyTargets = Set.of("zombie/GameWindow", "zombie/gameStates/GameLoadingState", "org/lwjglx/opengl/Display");
-        List<String> eager = candidate.classes.keySet().stream().filter(name -> candidate.selected(name, server))
+        List<String> eager = candidate.classNames().stream().filter(name -> candidate.selected(name, server))
             .sorted(Comparator.comparing((String name) -> buddyTargets.stream().anyMatch(target -> name.equals(target) || name.startsWith(target + "$")))
                 .thenComparing(name -> !name.contains("$"))
                 .thenComparing(name -> name)).toList();
@@ -73,8 +86,12 @@ public final class RuntimeState {
             : "client (all " + payload.targets.size() + " override families; " + eager.size() + " class definitions including nested)")
             + "; source=" + payload.root + "; commit=" + payload.build.getProperty("commit");
         System.out.println("[PZOptPreloader] " + status);
+        if(!server)try{SourceHistory.remember(candidate,actual);}catch(IOException error){System.err.println("[PZOptPreloader] original-source backup unavailable; existing snapshots retained: "+error);}
     }
 
+    private static void releaseSource(){
+        if(sourceUse!=null){try{sourceUse.close();}catch(IOException error){System.err.println("[PZOptPreloader] source lock close: "+error);}sourceUse=null;}
+    }
     public static boolean detectServer(String command) {
         String override = System.getProperty("pzoptpreloader.role", "auto");
         if (override.equals("server")) return true;
@@ -115,11 +132,11 @@ public final class RuntimeState {
         @Override public byte[] transform(ClassLoader loader, String name, Class<?> redefined, ProtectionDomain domain, byte[] input) {
             if (redefined != null || name == null || payload == null) return null;
             try {
-                if (payload.selected(name, server) && payload.classes.containsKey(name)) {
+                if (payload.selected(name, server) && payload.hasClass(name)) {
                     byte[] bytes = cachedClass(name);
                     definitions.put(name, bytes); return bytes;
                 }
-                if (name.startsWith("pzopt/") && payload.classes.containsKey(name)) {
+                if (name.startsWith("pzopt/") && payload.hasClass(name)) {
                     return helperBridges(name, input);
                 }
             } catch (Exception error) {

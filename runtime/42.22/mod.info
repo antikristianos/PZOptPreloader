@@ -1,0 +1,13 @@
+name=[B42] PZ Optimization Preloader
+id=PZOptPreloader
+modversion=1.5
+description=Loads compatible original PZ Optimization files from Workshop or the configuration folder through ZombieBuddy. Supports client options and Windows AOT setup; servers retain selected optimizations. Voxel Lighting, Pixel Lighting and God Rays are excluded. Keep PZ_Optimization disabled and fully restart after changes.
+author=Antikristianos
+icon=../common/icon.png
+versionMin=42.22.0
+require=\ZombieBuddy
+incompatible=PZ_Optimization,PZPeek,PZPeek_WIP,PZOptPreloader_WIP
+javaJarFile=media/java/PZOptPreloader.jar
+javaPkgName=antikristianos.pzoptpreloader
+javaPreload=true
+poster=../common/poster.png

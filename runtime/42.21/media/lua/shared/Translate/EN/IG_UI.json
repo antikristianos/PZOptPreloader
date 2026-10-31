@@ -1,3 +1,0 @@
-{
-  "IGUI_PZOptPreloader_AotSetupInfo": "PZ Optimization Preloader: Automatic AOT setup\nYou can continue playing normally. No restart is needed now.\nAt future normal starts, the JVM cache will be recorded\nand then enabled automatically. Quit the game normally\nafter playing so the recording can finish."
-}
