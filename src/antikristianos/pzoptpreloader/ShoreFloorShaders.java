@@ -1,0 +1,78 @@
+package antikristianos.pzoptpreloader;
+
+/** Own supplementary shaders. The original AO/sun algorithm stays in the separately installed input. */
+public final class ShoreFloorShaders {
+    private ShoreFloorShaders() { }
+    private static String replaceOnce(String source,String before,String after){
+        int at=source.indexOf(before);
+        if(at<0||source.indexOf(before,at+before.length())>=0)throw new IllegalStateException("Unsupported shore shader anchor: "+before);
+        return source.substring(0,at)+after+source.substring(at+before.length());
+    }
+    public static String kernel(String source){
+        // The native shore is deliberately absent from Src0. Supply just its flat depth as an AO receiver,
+        // with the original kernel, strengths, neighbours, vegetation and sun masks still doing the shading.
+        String declaration="""
+            uniform uint pzShoreMask[8];
+            float pzShoreDepth(vec2 pixel, float original) {
+                pixel = floor(pixel) + 0.5;
+                float row = geo.z < 0.0 ? pixel.y : rect[0].w - pixel.y;
+                float diagonal = (row / iso0.z - iso0.w) / iso1.x;
+                float across = (pixel.x - iso0.x) * iso0.y;
+                ivec2 square = ivec2(floor(vec2(diagonal + across, diagonal - across) * 0.5)) + ivec2(4);
+                if (square.x < 0 || square.y < 0 || square.x >= 16 || square.y >= 16) return original;
+                int bit = square.y * 16 + square.x;
+                if ((pzShoreMask[bit >> 5] & (1u << uint(bit & 31))) == 0u) return original;
+                return min(original, (20.0 - diagonal) * iso1.z);
+            }
+            """;
+        source=replaceOnce(source,"float depthAt(vec2 p) {",declaration+"float depthAt(vec2 p) {");
+        source=replaceOnce(source,"   return d;\n}","   return pzShoreDepth(p, d);\n}");
+        source=replaceOnce(source,"texelFetch(Src0, ivec2(c), 0).r >= 0.99999",
+            "pzShoreDepth(c, texelFetch(Src0, ivec2(c), 0).r) >= 0.99999");
+        source=replaceOnce(source,"return nSrc > 1 ? depthAt(p) : 1.0;",
+            "return pzShoreDepth(p, nSrc > 1 ? depthAt(p) : 1.0);");
+        return source;
+    }
+    public static CharSequence tile(CharSequence text,String fileName){
+        if(text==null||fileName==null)return text;
+        String path=fileName.replace('\\','/');
+        if(!path.endsWith("/tileWithDepth.frag")&&!path.endsWith("/opaqueWithDepth.frag")&&!path.endsWith("/seamFix2.frag"))return text;
+        String source=text.toString();
+        if(source.contains("pzShoreEnabled"))return text;
+        ShoreFloorLighting.shaderReload();
+        String output=source.contains("gl_FragData[0]")?"gl_FragData[0]":"gl_FragColor";
+        if(!source.contains(output)||!source.contains("gl_FragDepth"))throw new IllegalStateException("Unsupported shore tile shader: "+path);
+        source=replaceOnce(source,"void main()","void pzShoreOriginal()");
+        return source+"\n#define PZ_SHORE_OUT "+output+"\n"+TILE;
+    }
+    public static final String TILE="""
+        uniform float pzShoreEnabled;
+        uniform sampler2D pzShoreTerm, pzShoreOld;
+        uniform vec4 pzShoreX, pzShoreY;
+        uniform vec4 pzShoreParams;
+        uniform sampler2D pzCloudFieldW;
+        uniform vec4 pzCloudU, pzCloudV, pzCloudP, pzCloudD, pzCloudE;
+        float pzShoreCloud() {
+            if (pzCloudP.x <= 0.0) return 1.0;
+            vec4 pixel = vec4(gl_FragCoord.xy, gl_FragDepth, 1.0);
+            vec2 uv = vec2(dot(pzCloudU, pixel), dot(pzCloudV, pixel));
+            float density = clamp((texture2D(pzCloudFieldW, uv).r - pzCloudP.y) * pzCloudP.z, 0.0, 1.0);
+            float erosion = texture2D(pzCloudFieldW, uv * pzCloudD.x + pzCloudD.yz).g * pzCloudP.w;
+            density = clamp((density - erosion) / max(1.0 - erosion, 0.0001), 0.0, 1.0);
+            return 1.0 - pzCloudD.w * (1.0 - exp(-3.0 * density));
+        }
+        void main() {
+            pzShoreOriginal();
+            if (pzShoreEnabled < 0.5) return;
+            vec4 pixel = vec4(gl_FragCoord.xy, 0.0, 1.0);
+            vec2 uv = vec2(dot(pzShoreX, pixel), dot(pzShoreY, pixel));
+            vec2 light = vec2(1.0, pzShoreParams.y);
+            if (pzShoreParams.x > 0.5) {
+                light = texture2D(pzShoreTerm, uv, -8.0).rg;
+                if (pzShoreParams.z > 0.0) light = mix(light, texture2D(pzShoreOld, uv, -8.0).rg, pzShoreParams.z);
+            }
+            float factor = clamp(light.r, 0.0, 1.0) * (1.0 - clamp(light.g, 0.0, 1.0) * (1.0 - pzShoreCloud()));
+            PZ_SHORE_OUT.rgb *= factor;
+        }
+        """;
+}

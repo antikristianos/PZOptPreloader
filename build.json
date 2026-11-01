@@ -238,12 +238,12 @@
     {
       "Path": "antikristianos/pzoptpreloader/Payload$SourceUnavailable.class",
       "Size": 642,
-      "Sha256": "73FE927E3592EF329F4FD0E16C5CFFA1118CE75CB10A9340CCB2463198A7D749"
+      "Sha256": "95F09638B15D2EFBB7FB9AEDFD98C595067AD334818D62D80380164EBC8C6E3C"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Payload.class",
-      "Size": 15707,
-      "Sha256": "DA16A0C18328D921B16D468DF41834FC68F1D83A05B86CC6782243C81DE8E32E"
+      "Size": 15847,
+      "Sha256": "F6A5EC04448160BB3B336B8F7182728F374682334B660091623E525E51C6FE8B"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PayloadFile.class",
@@ -434,6 +434,61 @@
       "Path": "antikristianos/pzoptpreloader/SharedSceneSlices.class",
       "Size": 11354,
       "Sha256": "43554B12FD08933F9C354785AE627A5436226B499B2AC9E8E849A7BEA5A27A5F"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Access.class",
+      "Size": 2869,
+      "Sha256": "210EF7A264472EE1C09B1F61F90BA867597DFF99D8417605998F8EAAB0EC0789"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Binding.class",
+      "Size": 5437,
+      "Sha256": "06FC27EE690A078B5EEE7D782EA109A638A1E2955048566BFFA5318478683E74"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Bound.class",
+      "Size": 605,
+      "Sha256": "9D041760B8CB1C78FB3C9AF554BA2D917192C1BB9214CB94FC47744C98D13AA3"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Context.class",
+      "Size": 1467,
+      "Sha256": "F37B86A36959AEB3ADBAF42D3F9DB313797BBF7572A6CE79F7E2A0C04B65D106"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Reset.class",
+      "Size": 1354,
+      "Sha256": "A6A501491907E24494B0E061B15EEB4F06DD78B02EF5A24A9DF29D2D7FE263E0"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Uniforms.class",
+      "Size": 1537,
+      "Sha256": "BB35FDCFE551818BD96233E6D759295948D8BE3229ACD1C8F9CB41C9CD906E8E"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting.class",
+      "Size": 7457,
+      "Sha256": "841E36FAB0D1C8D8D50FEA1766C3ADFBFD4F193534E1A0B78D81A5B39B587736"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorRepair$1$1.class",
+      "Size": 3953,
+      "Sha256": "7496325A9DAA690BCC52EA47266D1B9446A705209BF59E2BF6BC3112E64B2C52"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorRepair$1.class",
+      "Size": 1105,
+      "Sha256": "7756D58CD7B2A1839A3A4C73DC7459C6B2B372F5426743D5581C1590E440EA70"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorRepair.class",
+      "Size": 4917,
+      "Sha256": "1893B4F09DDCCDAD53360E5CB63DD48FDC112013921C262550E5E7684434BECA"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreFloorShaders.class",
+      "Size": 6018,
+      "Sha256": "9729E7164826A1A9552F6EF603E2DF8F8DDD12A00BC3CAA503F8898FE343FB0C"
     },
     {
       "Path": "antikristianos/pzoptpreloader/SourceHistory$Previous.class",

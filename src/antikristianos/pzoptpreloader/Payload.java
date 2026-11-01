@@ -17,6 +17,7 @@ public final class Payload {
     private byte[] serverVehicleZones;
     private Map<String,byte[]> prepared;
     private Properties effectiveBuild;
+    private boolean shoreLighting;
     private static final ThreadLocal<Payload> VERIFIED = new ThreadLocal<>();
     public static Payload discovered()throws Exception {
         Path root=discover();Payload cached=VERIFIED.get();VERIFIED.remove();
@@ -30,7 +31,7 @@ public final class Payload {
         if(prepared!=null)return;
         Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
         Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
-        prepared=candidate;effectiveBuild=metadata;
+        prepared=candidate;effectiveBuild=metadata;shoreLighting="e013dbb529".equals(actual);
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
     public Set<String> classNames(){return Collections.unmodifiableSet(prepared==null?classes.keySet():prepared.keySet());}
@@ -98,7 +99,9 @@ public final class Payload {
         byte[] source=baseClassBytes(name);
         if(source==null)throw new IOException("Missing prepared definition: "+name);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
-        return server ? bytes : UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
+        if(server)return bytes;
+        if(shoreLighting)bytes=ShoreFloorRepair.patch(name,bytes);
+        return UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {
