@@ -36,6 +36,7 @@ public final class ShoreFloorShaders {
     public static CharSequence tile(CharSequence text,String fileName){
         if(text==null||fileName==null)return text;
         String path=fileName.replace('\\','/');
+        if(path.endsWith("/water.frag")||path.endsWith("/water_hq.frag"))return water(text);
         if(!path.endsWith("/tileWithDepth.frag")&&!path.endsWith("/opaqueWithDepth.frag")&&!path.endsWith("/seamFix2.frag"))return text;
         String source=text.toString();
         if(source.contains("pzShoreEnabled"))return text;
@@ -47,6 +48,21 @@ public final class ShoreFloorShaders {
         source=source.substring(0,header+1)+"#ifdef GL_ARB_shader_texture_lod\n#extension GL_ARB_shader_texture_lod : enable\n#endif\n"+source.substring(header+1);
         source=replaceOnce(source,"void main()","void pzShoreOriginal()");
         return source+"\n#define PZ_SHORE_OUT "+output+"\n"+TILE;
+    }
+    /** Keep native per-pixel bank coverage when the installed reflection pass blends over water. */
+    private static CharSequence water(CharSequence text){
+        String source=text.toString();
+        if(source.contains("pzShoreWaterBase"))return text;
+        String anchor="fragColor = pzSsrApply(fragColor, gm);";
+        if(!source.contains(anchor))return text; // SSR disabled: preserve the native program exactly.
+        return replaceOnce(source,anchor,"""
+            vec4 pzShoreWaterBase = fragColor;
+            fragColor = pzSsrApply(fragColor, gm);
+            // Recover straight colour before restoring coverage: simply restoring alpha
+            // would overweight the reflected colour at partially covered bank pixels.
+            fragColor.rgb = mix(pzShoreWaterBase.rgb, fragColor.rgb, fragColor.a);
+            fragColor.a = pzShoreWaterBase.a;
+            """);
     }
     public static final String TILE="""
         uniform float pzShoreEnabled;
