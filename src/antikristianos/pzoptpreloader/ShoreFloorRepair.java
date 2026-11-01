@@ -7,7 +7,7 @@ import net.bytebuddy.jar.asm.*;
 
 /** Connect the native deferred shore floor to the separately installed lighting implementation. */
 public final class ShoreFloorRepair {
-    public static final Set<String> TARGETS=Set.of("pzopt/ChunkAo","pzopt/ChunkAo$Gl","pzopt/TileBatch",
+    public static final Set<String> TARGETS=Set.of("pzopt/ChunkAo","pzopt/ChunkAo$Gl","pzopt/CloudShadow","pzopt/TileBatch",
         "zombie/iso/fboRenderChunk/FBORenderCell","zombie/iso/sprite/IsoSprite","zombie/core/opengl/ShaderUnit");
     private static final String LIGHT="antikristianos/pzoptpreloader/ShoreFloorLighting";
     private static final String SHADERS="antikristianos/pzoptpreloader/ShoreFloorShaders";
@@ -15,6 +15,7 @@ public final class ShoreFloorRepair {
         "pzopt/ChunkAo",Map.of("<clinit>()V","5a7ff5a4ef4620453b5e5fb6c84bdb28acc7b94ad4a1aa02059e6c73bf2a6077",
             "context(Lpzopt/ChunkAo$Job;Lzombie/iso/fboRenderChunk/FBORenderChunk;Lzombie/iso/IsoChunk;IFZ)I","3ee1b7a91abadb2faf5ad7a64fc8f36c57c366adaa7d0ed298a710cb12497382"),
         "pzopt/ChunkAo$Gl",Map.of("kernelUniforms([ILpzopt/ChunkAo$Job;F)V","0811eb991407a1c8ad28b7ce91097854f66a8da0c5943cada372558edef4f2ef"),
+        "pzopt/CloudShadow",Map.of("waterUniforms()V","d08ec7eeb546e0b810df4e685429e14d3c52cfc37a7eefa89d495423bd9b9643"),
         "pzopt/TileBatch",Map.of("start(IFF)Z","8e914df264ebb22047245990a3379854cc9ff9526a9064bef260d7c681e0ef29"),
         "zombie/iso/fboRenderChunk/FBORenderCell",Map.of("renderFloor(Lzombie/iso/IsoObject;)V","2723610f0ac15ad0bb3766cd524a36f731969378e197ed6abeea1bf7f18cb70b"),
         "zombie/iso/sprite/IsoSprite",Map.of("startTileDepthShader(Lzombie/iso/IsoObject;FFFFZ)V","c067869f65eb5e88dfb5e1123c7073c4867fcb62f22131c3c421b5d1da25a66f"),
@@ -36,6 +37,9 @@ public final class ShoreFloorRepair {
                     private void call(String owner,String method,String desc){super.visitMethodInsn(Opcodes.INVOKESTATIC,owner,method,desc,false);}
                     @Override public void visitCode(){
                         super.visitCode();
+                        if(name.equals("pzopt/CloudShadow")&&n.equals("waterUniforms")&&d.equals("()V")){
+                            hits[0]++;call(LIGHT,"waterCloudBind","()V");
+                        }
                         if(name.equals("pzopt/TileBatch")&&n.equals("start")&&d.equals("(IFF)Z")){
                             // Every shore draw needs its own uniform boundary, including with tile batching enabled.
                             hits[0]++;call(LIGHT,"active","()Z");Label ordinary=new Label();super.visitJumpInsn(Opcodes.IFEQ,ordinary);

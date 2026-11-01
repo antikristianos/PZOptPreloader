@@ -21,6 +21,16 @@ public final class ShoreFloorLighting {
     private ShoreFloorLighting() { }
     public static boolean active(){return CURRENT.get()!=null;}
     public static void shaderReload(){PROGRAMS.clear();KERNELS.clear();}
+    /** Native water draws pop texture attributes. Uniform caching cannot retain this sampler binding. */
+    public static void waterCloudBind(){
+        try{
+            Access a=Access.get();
+            if(!a.waterPatched.getBoolean(null)||a.cloudFailed.getBoolean(null)||!(Boolean)a.cloudEnabled.invoke(null))return;
+            int cloud=a.fieldTex.getInt(null);if(cloud<=0)return;
+            int active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+            try{bind(CLOUD_UNIT,cloud);}finally{GL13.glActiveTexture(active);}
+        }catch(ReflectiveOperationException error){throw new IllegalStateException("Water cloud binding API unavailable",error);}
+    }
     public static void capture(Object job,IsoChunk chunk,FBORenderChunk renderChunk){
         int[] mask=EMPTY_MASK;
         if(chunk!=null&&renderChunk.getMinLevel()==0&&IsoWater.getInstance().getShaderEnable()){
@@ -82,7 +92,9 @@ public final class ShoreFloorLighting {
         static Access instance;
         final Object gl;
         final Map<?,?> entries,bare;
-        final Field valid,owner,tex,fadeTex,fieldTex,waterPatched,cloudFailed,dir;
+        final Field valid,owner,tex,fadeTex,hasShare,fieldTex,waterPatched,cloudFailed,cloudBindless,dir;
+        final boolean cloudTermMips;
+        final int cloudTermLod;
         final Map<?,?> cloudLocations,cloudApplied;
         final Method enabled,cloudEnabled,waterUniforms,remaining;
         private Access()throws ReflectiveOperationException {
@@ -90,6 +102,9 @@ public final class ShoreFloorLighting {
             gl=field(ao,"GL").get(null);Class<?> glClass=gl.getClass();
             entries=(Map<?,?>)field(glClass,"byColour").get(gl);bare=(Map<?,?>)field(glClass,"bareByColour").get(gl);
             valid=field(entry,"valid");owner=field(entry,"colorTex");tex=field(entry,"tex");fadeTex=field(entry,"fadeTex");
+            hasShare=field(entry,"q");cloudBindless=field(cloud,"bindless");
+            Class<?> config=Class.forName("pzopt.Config");cloudTermMips=field(config,"CLOUD_TERM_MIPS").getBoolean(null);
+            cloudTermLod=Math.max(0,Math.min(2,field(config,"CLOUD_TERM_LOD").getInt(null)));
             fieldTex=field(cloud,"fieldTex");waterPatched=field(cloud,"waterPatched");cloudFailed=field(cloud,"failed");
             dir=field(Class.forName("pzopt.SunShadow"),"dir");
             cloudLocations=(Map<?,?>)field(cloud,"WATER_LOCATIONS").get(null);cloudApplied=(Map<?,?>)field(cloud,"WATER_APPLIED").get(null);
@@ -101,12 +116,13 @@ public final class ShoreFloorLighting {
         static Method method(Class<?> type,String name,Class<?>...args)throws ReflectiveOperationException {Method method=type.getDeclaredMethod(name,args);method.setAccessible(true);return method;}
     }
     private static final class Uniforms {
-        final int enabled,x,y,params,term,old,cloudP,cloudE;
+        final int enabled,x,y,params,term,old,cloudRead,cloudP,cloudE;
         Uniforms(int program){
             try{Access a=Access.get();a.cloudLocations.remove(program);a.cloudApplied.remove(program);}
             catch(ReflectiveOperationException error){throw new IllegalStateException("Shore shader API unavailable",error);}
             enabled=GL20.glGetUniformLocation(program,"pzShoreEnabled");x=GL20.glGetUniformLocation(program,"pzShoreX");y=GL20.glGetUniformLocation(program,"pzShoreY");
             params=GL20.glGetUniformLocation(program,"pzShoreParams");term=GL20.glGetUniformLocation(program,"pzShoreTerm");old=GL20.glGetUniformLocation(program,"pzShoreOld");
+            cloudRead=GL20.glGetUniformLocation(program,"pzShoreCloudRead");
             cloudP=GL20.glGetUniformLocation(program,"pzCloudP");cloudE=GL20.glGetUniformLocation(program,"pzCloudE");
         }
     }
@@ -124,14 +140,16 @@ public final class ShoreFloorLighting {
             Bound state=new Bound();state.program=program;state.uniforms=u;state.active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
             state.term=texture(TERM_UNIT);state.old=texture(OLD_UNIT);state.cloud=texture(CLOUD_UNIT);BOUND.push(state);
             try{
-                Access a=Access.get();Object entry=a.entries.get(context.depth);int term=0,old=0;float fade=0,direct=0;
+                Access a=Access.get();Object entry=a.entries.get(context.depth);int term=0,old=0;float fade=0,direct=0;boolean share=false;
                 if(entry!=null&&a.valid.getBoolean(entry)&&a.owner.getInt(entry)==context.depth){
                     term=a.tex.getInt(entry);old=a.fadeTex.getInt(entry);
+                    share=a.hasShare.getBoolean(entry);
                     if(old>0)fade=(Float)a.remaining.invoke(null,entry,System.nanoTime());
                 }else if(Integer.valueOf(1).equals(a.bare.get(context.depth)))direct=((float[])a.dir.get(null))[3];
                 bind(TERM_UNIT,term);bind(OLD_UNIT,old>0?old:term);
                 GL20.glUniform1i(u.term,TERM_UNIT);GL20.glUniform1i(u.old,OLD_UNIT);
                 GL20.glUniform4f(u.params,term>0?1:0,direct,fade,0);
+                GL20.glUniform4f(u.cloudRead,share?1:0,a.cloudBindless.getBoolean(null)?1:0,a.cloudTermMips?a.cloudTermLod:0,a.cloudTermMips?1:-8);
                 int[] viewport=new int[4];GL11.glGetIntegerv(GL11.GL_VIEWPORT,viewport);
                 float dx=context.screenW*context.zoom/(viewport[2]*64f),dy=-context.screenH*context.zoom/(viewport[3]*32f);
                 float cx=(context.offX-viewport[0]*context.screenW*context.zoom/viewport[2])/64f-context.chunkX+context.chunkY;

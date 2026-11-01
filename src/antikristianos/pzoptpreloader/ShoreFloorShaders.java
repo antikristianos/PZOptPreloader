@@ -42,6 +42,9 @@ public final class ShoreFloorShaders {
         ShoreFloorLighting.shaderReload();
         String output=source.contains("gl_FragData[0]")?"gl_FragData[0]":"gl_FragColor";
         if(!source.contains(output)||!source.contains("gl_FragDepth"))throw new IllegalStateException("Unsupported shore tile shader: "+path);
+        int header=source.indexOf('\n');
+        if(header<0||!source.startsWith("#version"))throw new IllegalStateException("Unsupported shore shader header: "+path);
+        source=source.substring(0,header+1)+"#ifdef GL_ARB_shader_texture_lod\n#extension GL_ARB_shader_texture_lod : enable\n#endif\n"+source.substring(header+1);
         source=replaceOnce(source,"void main()","void pzShoreOriginal()");
         return source+"\n#define PZ_SHORE_OUT "+output+"\n"+TILE;
     }
@@ -50,8 +53,16 @@ public final class ShoreFloorShaders {
         uniform sampler2D pzShoreTerm, pzShoreOld;
         uniform vec4 pzShoreX, pzShoreY;
         uniform vec4 pzShoreParams;
+        uniform vec4 pzShoreCloudRead;
         uniform sampler2D pzCloudFieldW;
         uniform vec4 pzCloudU, pzCloudV, pzCloudP, pzCloudD, pzCloudE;
+        float pzShoreDirectShare(vec2 uv) {
+            if (pzShoreCloudRead.x < 0.5) return pzShoreParams.y;
+            #ifdef GL_ARB_shader_texture_lod
+            if (pzShoreCloudRead.y > 0.5) return texture2DLod(pzShoreTerm, uv, pzShoreCloudRead.z).g;
+            #endif
+            return texture2D(pzShoreTerm, uv, pzShoreCloudRead.w).g;
+        }
         float pzShoreCloud() {
             if (pzCloudP.x <= 0.0) return 1.0;
             vec4 pixel = vec4(gl_FragCoord.xy, gl_FragDepth, 1.0);
@@ -66,12 +77,14 @@ public final class ShoreFloorShaders {
             if (pzShoreEnabled < 0.5) return;
             vec4 pixel = vec4(gl_FragCoord.xy, 0.0, 1.0);
             vec2 uv = vec2(dot(pzShoreX, pixel), dot(pzShoreY, pixel));
-            vec2 light = vec2(1.0, pzShoreParams.y);
+            float light = 1.0;
             if (pzShoreParams.x > 0.5) {
-                light = texture2D(pzShoreTerm, uv, -8.0).rg;
-                if (pzShoreParams.z > 0.0) light = mix(light, texture2D(pzShoreOld, uv, -8.0).rg, pzShoreParams.z);
+                light = texture2D(pzShoreTerm, uv, -8.0).r;
+                if (pzShoreParams.z > 0.0) light = mix(light, texture2D(pzShoreOld, uv, -8.0).r, pzShoreParams.z);
             }
-            float factor = clamp(light.r, 0.0, 1.0) * (1.0 - clamp(light.g, 0.0, 1.0) * (1.0 - pzShoreCloud()));
+            // The land composite samples the current direct share at its configured LOD.
+            // Its separate sun-step fade adjusts baked light, never this cloud share.
+            float factor = clamp(light, 0.0, 1.0) * (1.0 - clamp(pzShoreDirectShare(uv), 0.0, 1.0) * (1.0 - pzShoreCloud()));
             PZ_SHORE_OUT.rgb *= factor;
         }
         """;
