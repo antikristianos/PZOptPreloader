@@ -18,6 +18,7 @@ public final class Payload {
     private Map<String,byte[]> prepared;
     private Properties effectiveBuild;
     private boolean shoreLighting;
+    private ManualAdpCompatibility.Kind manualAdp=ManualAdpCompatibility.Kind.ABSENT;
     private static final ThreadLocal<Payload> VERIFIED = new ThreadLocal<>();
     public static Payload discovered()throws Exception {
         Path root=discover();Payload cached=VERIFIED.get();VERIFIED.remove();
@@ -31,11 +32,21 @@ public final class Payload {
         if(prepared!=null)return;
         Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
         Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
-        prepared=candidate;effectiveBuild=metadata;shoreLighting="e013dbb529".equals(actual);
+        ManualAdpCompatibility.Kind installedManualAdp="e013dbb529".equals(actual)&&!RuntimeState.server
+            ?ManualAdpCompatibility.detect():ManualAdpCompatibility.Kind.ABSENT;
+        if(installedManualAdp!=ManualAdpCompatibility.Kind.ABSENT){
+            Properties owned=new Properties();owned.putAll(metadata==null?build:metadata);
+            owned.setProperty("overrides",String.join(",",Arrays.stream(owned.getProperty("overrides","").split(","))
+                .filter(name->!name.equals(ManualAdpCompatibility.SIMULATION)).toList()));
+            metadata=owned;
+        }
+        prepared=candidate;effectiveBuild=metadata;shoreLighting="e013dbb529".equals(actual);manualAdp=installedManualAdp;
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
     public Set<String> classNames(){return Collections.unmodifiableSet(prepared==null?classes.keySet():prepared.keySet());}
     public boolean hasClass(String name){return prepared==null?classes.containsKey(name):prepared.containsKey(name);}
+    public boolean manualAdpPhysics(){return manualAdp!=ManualAdpCompatibility.Kind.ABSENT;}
+    public boolean manualAdpOptimizedPhysics(){return manualAdp==ManualAdpCompatibility.Kind.OPTCOMPAT;}
     public static final Set<String> SERVER_TARGETS = Set.of(
         "zombie/scripting/ScriptParser", "zombie/iso/FishSchoolManager",
         "zombie/scripting/objects/Item", "zombie/MapCollisionData", "zombie/iso/IsoMetaCell",
@@ -71,6 +82,7 @@ public final class Payload {
     }
 
     public boolean selected(String name, boolean server) {
+        if(!server&&manualAdpPhysics()&&name.equals(ManualAdpCompatibility.SIMULATION))return false;
         if (server && name.equals(VehicleZoneRepair.TARGET)) return serverVehicleZones != null;
         Set<String> selected = server ? SERVER_TARGETS : targets;
         return selected.stream().anyMatch(target -> name.equals(target) || name.startsWith(target + "$"));
@@ -98,10 +110,12 @@ public final class Payload {
         }
         byte[] source=baseClassBytes(name);
         if(source==null)throw new IOException("Missing prepared definition: "+name);
+        if(!server&&manualAdp==ManualAdpCompatibility.Kind.STANDARD)source=ManualAdpCompatibility.keepManualPhysics(name,source);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
         if(server)return bytes;
-        if(shoreLighting)bytes=ShoreFloorRepair.patch(name,bytes);
-        return UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
+        if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
+        bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
+        return shoreLighting?ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)):bytes;
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {
@@ -113,6 +127,7 @@ public final class Payload {
         VisualExclusions.prepareMedia(this,directory);
         try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar))) {
             for (String name : classNames()) {
+                if(!server&&manualAdpPhysics()&&name.equals(ManualAdpCompatibility.SIMULATION))continue;
                 if (server && !name.startsWith("pzopt/") && !selected(name, true)) continue;
                 output.putNextEntry(new JarEntry(name + ".class"));
                 output.write(classBytes(name, server)); output.closeEntry();

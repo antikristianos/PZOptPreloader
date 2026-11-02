@@ -60,6 +60,9 @@ public final class RuntimeState {
             releaseSource();throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed.getMessage(),candidate.root);
         }
         payload = candidate;
+        if(!server&&candidate.manualAdpPhysics())
+            System.out.println("[PZOptPreloader] Verified installed manual ADP owns WorldSimulation; massScaler and complete ADP physics retained. "
+                +(candidate.manualAdpOptimizedPhysics()?"Existing optcompat vehicle smoothing/step hooks retained.":"PZOpt vehicle smoothing/step overrides are inactive for this standard ADP process; saved options are unchanged."));
         instrumentation.appendToSystemClassLoaderSearch(helperJar);
         instrumentation.addTransformer(new Transformer(), false);
         // Define every member of the chosen families before other transformers resolve their types.
@@ -83,7 +86,7 @@ public final class RuntimeState {
             throw new IllegalStateException("Selected class escaped early injection: " + name);
         }
         status = "active " + (server ? "server (" + candidate.serverFamilyCount() + " selected override families; " + eager.size() + " class definitions)"
-            : "client (all " + payload.targets.size() + " override families; " + eager.size() + " class definitions including nested)")
+            : "client (" + (candidate.manualAdpPhysics() ? candidate.targets.stream().filter(name -> candidate.selected(name,false)).count()+" selected" : "all "+payload.targets.size()) + " override families; " + eager.size() + " class definitions including nested)")
             + "; source=" + payload.root + "; commit=" + payload.build.getProperty("commit");
         System.out.println("[PZOptPreloader] " + status);
         if(!server)try{SourceHistory.remember(candidate,actual);}catch(IOException error){System.err.println("[PZOptPreloader] original-source backup unavailable; existing snapshots retained: "+error);}

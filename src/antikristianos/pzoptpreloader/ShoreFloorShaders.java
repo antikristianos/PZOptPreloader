@@ -35,6 +35,7 @@ public final class ShoreFloorShaders {
     }
     public static CharSequence tile(CharSequence text,String fileName){
         if(text==null||fileName==null)return text;
+        text=PuddleFootprintShaders.shader(PuddlePositionState.shader(text,fileName),fileName);
         String path=fileName.replace('\\','/');
         if(path.endsWith("/water.frag")||path.endsWith("/water_hq.frag"))return water(text);
         if(!path.endsWith("/tileWithDepth.frag")&&!path.endsWith("/opaqueWithDepth.frag")&&!path.endsWith("/seamFix2.frag"))return text;

@@ -11,6 +11,7 @@ public final class ShoreFloorRepair {
         "zombie/iso/fboRenderChunk/FBORenderCell","zombie/iso/sprite/IsoSprite","zombie/core/opengl/ShaderUnit");
     private static final String LIGHT="antikristianos/pzoptpreloader/ShoreFloorLighting";
     private static final String SHADERS="antikristianos/pzoptpreloader/ShoreFloorShaders";
+    private static final String FLOOR_BODY="pzoptPreloaderRenderFloorBeforeLightingCleanup";
     private static final Map<String,Map<String,String>> METHODS=Map.of(
         "pzopt/ChunkAo",Map.of("<clinit>()V","5a7ff5a4ef4620453b5e5fb6c84bdb28acc7b94ad4a1aa02059e6c73bf2a6077",
             "context(Lpzopt/ChunkAo$Job;Lzombie/iso/fboRenderChunk/FBORenderChunk;Lzombie/iso/IsoChunk;IFZ)I","3ee1b7a91abadb2faf5ad7a64fc8f36c57c366adaa7d0ed298a710cb12497382"),
@@ -32,7 +33,13 @@ public final class ShoreFloorRepair {
         ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){
-                MethodVisitor target=super.visitMethod(a,n,d,s,e);
+                if(n.equals(FLOOR_BODY))throw new IllegalStateException("Shore floor scope already present");
+                boolean floor=name.equals("zombie/iso/fboRenderChunk/FBORenderCell")&&n.equals("renderFloor")&&d.equals("(Lzombie/iso/IsoObject;)V");
+                if(floor){
+                    hits[0]++;floorScope(super.visitMethod(a,n,d,s,e),name,d);
+                    a=(a&~(Opcodes.ACC_PUBLIC|Opcodes.ACC_PROTECTED))|Opcodes.ACC_PRIVATE;
+                }
+                MethodVisitor target=super.visitMethod(a,floor?FLOOR_BODY:n,d,s,e);
                 return new MethodVisitor(Opcodes.ASM9,target){
                     private void call(String owner,String method,String desc){super.visitMethodInsn(Opcodes.INVOKESTATIC,owner,method,desc,false);}
                     @Override public void visitCode(){
@@ -46,16 +53,12 @@ public final class ShoreFloorRepair {
                             super.visitInsn(Opcodes.ICONST_0);super.visitInsn(Opcodes.IRETURN);super.visitLabel(ordinary);
                             super.visitFrame(Opcodes.F_SAME,0,null,0,null);
                         }
-                        if(name.equals("zombie/iso/fboRenderChunk/FBORenderCell")&&n.equals("renderFloor")&&d.equals("(Lzombie/iso/IsoObject;)V")){
-                            hits[0]++;super.visitVarInsn(Opcodes.ALOAD,1);call(LIGHT,"begin","(Lzombie/iso/IsoObject;)V");
-                        }
                         if(name.equals("pzopt/ChunkAo")&&n.equals("context")&&d.equals("(Lpzopt/ChunkAo$Job;Lzombie/iso/fboRenderChunk/FBORenderChunk;Lzombie/iso/IsoChunk;IFZ)I")){
                             hits[0]++;super.visitVarInsn(Opcodes.ALOAD,0);super.visitVarInsn(Opcodes.ALOAD,2);super.visitVarInsn(Opcodes.ALOAD,1);
                             call(LIGHT,"capture","(Ljava/lang/Object;Lzombie/iso/IsoChunk;Lzombie/iso/fboRenderChunk/FBORenderChunk;)V");
                         }
                     }
                     @Override public void visitInsn(int op){
-                        if((op==Opcodes.RETURN||op==Opcodes.ATHROW)&&name.equals("zombie/iso/fboRenderChunk/FBORenderCell")&&n.equals("renderFloor")&&d.equals("(Lzombie/iso/IsoObject;)V"))call(LIGHT,"end","()V");
                         if(op==Opcodes.RETURN&&name.equals("pzopt/ChunkAo$Gl")&&n.equals("kernelUniforms")&&d.equals("([ILpzopt/ChunkAo$Job;F)V")){
                             hits[0]++;super.visitVarInsn(Opcodes.ALOAD,2);call(LIGHT,"uploadMask","(Ljava/lang/Object;)V");
                         }
@@ -90,5 +93,16 @@ public final class ShoreFloorRepair {
         };
         if(!valid)throw new IOException("Unsupported shore lighting boundary: "+name+" ("+java.util.Arrays.toString(hits)+")");
         return writer.toByteArray();
+    }
+    private static void floorScope(MethodVisitor m,String owner,String desc){
+        Label start=new Label(),end=new Label(),handler=new Label();
+        m.visitCode();m.visitTryCatchBlock(start,end,handler,"java/lang/Throwable");m.visitLabel(start);
+        m.visitVarInsn(Opcodes.ALOAD,1);m.visitMethodInsn(Opcodes.INVOKESTATIC,LIGHT,"begin",desc,false);
+        m.visitVarInsn(Opcodes.ALOAD,0);m.visitVarInsn(Opcodes.ALOAD,1);
+        m.visitMethodInsn(Opcodes.INVOKESPECIAL,owner,FLOOR_BODY,desc,false);m.visitLabel(end);
+        m.visitMethodInsn(Opcodes.INVOKESTATIC,LIGHT,"end","()V",false);m.visitInsn(Opcodes.RETURN);
+        m.visitLabel(handler);m.visitFrame(Opcodes.F_SAME1,0,null,1,new Object[]{"java/lang/Throwable"});m.visitVarInsn(Opcodes.ASTORE,2);
+        m.visitMethodInsn(Opcodes.INVOKESTATIC,LIGHT,"end","()V",false);m.visitVarInsn(Opcodes.ALOAD,2);m.visitInsn(Opcodes.ATHROW);
+        m.visitMaxs(0,0);m.visitEnd();
     }
 }
