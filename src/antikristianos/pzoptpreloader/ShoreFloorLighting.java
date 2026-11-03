@@ -19,8 +19,8 @@ public final class ShoreFloorLighting {
     private static final Map<Integer,Integer> KERNELS=new HashMap<>(); // render thread only
     private static boolean warned;
     private ShoreFloorLighting() { }
-    public static boolean active(){return CURRENT.get()!=null||ShoreReceiverState.active();}
-    public static void shaderReload(){PROGRAMS.clear();KERNELS.clear();}
+    public static boolean active(){return ShoreLandState.active()||CURRENT.get()!=null||ShoreReceiverState.active();}
+    public static void shaderReload(){PROGRAMS.clear();KERNELS.clear();ShoreLandState.shaderReload();}
     /** Native water draws pop texture attributes. Uniform caching cannot retain this sampler binding. */
     public static void waterCloudBind(){
         try{
@@ -53,6 +53,7 @@ public final class ShoreFloorLighting {
         int[] mask=MASKS.get(job);GL30.glUniform1uiv(location,mask==null?EMPTY_MASK:mask);
     }
     public static void begin(IsoObject object){
+        ShoreLandState.begin(object);
         ShoreReceiverState.begin(object);
         if(FBORenderChunkManager.instance.isCaching()||object==null||object.square==null||object.square.z!=0||object.square.chunk==null)return;
         if(object.getSprite()==null||!object.getSprite().solidfloor||!IsoWater.getInstance().getShaderEnable())return;
@@ -73,6 +74,7 @@ public final class ShoreFloorLighting {
         SpriteRenderer.instance.drawGeneric(new Binding(context,program));context.started=true;
     }
     public static void end(){
+        ShoreLandState.end();
         ShoreReceiverState.end();
         Context context=CURRENT.get();if(context==null)return;
         CURRENT.remove();if(context.started)SpriteRenderer.instance.drawGeneric(new Reset());

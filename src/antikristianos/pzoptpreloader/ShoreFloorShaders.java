@@ -39,8 +39,8 @@ public final class ShoreFloorShaders {
         String path=fileName.replace('\\','/');
         if(path.endsWith("/water.frag")||path.endsWith("/water_hq.frag"))return water(text);
         if(!path.endsWith("/tileWithDepth.frag")&&!path.endsWith("/opaqueWithDepth.frag")&&!path.endsWith("/seamFix2.frag"))return text;
-        String source=text.toString();
-        if(source.contains("pzShoreEnabled"))return text;
+        String source=ShoreLandShaders.patch(text.toString());
+        if(source.contains("pzShoreEnabled"))return source;
         ShoreFloorLighting.shaderReload();
         String output=source.contains("gl_FragData[0]")?"gl_FragData[0]":"gl_FragColor";
         if(!source.contains(output)||!source.contains("gl_FragDepth"))throw new IllegalStateException("Unsupported shore tile shader: "+path);

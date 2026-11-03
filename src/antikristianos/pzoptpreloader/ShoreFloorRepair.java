@@ -81,7 +81,7 @@ public final class ShoreFloorRepair {
                             call(SHADERS,"tile","(Ljava/lang/CharSequence;Ljava/lang/String;)Ljava/lang/CharSequence;");
                         }
                         super.visitMethodInsn(op,owner,method,desc,itf);
-                        if(tile){hits[0]++;super.visitInsn(Opcodes.POP);call(LIGHT,"tileStarted","(I)V");}
+                        if(tile){hits[0]++;super.visitInsn(Opcodes.POP);super.visitInsn(Opcodes.DUP);super.visitVarInsn(Opcodes.ALOAD,0);call("antikristianos/pzoptpreloader/ShoreLandState","tileStarted","(ILzombie/iso/sprite/IsoSprite;)V");call(LIGHT,"tileStarted","(I)V");}
                     }
                 };
             }

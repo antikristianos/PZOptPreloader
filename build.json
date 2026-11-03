@@ -432,8 +432,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/PuddleFootprintShaders.class",
-      "Size": 10550,
-      "Sha256": "6DFA9D56553C27985381D82F3A10E980F9E878A9650DED1C9EEF9D156875E0DB"
+      "Size": 8192,
+      "Sha256": "D21EF1DA8D06670C093284662DF4C09E2A92F8EA56A44752D6565712A5CB1B31"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PuddleFootprintState$1.class",
@@ -443,12 +443,12 @@
     {
       "Path": "antikristianos/pzoptpreloader/PuddleFootprintState$Scope.class",
       "Size": 444,
-      "Sha256": "3CA923348C833CE01614D16716AC4EB8E377068E6531B4A3AB9B64BEE7E15E63"
+      "Sha256": "0A03614ACA4C8B86AAB4A9FFF9C5FEED2FB837EECC34EC4F7CEC767BE1003093"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PuddleFootprintState.class",
-      "Size": 7536,
-      "Sha256": "3AB7929200445DE1F5E389D995544B1EDE214967834C3E96381E4FE6F5ECD25A"
+      "Size": 8276,
+      "Sha256": "BF76EEF7CB1A45CED4C2D97A64131287DF8FDF5AA1528A903E7E1092C0EA35EE"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PuddleMatrixRepair$1$1.class",
@@ -588,42 +588,42 @@
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Access.class",
       "Size": 3314,
-      "Sha256": "292B48C35D5F43415DE13C57348F447E8D6C02DCC4940A895AA53249FA530997"
+      "Sha256": "9A8573F5D5717D9AE2872650434B60C89E1F30C1CFE8C085B7DE4DCC75274BFB"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Binding.class",
       "Size": 5864,
-      "Sha256": "4693CF7AC4820C99FD30471EE3FD6264E8FE6758B7F8914F6419BFBE9045F026"
+      "Sha256": "414FDF5879A76B8401040AE0DA29E47C5A25A72E3ED934099B498B36EB167883"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Bound.class",
       "Size": 605,
-      "Sha256": "FDBACA52A695CE11AFC92D03E77F2CFCE5601DB604B58641994FF0C84345E956"
+      "Sha256": "A27A45C1BCDD83495E2498536032F6746E5EA65ABB2A6BD5EF1137E0833555F6"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Context.class",
       "Size": 1467,
-      "Sha256": "C2CCCE5DE03E737524B3ADB15CC2EC2EDC126495C50DDF862048BD168D64461A"
+      "Sha256": "153B38296272325971E9327E72ECF176C2477DEED544A089C991B4A9985EF5A6"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Reset.class",
       "Size": 1354,
-      "Sha256": "0EA0AF717E6D74FF2D2F6E46D729319887D3F00DB3458C5B2A256086D6EAB024"
+      "Sha256": "062A7B284B9664EC61FCCEE4F4A729887468B73821C536C3B57EA574DAF92CC2"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting$Uniforms.class",
       "Size": 1603,
-      "Sha256": "4B2EC605D7F2C5C2A0EE15A12BA5E19354CD900169D57FCDF25B3BFE77530D6F"
+      "Sha256": "7F73E0AAA7A34A84ADFFCF0C15D6C8BECA595F555EA1CB9B8D674DD1844C78DA"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorLighting.class",
-      "Size": 8162,
-      "Sha256": "208AD58C7653DE5473B739B481B444E97AA2850F3B1D2B18CA3B7BD47BDD07F5"
+      "Size": 8261,
+      "Sha256": "3721AECBCF3A23D0607CE6CABEA47899DA8C5FAA51701C76CDCFA3258FF85730"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorRepair$1$1.class",
-      "Size": 3829,
-      "Sha256": "EC18C362D89C49B9F39E860BADCA3F2477C50616EE6FB7352A57BD26653EB825"
+      "Size": 3943,
+      "Sha256": "6807FC196A4C68ED46FF556A1942D03F362829047EB8B1CC26215E134C3DED39"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorRepair$1.class",
@@ -637,8 +637,33 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreFloorShaders.class",
-      "Size": 8068,
-      "Sha256": "156E16F32163F1E47D92C1E1330165F13181875F2A17B1E2A0151AED48D01EA7"
+      "Size": 8141,
+      "Sha256": "55542E76E028A049AF16783A22A1CD61377F41AECDEF4E52B58981FA5D464966"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreLandShaders.class",
+      "Size": 4851,
+      "Sha256": "0FC29ECD5E9ECDDA73A990EDB30BE7C5B0A14596D6F7F920FDE46E55C913B297"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreLandState$Floor.class",
+      "Size": 564,
+      "Sha256": "AD2AB7B47305E695AD3B018CCB335E618D5AFC119BA5CFF938722FA761F9CBA8"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreLandState$Marker.class",
+      "Size": 2791,
+      "Sha256": "1739FC9DADF35A0208470620784009984C96E1C07CEB8B3AA08DE6D1C3A1246D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreLandState$Pool.class",
+      "Size": 702,
+      "Sha256": "90F951AB43229A04689D19D5AA7509C8A8937D55A6A8679C1CC809C6C75F0517"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ShoreLandState.class",
+      "Size": 7428,
+      "Sha256": "51406F37045FFFB86C2568505D6DFEAF148D110769BBAB3E6E96F4B8CE897C7B"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ShoreReceiverRepair$1.class",

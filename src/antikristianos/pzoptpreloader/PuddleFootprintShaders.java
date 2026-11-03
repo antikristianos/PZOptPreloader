@@ -58,26 +58,6 @@ public final class PuddleFootprintShaders {
         uniform vec2 pzPuddleMaskInvSize;
         flat varying float pzPuddleOwner;
         flat varying vec2 pzPuddleCentre;
-        bool pzPuddleAdjacentOwners(float a,float b) {
-            vec2 ta=vec2(mod(a-1.0,4096.0),floor((a-1.0)/4096.0));
-            vec2 tb=vec2(mod(b-1.0,4096.0),floor((b-1.0)/4096.0));
-            vec2 delta=abs(ta-tb);delta=min(delta,vec2(4096.0)-delta);
-            return delta.x+delta.y==1.0;
-        }
-        float pzPuddleSharedPair(vec2 pixel,vec2 direction) {
-            vec3 a=texture2D(pzPuddleMask,(pixel+direction)*pzPuddleMaskInvSize).rgb;
-            vec3 b=texture2D(pzPuddleMask,(pixel-direction)*pzPuddleMaskInvSize).rgb;
-            if(a.g<0.9999||b.g<0.9999||a.b==0.0||b.b==0.0||a.b==b.b)return 0.0;
-            // One deterministic owner prevents the expanded neighbouring quads from double blending.
-            return pzPuddleAdjacentOwners(a.b,b.b)?min(a.b,b.b):0.0;
-        }
-        float pzPuddleSharedEdgeOwner(vec2 pixel) {
-            // Actual mask neighbours bound the gap; ideal diamond rounding must not reject it.
-            float owner=pzPuddleSharedPair(pixel,vec2(1,0));if(owner!=0.0)return owner;
-            owner=pzPuddleSharedPair(pixel,vec2(0,1));if(owner!=0.0)return owner;
-            owner=pzPuddleSharedPair(pixel,vec2(1,1));if(owner!=0.0)return owner;
-            return pzPuddleSharedPair(pixel,vec2(1,-1));
-        }
         void pzPuddleFootprint() {
             vertColour=pzRaw_vertColour;puddlesDirNE=pzRaw_puddlesDirNE;puddlesDirNW=pzRaw_puddlesDirNW;
             puddlesDirAll=pzRaw_puddlesDirAll;puddlesDirNone=pzRaw_puddlesDirNone;
@@ -89,7 +69,6 @@ public final class PuddleFootprintShaders {
             puddlesDirAll+=(dFdx(pzRaw_puddlesDirAll)*distance.x+dFdy(pzRaw_puddlesDirAll)*distance.y)/16.0;
             puddlesDirNone+=(dFdx(pzRaw_puddlesDirNone)*distance.x+dFdy(pzRaw_puddlesDirNone)*distance.y)/16.0;
             float owner=texture2D(pzPuddleMask,gl_FragCoord.xy*pzPuddleMaskInvSize).b;
-            if(owner==0.0)owner=pzPuddleSharedEdgeOwner(gl_FragCoord.xy);
             if(owner!=pzPuddleOwner)discard;
         }
         """;

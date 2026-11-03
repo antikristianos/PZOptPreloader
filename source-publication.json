@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.79",
-  "ModVersion": "1.5.4",
-  "CollectionVersion": "1.79",
+  "Tag": "wip-1.80",
+  "ModVersion": "1.5.5",
+  "CollectionVersion": "1.80",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "75BCB1A8F4159FBD170844988FC7F416500C7AFC17CFBE19A442AADF765D455B",
+  "UploadManifestSha256": "C40AF9B59B6D599DBF4132FD357BA4C7187FF9922DADECF261FA4A433C859349",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.22/media/java/PZOptPreloader.jar",
-    "Size": 2072586,
-    "Sha256": "2CF25047EC6E8EA819CE58644F60A584615A6FE5A2B055137DCBA57490498E47"
+    "Size": 2080904,
+    "Sha256": "70E53F28BD27DA95D937F41A8C9C361771ACE5AEB397CCF9E18FA49AE7FAF36D"
   },
   "Sources": [
     {
@@ -23,17 +23,17 @@
     {
       "Path": "MANIFEST.MF",
       "Size": 111,
-      "Sha256": "B5DBF33241476EBBD2ADA8626E6C825B76EC764457FA65AAFF3665749D6C4C6F"
+      "Sha256": "707F2E6BADCB07C03C20618B483DEE85FFEF033D3C81DFFCA4D6B791B5F3F8CF"
     },
     {
       "Path": "README.md",
       "Size": 1489,
-      "Sha256": "0B277829443E428864B53A8A68CB490F179462619D1038DC0D6856821DB7D9CF"
+      "Sha256": "9041AC6A14D86F3A100C0189F0364DE5F7CBA1684F95F63C1ECA9EB018A0DA27"
     },
     {
       "Path": "build.json",
-      "Size": 54691,
-      "Sha256": "38896EBA64EDA2D8F697545EEB47F7D889F5F32A3776456296C73FCC358CB4DF"
+      "Size": 55653,
+      "Sha256": "A38E09287BFB121F266CEBEE88A229A6E1F6C8FDCC45D2BCFBE3945486FB4135"
     },
     {
       "Path": "build.ps1",
@@ -92,8 +92,8 @@
     },
     {
       "Path": "runtime/42.22/mod.info",
-      "Size": 672,
-      "Sha256": "A8B55696B9A559198A1A1D8EB6F4C2073A6933312AE9148B995D5568582B553B"
+      "Size": 673,
+      "Sha256": "E6EF6CFE75A141DA06F95D21B81781ABA2860E83819D4C3C3719C871B111726A"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
@@ -227,13 +227,13 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PuddleFootprintShaders.java",
-      "Size": 6714,
-      "Sha256": "7D83A774E2339A60592096D22BE48B85F4A64A2BB57B148DE4BE17D41AB57C69"
+      "Size": 5367,
+      "Sha256": "6B83ED50A3A54BEF2C43E142957BA3E3895E83B97F5E5267C379C4C0290EFDF5"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PuddleFootprintState.java",
-      "Size": 5683,
-      "Sha256": "0C3CDE47A4A7BA0BE0EE4F3232B5CB545CBC661F39E3929C6778BCC4334B34E2"
+      "Size": 6033,
+      "Sha256": "1953498B9DD9DD2E37F6FFEE606ED43B65D6602F06A36DCD76EB37BA8B81275A"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PuddleMatrixRepair.java",
@@ -282,18 +282,28 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ShoreFloorLighting.java",
-      "Size": 12825,
-      "Sha256": "BF69CC1623409AE9612DD1CB1E89C76F8BF78AC59151C006B3DD08E16DF5DB68"
+      "Size": 12948,
+      "Sha256": "EBCAE80226801EBDB2EACDF465CDB69F24C62E6D4C39495EC17A066323974CE4"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ShoreFloorRepair.java",
-      "Size": 8656,
-      "Sha256": "A7F5ADC2334804E8518CE460E09F54BDB0EA4520FCFD4B7640A967D9457820CE"
+      "Size": 8824,
+      "Sha256": "7A7DE55283EDEA494E1B688875657AA5AD49B7AFA93F00B55B45459AF244E3DD"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ShoreFloorShaders.java",
-      "Size": 6580,
-      "Sha256": "44975ADE590D7C804410CC79CA2D52D53F48E9D1D02E83FC419B2EED1B7D35C9"
+      "Size": 6606,
+      "Sha256": "CBFA1578F756505BF8CE62496C872450E136B0ED2083ED23D266DDF7A0A676FA"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/ShoreLandShaders.java",
+      "Size": 2814,
+      "Sha256": "149722735725C331DFE9DF5B2FBB48B8273E05AEB2978A19B79DBF4EAA50DAC1"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/ShoreLandState.java",
+      "Size": 5485,
+      "Sha256": "C50903078FAD758D7BAC9A8FB4EC74B7773411054B98B017857DEF0ACF5C6C1D"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ShoreReceiverRepair.java",

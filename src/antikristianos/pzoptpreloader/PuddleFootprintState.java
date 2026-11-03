@@ -17,6 +17,7 @@ public final class PuddleFootprintState {
     private static final Map<Integer,int[]> UNIFORMS=new HashMap<>();
     private static final ArrayList<Scope> SCOPES=new ArrayList<>();
     private static int depth;
+    private static boolean markedLogged;
     private static final class Scope {int program,enabled;float prior;boolean bound;}
     private PuddleFootprintState() { }
     private static Field field(Class<?> type,String name){try{Field f=type.getDeclaredField(name);f.setAccessible(true);return f;}catch(ReflectiveOperationException e){throw new ExceptionInInitializerError(e);}}
@@ -42,6 +43,7 @@ public final class PuddleFootprintState {
             float centre=(values[at+15]+values[at+31])*.5f;if(!Float.isFinite(centre)||centre<0||centre>1)return;
             for(int v=0;v<4;v++){float none=values[at+v*8+3],z=values[at+v*8+7];if((none!=0&&none!=1)||!Float.isFinite(z)||z<0||z>1)return;}
             for(int v=0;v<4;v++)values[at+v*8+3]=16+8*values[at+v*8+3]+4*centre;
+            if(!markedLogged){markedLogged=true;System.out.println("[PZOptPreloader] shore puddle geometry marked texture="+square.getFloor().getCurrentFrameTex().getName());}
         }catch(IllegalAccessException e){throw new IllegalStateException("Native shore puddle metadata unavailable",e);}
     }
     public static void shaderReload(){UNIFORMS.clear();}
@@ -60,10 +62,11 @@ public final class PuddleFootprintState {
     public static void begin(){
         if(depth==SCOPES.size())SCOPES.add(new Scope());Scope scope=SCOPES.get(depth++);scope.bound=false;scope.enabled=-1;
         scope.program=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);if(scope.program==0)return;
-        int[] u=UNIFORMS.computeIfAbsent(scope.program,p->new int[]{GL20.glGetUniformLocation(p,"pzPuddleMaskEnabled"),GL20.glGetUniformLocation(p,"pzPuddleMask"),GL20.glGetUniformLocation(p,"pzPuddleMaskInvSize"),GL20.glGetUniformLocation(p,"pzPuddleMaskViewport")});
+        int[] u=UNIFORMS.computeIfAbsent(scope.program,p->new int[]{GL20.glGetUniformLocation(p,"pzPuddleMaskEnabled"),GL20.glGetUniformLocation(p,"pzPuddleMask"),GL20.glGetUniformLocation(p,"pzPuddleMaskInvSize"),GL20.glGetUniformLocation(p,"pzPuddleMaskViewport"),0});
         if(u[0]<0)return;scope.enabled=u[0];scope.prior=GL20.glGetUniformf(scope.program,u[0]);
         scope.bound=ShoreReceiverState.puddleBegin();GL20.glUniform1f(u[0],scope.bound?1:0);
         if(scope.bound){GL20.glUniform1i(u[1],ShoreReceiverState.PUDDLE_UNIT);ShoreReceiverState.puddleUniforms(u[2],u[3]);}
+        if(scope.bound&&u[4]==0){u[4]=1;System.out.println("[PZOptPreloader] shore puddle mask shader="+scope.program+" active");}
     }
     public static void end(){
         if(depth==0)return;Scope scope=SCOPES.get(--depth);
