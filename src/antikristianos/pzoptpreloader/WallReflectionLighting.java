@@ -19,7 +19,7 @@ public final class WallReflectionLighting {
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Physical wall lighting metadata",error);}
     }
     public static void drawArrays(int mode,int first,int count,Object gl,Object job){
-        GL11.glDrawArrays(mode,first,count);if(applying)return;
+        PhysicalShadowSources.draw(mode,first,count,job);if(applying)return;
         try{WallReflectionSource.mirrorLighting(mode,first,count,Access.INSTANCE.colour.getInt(job));}
         catch(IllegalAccessException error){throw new IllegalStateException(error);}
     }

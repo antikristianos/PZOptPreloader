@@ -27,7 +27,7 @@ public final class ShoreReceiverRepair {
         Map<String,String> pins=PINS.get(name);if(pins==null)return bytes;
         ClassReader reader=new ClassReader(bytes);if(!reader.getClassName().equals(name))throw new IOException("Shore receiver class identity: "+name);
         Map<String,String> actual=Compatibility.methods(bytes);
-        for(var pin:pins.entrySet())if(!pin.getValue().equals(actual.get(pin.getKey())))throw new IOException("Unsupported shore receiver boundary: "+name+"."+pin.getKey());
+        for(var pin:pins.entrySet())if(!RepairProfiles.matches(pin.getValue(),actual.get(pin.getKey())))throw new IOException("Unsupported shore receiver boundary: "+name+"."+pin.getKey());
         int[] collision={0};reader.accept(new ClassVisitor(Opcodes.ASM9){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){if(n.startsWith(PREFIX))collision[0]++;return null;}
         },ClassReader.SKIP_CODE);

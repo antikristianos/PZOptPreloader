@@ -19,7 +19,7 @@ public final class TextureSamplingRepair {
         if(!TARGETS.contains(name))return bytes;
         boolean texture=name.endsWith("/TextureID");
         String method=texture?"assignFilteringFlags":"run";
-        if(!HASHES.get(name).equals(Compatibility.methods(bytes).get(method+"()V")))
+        if(!RepairProfiles.matches(HASHES.get(name),Compatibility.methods(bytes).get(method+"()V")))
             throw new IOException("Unsupported sampler-cache boundary: "+name+"."+method);
         ClassReader reader=new ClassReader(bytes);
         if(!reader.getClassName().equals(name))throw new IOException("Sampler class identity: "+name);

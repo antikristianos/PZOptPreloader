@@ -16,7 +16,7 @@ public final class PeekNativeApi {
     private PeekNativeApi() { }
     public static synchronized void install() throws Exception {
         if(installed)return;
-        if(!Compatibility.CURRENT.equals(zombie.GitVersion.REVISION))throw new IllegalStateException("Peek API adapter requires the verified B42.22 game");
+        if(!Compatibility.currentGame())throw new IllegalStateException("Peek API adapter requires the verified B42.22 game");
         ClassLoader loader=PeekNativeApi.class.getClassLoader();
         URL resource=loader.getResource(PREFIX+"PeekAViewMod.class");
         if(resource==null || !(resource.openConnection() instanceof JarURLConnection connection))throw new IOException("Selected PeekAView JAR is unavailable");
@@ -37,7 +37,7 @@ public final class PeekNativeApi {
             }
         }
         Map<String,byte[]> checked=new HashMap<>();
-        for(String name:RuntimeState.payload.classNames())checked.put(name,RuntimeState.payload.baseClassBytes(name));
+        for(String name:RuntimeState.payload.classNames())checked.put(name,RuntimeState.payload.classBytes(name,false));
         checked.putAll(foreign);
         try(JarFile game=new JarFile(Compatibility.gameJar().toFile())){ClassReferences.verify(checked,game);}
         var field=Class.forName("me.zed_0xff.zombie_buddy.Loader").getDeclaredField("g_instrumentation");field.setAccessible(true);

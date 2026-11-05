@@ -37,6 +37,7 @@ public final class ShoreFloorShaders {
         if(text==null||fileName==null)return text;
         text=PuddleFootprintShaders.shader(PuddlePositionState.shader(text,fileName),fileName);
         String path=fileName.replace('\\','/');
+        if(path.endsWith("/floorTile.frag"))return ShoreWeatherShaders.snow(text);
         if(path.endsWith("/water.frag")||path.endsWith("/water_hq.frag"))return water(text);
         if(!path.endsWith("/tileWithDepth.frag")&&!path.endsWith("/opaqueWithDepth.frag")&&!path.endsWith("/seamFix2.frag"))return text;
         String source=ShoreLandShaders.patch(text.toString());
@@ -54,23 +55,28 @@ public final class ShoreFloorShaders {
     private static CharSequence water(CharSequence text){
         String source=text.toString();
         if(source.contains("pzShoreWaterBase"))return text;
-        String anchor="fragColor = pzSsrApply(fragColor, gm);";
-        if(!source.contains(anchor))return text; // SSR disabled: preserve the native program exactly.
-        return replaceOnce(source,anchor,"""
-            vec4 pzShoreWaterBase = fragColor;
-            fragColor = pzSsrApply(fragColor, gm);
+        String prefix="fragColor = pzSsrApply(fragColor, gm";
+        int start=source.indexOf(prefix);
+        if(start<0)return text; // SSR disabled: preserve the native program exactly.
+        int end=source.indexOf(';',start);
+        if(end<0||source.indexOf(prefix,start+prefix.length())>=0)throw new IllegalStateException("Ambiguous shore reflection call");
+        // Preserve every original argument, including the new release's flow/phase expressions.
+        String anchor=source.substring(start,end+1);
+        return replaceOnce(source,anchor,"vec4 pzShoreWaterBase = fragColor;\n"+anchor+"\n"+"""
             // Recover straight colour before restoring coverage: simply restoring alpha
             // would overweight the reflected colour at partially covered bank pixels.
             fragColor.rgb = mix(pzShoreWaterBase.rgb, fragColor.rgb, fragColor.a);
             fragColor.a = pzShoreWaterBase.a;
             """);
     }
-    public static final String TILE="""
+        public static final String TILE="""
         uniform float pzShoreEnabled;
         uniform sampler2D pzShoreTerm, pzShoreOld;
         uniform vec4 pzShoreX, pzShoreY;
         uniform vec4 pzShoreParams;
         uniform vec4 pzShoreCloudRead;
+        uniform sampler2D pzShoreWeather;
+        uniform float pzShoreWeatherEnabled;
         uniform sampler2D pzCloudFieldW;
         uniform vec4 pzCloudU, pzCloudV, pzCloudP, pzCloudD, pzCloudE;
         float pzShoreDirectShare(vec2 uv) {
@@ -94,6 +100,10 @@ public final class ShoreFloorShaders {
             if (pzShoreEnabled < 0.5) return;
             vec4 pixel = vec4(gl_FragCoord.xy, 0.0, 1.0);
             vec2 uv = vec2(dot(pzShoreX, pixel), dot(pzShoreY, pixel));
+            if (pzShoreWeatherEnabled > 0.5) {
+                vec4 weather = texture2D(pzShoreWeather, uv);
+                PZ_SHORE_OUT.rgb = weather.rgb + PZ_SHORE_OUT.rgb * (1.0 - weather.a);
+            }
             float light = 1.0;
             if (pzShoreParams.x > 0.5) {
                 light = texture2D(pzShoreTerm, uv, -8.0).r;

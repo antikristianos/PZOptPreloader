@@ -16,6 +16,7 @@ public final class Payload {
     final Map<String,String> originalClassHashes=new TreeMap<>();
     private byte[] serverVehicleZones;
     private Map<String,byte[]> prepared;
+    private Map<String,byte[]> emitted;
     private Properties effectiveBuild;
     private boolean shoreLighting;
     private ManualAdpCompatibility.Kind manualAdp=ManualAdpCompatibility.Kind.ABSENT;
@@ -32,7 +33,7 @@ public final class Payload {
         if(prepared!=null)return;
         Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
         Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
-        ManualAdpCompatibility.Kind installedManualAdp="e013dbb529".equals(actual)&&!RuntimeState.server
+        ManualAdpCompatibility.Kind installedManualAdp=Compatibility.isCurrent(actual)&&!RuntimeState.server
             ?ManualAdpCompatibility.detect():ManualAdpCompatibility.Kind.ABSENT;
         if(installedManualAdp!=ManualAdpCompatibility.Kind.ABSENT){
             Properties owned=new Properties();owned.putAll(metadata==null?build:metadata);
@@ -40,11 +41,18 @@ public final class Payload {
                 .filter(name->!name.equals(ManualAdpCompatibility.SIMULATION)).toList()));
             metadata=owned;
         }
-        prepared=candidate;effectiveBuild=metadata;shoreLighting="e013dbb529".equals(actual);manualAdp=installedManualAdp;
+        prepared=candidate;effectiveBuild=metadata;shoreLighting=Compatibility.isCurrent(actual);manualAdp=installedManualAdp;
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
-    public Set<String> classNames(){return Collections.unmodifiableSet(prepared==null?classes.keySet():prepared.keySet());}
-    public boolean hasClass(String name){return prepared==null?classes.containsKey(name):prepared.containsKey(name);}
+    public Set<String> classNames(){return Collections.unmodifiableSet(emitted!=null?emitted.keySet():prepared==null?classes.keySet():prepared.keySet());}
+    public boolean hasClass(String name){return emitted!=null?emitted.containsKey(name):prepared==null?classes.containsKey(name):prepared.containsKey(name);}
+    public void prepareEarlyEmission(Map<String,byte[]> loaded) throws IOException {
+        Map<String,byte[]> definitions=new TreeMap<>();
+        for (String name:classNames()) definitions.put(name,classBytes(name,false));
+        EarlyClassAdapter adapter=EarlyClassAdapter.prepare(definitions,loaded);
+        try (JarFile game=new JarFile(Compatibility.gameJar().toFile())) { ClassReferences.verify(definitions,game); }
+        emitted=definitions; adapter.activate();
+    }
     public boolean manualAdpPhysics(){return manualAdp!=ManualAdpCompatibility.Kind.ABSENT;}
     public boolean manualAdpOptimizedPhysics(){return manualAdp==ManualAdpCompatibility.Kind.OPTCOMPAT;}
     public static final Set<String> SERVER_TARGETS = Set.of(
@@ -104,6 +112,11 @@ public final class Payload {
     public int serverFamilyCount() { return SERVER_TARGETS.size() + (serverVehicleZones == null ? 0 : 1); }
 
     public byte[] classBytes(String name, boolean server) throws IOException {
+        if (emitted!=null&&!server) {
+            byte[] bytes=emitted.get(name);
+            if (bytes==null) throw new IOException("Missing emitted definition: "+name);
+            return bytes.clone();
+        }
         if (server && name.equals(VehicleZoneRepair.TARGET)) {
             if (serverVehicleZones == null) throw new IOException("Unverified server vehicle-zone override refused");
             return serverVehicleZones.clone();
@@ -113,9 +126,10 @@ public final class Payload {
         if(!server&&manualAdp==ManualAdpCompatibility.Kind.STANDARD)source=ManualAdpCompatibility.keepManualPhysics(name,source);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
         if(server)return bytes;
+        if(shoreLighting)bytes=SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes));
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
-        return shoreLighting?ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)):bytes;
+        return shoreLighting?OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))):bytes;
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {

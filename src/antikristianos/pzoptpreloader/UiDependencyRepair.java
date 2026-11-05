@@ -24,7 +24,7 @@ public final class UiDependencyRepair {
         ClassReader reader=new ClassReader(bytes);
         if(!reader.getClassName().equals(name))throw new IOException("UI dependency class identity: "+name);
         Map<String,String> actual=Compatibility.methods(bytes);
-        for(var pin:pins.entrySet())if(!pin.getValue().equals(actual.get(pin.getKey())))
+        for(var pin:pins.entrySet())if(!RepairProfiles.matches(pin.getValue(),actual.get(pin.getKey())))
             throw new IOException("Unsupported UI dependency boundary: "+name+"."+pin.getKey());
         int[] collisions={0},hits={0};
         reader.accept(new ClassVisitor(Opcodes.ASM9){

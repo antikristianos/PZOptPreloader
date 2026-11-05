@@ -15,7 +15,7 @@ public final class PuddleMatrixState {
     public static void jiggle(ShaderProgram program){program.setVector2("pzNativePuddleJiggle",jiggleX,jiggleY);}
 
     public static void restore(ShaderProgram program){
-        if(program==null||RuntimeState.server||!Compatibility.CURRENT.equals(zombie.GitVersion.REVISION))return;
+        if(program==null||RuntimeState.server||!Compatibility.currentGame())return;
         // PuddleVbo overrides only the GPU uniform with its translated matrix. The native metadata still describes BASE.
         // A later native setModelViewProjection may therefore skip its upload; make that cache hit truthful again.
         BASE.set(program.projection).mul(program.modelView);

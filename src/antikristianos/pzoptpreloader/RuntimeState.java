@@ -44,16 +44,28 @@ public final class RuntimeState {
         Field field = Class.forName("me.zed_0xff.zombie_buddy.Loader").getDeclaredField("g_instrumentation");
         field.setAccessible(true); instrumentation = (Instrumentation) field.get(null);
         if (instrumentation == null) throw new IllegalStateException("ZombieBuddy instrumentation is unavailable");
+        PzfbSignedPackages.Prepared signedPzfb=server?null:PzfbSignedPackages.prepare(instrumentation);
         if(!Compatibility.LEGACY.equals(actual))ListStorage.install(instrumentation);
         Map<Class<?>, LambdaAdapter.Prepared> pending = new LinkedHashMap<>();
         try{
+        boolean extended=!server&&Compatibility.extendedSource(candidate);
+        Map<Class<?>,byte[]> loaded=new LinkedHashMap<>();
         for (Class<?> cls : instrumentation.getAllLoadedClasses()) {
             String name = cls.getName().replace('.', '/');
             if (!candidate.selected(name, server)) continue;
             try (InputStream input = cls.getClassLoader().getResourceAsStream(name + ".class")) {
                 if (input == null) throw new IOException("Cannot read the already loaded schema: " + name);
-                pending.put(cls, LambdaAdapter.prepare(name, input.readAllBytes(), candidate.classBytes(name, server)));
+                byte[] original=input.readAllBytes();
+                if (extended) loaded.put(cls,original);
+                else pending.put(cls, LambdaAdapter.prepare(name, original, candidate.classBytes(name, server)));
             }
+        }
+        if (extended) {
+            Map<String,byte[]> schemas=new TreeMap<>();
+            loaded.forEach((cls,bytes)->schemas.put(cls.getName().replace('.','/'),bytes));
+            candidate.prepareEarlyEmission(schemas);
+            for(Class<?> cls:loaded.keySet()) pending.put(cls,new LambdaAdapter.Prepared(
+                candidate.classBytes(cls.getName().replace('.','/'),false),null,null));
         }
         helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
         }catch(Exception failed){
@@ -65,6 +77,10 @@ public final class RuntimeState {
                 +(candidate.manualAdpOptimizedPhysics()?"Existing optcompat vehicle smoothing/step hooks retained.":"PZOpt vehicle smoothing/step overrides are inactive for this standard ADP process; saved options are unchanged."));
         instrumentation.appendToSystemClassLoaderSearch(helperJar);
         instrumentation.addTransformer(new Transformer(), false);
+        if(signedPzfb!=null)PzfbSignedPackages.define(signedPzfb);
+        if(!server)ManualAdpCompatibility.defineSignedPhysics(candidate,instrumentation);
+        int signedHelpers=SignedPackageHelpers.define(candidate,server,instrumentation,helperJar);
+        if(signedHelpers>0)System.out.println("[PZOptPreloader] "+signedHelpers+" installed helpers defined in their native package protection domains");
         // Define every member of the chosen families before other transformers resolve their types.
         // JVM instrumentation suppresses recursive transformation during a transformer callback.
         Set<String> buddyTargets = Set.of("zombie/GameWindow", "zombie/gameStates/GameLoadingState", "org/lwjglx/opengl/Display");

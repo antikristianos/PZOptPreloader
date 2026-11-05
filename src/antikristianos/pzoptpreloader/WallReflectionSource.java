@@ -19,6 +19,7 @@ public final class WallReflectionSource {
     private static Source renderingSource, pendingComposite;
     private static final Map<Texture,Source> SOURCES=new IdentityHashMap<>();
     private static final Map<Integer,Source> BY_COLOUR=new HashMap<>();
+    private static final Map<Integer,Source> BY_DEPTH=new HashMap<>();
     private static final java.util.concurrent.ConcurrentHashMap<Texture,Boolean> WANTED=new java.util.concurrent.ConcurrentHashMap<>(); // render thread
     private static final Map<Integer,Boolean> COMPOSITES=new HashMap<>();
     private static final FrameCommands[] COMMANDS={new FrameCommands(),new FrameCommands(),new FrameCommands()};
@@ -29,6 +30,7 @@ public final class WallReflectionSource {
 
     /** Only calls made by the explicit physical-source pass bypass camera cutaway. */
     public static int cutaway(int value){return sourceCpu?0:value;}
+    public static boolean translucentTree(boolean value){return !sourceCpu&&value;}
     public static boolean sourcePass(){return sourceCpu;}
     public static long captures(){return captures;}
     public static long nativeBegins(){return nativeBegins;}
@@ -54,20 +56,22 @@ public final class WallReflectionSource {
                 IsoGridSquare square=chunk.getGridSquare(x,y,sourceLevel);if(square==null)continue;
                 List<IsoObject> objects=square.getObjects();
                 for(int i=0;i<objects.size();i++){
-                    IsoObject object=objects.get(i);if(!wall(object))continue;command.candidates=true;
+                    IsoObject object=objects.get(i);if(!physical(object))continue;command.candidates=true;
                     ObjectRenderInfo info=object.getRenderInfo(player);
                     float alpha=object.getAlpha(player),target=object.getTargetAlpha(player),sx=object.sx,sy=object.sy;
                     float targetInfo=info.targetAlpha,renderAlpha=info.renderAlpha;
                     float rx=info.renderX,ry=info.renderY,rw=info.renderWidth,rh=info.renderHeight,rsx=info.renderScaleX,rsy=info.renderScaleY;
                     boolean cut=info.cutaway,outline=info.cutawayOutline,noPicking=object.noPicking;
+                    boolean treeFlag=object instanceof IsoTree tree&&tree.renderFlag;
                     try{
                         info.targetAlpha=1.0f;info.cutaway=false;info.cutawayOutline=false;object.setAlphaAndTarget(player,1.0f);
-                        Access.render(cell,object);captures++;
+                        Access.render(cell,object,wall(object));captures++;
                     }finally{
                         object.setAlpha(player,alpha);object.setTargetAlpha(player,target);object.sx=sx;object.sy=sy;
                         info.targetAlpha=targetInfo;info.renderAlpha=renderAlpha;info.renderX=rx;info.renderY=ry;
                         info.renderWidth=rw;info.renderHeight=rh;info.renderScaleX=rsx;info.renderScaleY=rsy;
                         info.cutaway=cut;info.cutawayOutline=outline;object.noPicking=noPicking;
+                        if(object instanceof IsoTree tree)tree.renderFlag=treeFlag;
                     }
                 }
             }
@@ -84,6 +88,9 @@ public final class WallReflectionSource {
         return sprite.cutN||sprite.cutW||object.isWallSE()||type==IsoObjectType.doorFrN||type==IsoObjectType.doorFrW
             ||type==IsoObjectType.doorN||type==IsoObjectType.doorW||object instanceof IsoDoor
             ||object instanceof IsoThumpable thump&&thump.isDoor();
+    }
+    private static boolean physical(IsoObject object){
+        return object!=null&&object.getDoRender()&&!object.isSpriteInvisible()&&object.getSprite()!=null&&!object.getSprite().solidfloor;
     }
     private static FrameCommands commands(){
         int index=SpriteRenderer.instance.getMainStateIndex();FrameCommands commands=COMMANDS[Math.floorMod(index,COMMANDS.length)];
@@ -109,7 +116,7 @@ public final class WallReflectionSource {
     private static final class Source {
         final FBORenderChunk owner;final Texture depth,colour;final IsoChunk chunk;final int w,h,storageW,storageH,originalColour;
         int fbo,colourId,depthId,nativeFbo;boolean clear=true,valid,removed,hasPixels;volatile boolean rebuildQueued;
-        Source(Capture capture){owner=capture.owner;depth=capture.depth;colour=capture.colour;chunk=capture.chunk;w=capture.width;h=capture.height;storageW=colour.getWidthHW();storageH=colour.getHeightHW();originalColour=colour.getID();BY_COLOUR.put(originalColour,this);}
+        Source(Capture capture){owner=capture.owner;depth=capture.depth;colour=capture.colour;chunk=capture.chunk;w=capture.width;h=capture.height;storageW=colour.getWidthHW();storageH=colour.getHeightHW();originalColour=colour.getID();BY_COLOUR.put(originalColour,this);BY_DEPTH.put(depth.getID(),this);}
         void ensure(){
             if(fbo!=0)return;
             int previous=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING),active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
@@ -126,7 +133,7 @@ public final class WallReflectionSource {
             }finally{GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,previous);GL11.glBindTexture(GL11.GL_TEXTURE_2D,texture);GL13.glActiveTexture(active);}
         }
         void dropImages(){if(fbo!=0)GL30.glDeleteFramebuffers(fbo);if(colourId!=0)GL11.glDeleteTextures(colourId);if(depthId!=0)GL11.glDeleteTextures(depthId);fbo=colourId=depthId=0;valid=false;hasPixels=false;clear=true;}
-        void release(){dropImages();removed=true;WANTED.remove(depth);if(BY_COLOUR.get(originalColour)==this)BY_COLOUR.remove(originalColour);WallReflectionLighting.remove(depth.getID());}
+        void release(){dropImages();removed=true;WANTED.remove(depth);if(BY_COLOUR.get(originalColour)==this)BY_COLOUR.remove(originalColour);if(BY_DEPTH.get(depth.getID())==this)BY_DEPTH.remove(depth.getID());WallReflectionLighting.remove(depth.getID());}
     }
     private static int texture(int w,int h,int internal,int format){
         int texture=GL11.glGenTextures();GL11.glBindTexture(GL11.GL_TEXTURE_2D,texture);
@@ -155,16 +162,18 @@ public final class WallReflectionSource {
         SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){Source source=SOURCES.remove(key);if(source!=null)source.release();}});
     }
     public static void clear(){
+        if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.clear();
         SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){
-            for(Source source:SOURCES.values())source.release();SOURCES.clear();BY_COLOUR.clear();WANTED.clear();REBUILD.clear();WallReflectionLighting.clear();COMPOSITES.clear();pendingComposite=renderingSource=null;
+            for(Source source:SOURCES.values())source.release();SOURCES.clear();BY_COLOUR.clear();BY_DEPTH.clear();WANTED.clear();REBUILD.clear();WallReflectionLighting.clear();PhysicalShadowSources.clear();COMPOSITES.clear();pendingComposite=renderingSource=null;
         }});
     }
     /** After Ssr.chunkDraw set the current real native program's mapping and frame. */
     public static void composite(TextureDraw draw){
         pendingComposite=null;
-        if(failed||draw==null||draw.tex1==null||!enabled()||!Access.near(draw.tex1))return;
-        Source source=SOURCES.get(draw.tex1);if(source!=null){if(source.valid){if(source.hasPixels)pendingComposite=source;}else request(source);}
+        if(failed||draw==null||draw.tex1==null||!enabled())return;
+        Source source=SOURCES.get(draw.tex1);if(source!=null){if(source.valid){if(source.hasPixels&&Access.near(draw.tex1))pendingComposite=source;}else request(source);}
     }
+    public static int shadowTexture(int nativeDepth){Source source=BY_DEPTH.get(nativeDepth);return source!=null&&source.valid&&source.hasPixels&&!source.removed?source.depthId:0;}
     /** Replaces the single native RingBuffer GL call, using its exact live vertex/index data. */
     public static void drawElements(int mode,int start,int end,int count,int type,long offset){
         Source source=renderingSource;
@@ -182,6 +191,7 @@ public final class WallReflectionSource {
             return;
         }
         GL12.glDrawRangeElements(mode,start,end,count,type,offset);
+        if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
         source=pendingComposite;pendingComposite=null;if(source==null)return;
         int program=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         if(!COMPOSITES.computeIfAbsent(program,p->GL20.glGetUniformLocation(p,"pzSsrMapC")>=0&&GL20.glGetUniformLocation(p,"chunkDepth")>=0))return;
@@ -191,6 +201,7 @@ public final class WallReflectionSource {
             GL13.glActiveTexture(GL13.GL_TEXTURE0);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.colourId);
             GL13.glActiveTexture(GL13.GL_TEXTURE1);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depthId);GL13.glActiveTexture(GL13.GL_TEXTURE0);
             GL12.glDrawRangeElements(mode,start,end,count,type,offset);compositeDraws++;
+            if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
         }catch(Throwable error){source.valid=false;fail(error);}finally{
             GL13.glActiveTexture(GL13.GL_TEXTURE0);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.colour.getID());
             GL13.glActiveTexture(GL13.GL_TEXTURE1);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depth.getID());GL13.glActiveTexture(GL13.GL_TEXTURE0);
@@ -237,20 +248,23 @@ public final class WallReflectionSource {
             GL30.glBlitFramebuffer(0,0,source.w,source.h,0,0,source.w,source.h,GL11.GL_DEPTH_BUFFER_BIT,GL11.GL_NEAREST);
             source.clear=false;source.valid=true;source.hasPixels=false;
         }finally{GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,draw);GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,read);GL11.glPopAttrib();}
-    }    private static boolean enabled(){try{return !failed&&Access.active();}catch(Throwable error){fail(error);return false;}}
+    }    private static boolean enabled(){try{return !failed&&(Access.active()||Access.shadowActive());}catch(Throwable error){fail(error);return false;}}
     private static void fail(Throwable error){if(!failed)System.err.println("[PZOptPreloader] Physical wall reflections disabled: "+error);failed=true;}
     private static final class Access {
         static final Access INSTANCE=new Access();
-        final MethodHandle active,render;final Field frame,near,view,on;
+        final MethodHandle active,render,renderOther,shadowEnabled;final Field frame,near,view,on,sun;
         Access(){try{
             MethodHandles.Lookup lookup=MethodHandles.lookup();Class<?> ssr=Class.forName("pzopt.Ssr"),frameClass=Class.forName("pzopt.Ssr$Frame"),viewClass=Class.forName("pzopt.Ssr$View");
             Method a=ssr.getDeclaredMethod("active");active=lookup.unreflect(a);
             Method r=FBORenderCell.class.getDeclaredMethod("renderMinusFloor_DoorOrWall",IsoObject.class);r.setAccessible(true);render=lookup.unreflect(r).asType(MethodType.methodType(void.class,Object.class,IsoObject.class));
+            Method other=FBORenderCell.class.getDeclaredMethod("renderMinusFloor_NotDoorOrWall",IsoObject.class);other.setAccessible(true);renderOther=lookup.unreflect(other).asType(MethodType.methodType(void.class,Object.class,IsoObject.class));
+            Method shadows=Class.forName("pzopt.ChunkAo").getDeclaredMethod("enabled");shadows.setAccessible(true);shadowEnabled=lookup.unreflect(shadows);sun=field(Class.forName("pzopt.Config"),"SUN_SHADOWS");
             frame=field(ssr,"renderFrame");near=field(frameClass,"nearWater");view=field(frameClass,"view");on=field(viewClass,"on");
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Physical wall input API unavailable",error);}}
         static Field field(Class<?> type,String name)throws ReflectiveOperationException{Field field=type.getDeclaredField(name);field.setAccessible(true);return field;}
         static boolean active(){try{return (boolean)INSTANCE.active.invokeExact();}catch(Throwable error){throw new IllegalStateException("Physical wall active query",error);}}
-        static void render(Object cell,IsoObject object){try{INSTANCE.render.invokeExact(cell,object);}catch(Throwable error){throw new IllegalStateException("Physical wall bake",error);}}
+        static boolean shadowActive(){try{return INSTANCE.sun.getBoolean(null)&&(boolean)INSTANCE.shadowEnabled.invokeExact();}catch(Throwable error){throw new IllegalStateException("Physical shadow active query",error);}}
+        static void render(Object cell,IsoObject object,boolean wall){try{if(wall)INSTANCE.render.invokeExact(cell,object);else INSTANCE.renderOther.invokeExact(cell,object);}catch(Throwable error){throw new IllegalStateException("Physical object bake",error);}}
         static boolean near(Texture texture){try{Object f=INSTANCE.frame.get(null);return f!=null&&INSTANCE.on.getBoolean(INSTANCE.view.get(f))&&((Map<?,?>)INSTANCE.near.get(f)).containsKey(texture);}catch(IllegalAccessException error){throw new IllegalStateException(error);}}
     }
 }

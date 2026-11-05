@@ -15,7 +15,7 @@ public final class PeekIntegration {
     private PeekIntegration() { }
     private static boolean supported() {
         return !RuntimeState.server && RuntimeState.payload!=null
-            && Compatibility.CURRENT.equals(zombie.GitVersion.REVISION);
+            && Compatibility.currentGame();
     }
     public static synchronized void beforeModSet(Object[] arguments) {
         if(!supported() || arguments.length!=1 || !(arguments[0] instanceof List<?> || arguments[0] instanceof String))return;

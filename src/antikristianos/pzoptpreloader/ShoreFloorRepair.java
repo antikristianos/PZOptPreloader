@@ -27,7 +27,7 @@ public final class ShoreFloorRepair {
         ClassReader reader=new ClassReader(bytes);
         if(!reader.getClassName().equals(name))throw new IOException("Shore lighting class identity: "+name);
         Map<String,String> actual=Compatibility.methods(bytes);
-        for(var expected:METHODS.get(name).entrySet())if(!expected.getValue().equals(actual.get(expected.getKey())))
+        for(var expected:METHODS.get(name).entrySet())if(!RepairProfiles.matches(expected.getValue(),actual.get(expected.getKey())))
             throw new IOException("Unsupported shore lighting fingerprint: "+name+"."+expected.getKey());
         int[] hits=new int[4];
         ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);

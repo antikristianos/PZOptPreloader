@@ -10,8 +10,25 @@ import org.json.*;
 
 /** Validates native sources and the separately verified full-feature legacy port. */
 public final class Compatibility {
-    public static final String LEGACY = "4a0e9546ec", CURRENT = "e013dbb529";
+    public static final String LEGACY = "4a0e9546ec", BASE = "e013dbb529", CURRENT = HotfixCompatibility.REVISION;
+    private static final String RUNTIME_REVISION=readRevision();
+    private static String readRevision(){try{return String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));}catch(ReflectiveOperationException error){throw new ExceptionInInitializerError(error);}}
+    public static boolean isCurrent(String revision){return BASE.equals(revision)||CURRENT.equals(revision);}
+    public static boolean currentGame(){return isCurrent(RUNTIME_REVISION);}
     private static JSONObject profile;
+    private static JSONObject updateProfile;
+    public static final String UPDATE_COMMIT = "154126d0";
+    public static boolean extendedSource(Payload payload) {
+        return payload.build.getProperty("commit", "").startsWith(UPDATE_COMMIT);
+    }
+    public static synchronized JSONObject profile(Payload payload) throws IOException {
+        if (!extendedSource(payload)) return profile();
+        if (updateProfile == null) try (InputStream input = Compatibility.class.getResourceAsStream("compatibility-154126d0-42.22.json")) {
+            if (input == null) throw new IOException("Update compatibility profile missing");
+            updateProfile = new JSONObject(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+        }
+        return updateProfile;
+    }
     private Compatibility() { }
     /** Fixed native B42.22 scale; separate call preserves source concat operands. */
     public static int tileScale() { return 2; }
@@ -42,8 +59,8 @@ public final class Compatibility {
     public static boolean supports(Payload payload, String actual) throws IOException {
         String source = payload.build.getProperty("revision");
         if (actual.equals(source)) return true;
-        if (!LEGACY.equals(source) || !CURRENT.equals(actual)) return false;
-        JSONObject expected = profile().getJSONObject("payloadClasses");
+        if (!LEGACY.equals(source) || !isCurrent(actual)) return false;
+        JSONObject expected = profile(payload).getJSONObject("payloadClasses");
         if (payload.classes.size() != expected.length()) return false;
         for (var entry : payload.classes.entrySet()) {
             if (!hash(Files.readAllBytes(entry.getValue())).equals(expected.optString(entry.getKey()))) return false;
@@ -68,15 +85,17 @@ public final class Compatibility {
             byte[] original=Files.readAllBytes(entry.getValue());
             if(!new ClassReader(original).getClassName().equals(entry.getKey()))throw new Payload.SourceUnavailable("invalid","Downloaded class identity differs: "+entry.getKey());
             String digest=hash(original);
-            if(!actual.equals(payload.build.getProperty("revision"))&&!profile().getJSONObject("payloadClasses").getString(entry.getKey()).equals(digest))
+            if(!actual.equals(payload.build.getProperty("revision"))&&!profile(payload).getJSONObject("payloadClasses").getString(entry.getKey()).equals(digest))
                 throw new Payload.SourceUnavailable("incompatible","Installed original changed during preparation: "+entry.getKey());
             bytes.put(entry.getKey(),original);payload.originalClassHashes.put(entry.getKey(),digest);
         }
         if(!actual.equals(payload.build.getProperty("revision"))){
-            try(InputStream resource=Compatibility.class.getResourceAsStream("legacy-port-42.22.json");java.util.jar.JarFile game=new java.util.jar.JarFile(gameJar().toFile())){
+            String recipes = extendedSource(payload) ? "port-154126d0-42.22.json" : "legacy-port-42.22.json";
+            try(InputStream resource=Compatibility.class.getResourceAsStream(recipes);java.util.jar.JarFile game=new java.util.jar.JarFile(gameJar().toFile())){
                 if(resource==null)throw new IOException("Input-reference adaptation rules missing");
                 JSONObject rules=new JSONObject(new String(resource.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8));
-                bytes=new PortRecipes(rules,bytes,game).apply();
+                bytes=new PortRecipes(HotfixCompatibility.recipes(rules,actual),bytes,game).apply();
+                HotfixCompatibility.rebase(bytes,actual,game);
             }catch(RuntimeException error){throw new Payload.SourceUnavailable("incompatible","Full adaptation refused: "+error.getMessage());}
         }
         Map<String,byte[]> result=new TreeMap<>();
@@ -95,9 +114,9 @@ public final class Compatibility {
                     throw new IOException("Native source class differs from upstream catalog: "+key);
             }
             if(!actual.equals(payload.build.getProperty("revision"))){
-                JSONObject stock=profile().getJSONObject("stockClasses");
+                JSONObject stock=profile(payload).getJSONObject("stockClasses");
                 for(String name:stock.keySet()){
-                    String expected=stock.getJSONObject(name).getString("currentHash");var entry=game.getJarEntry(name+".class");
+                    String expected=HotfixCompatibility.stockHash(actual,name,stock.getJSONObject(name).getString("currentHash"));var entry=game.getJarEntry(name+".class");
                     if(expected.equals("removed")){if(entry!=null)throw new IOException("Removed native baseline type reappeared: "+name);continue;}
                     if(entry==null)throw new IOException("Missing verified native baseline: "+name);
                     try(InputStream in=game.getInputStream(entry)){if(!hash(in.readAllBytes()).equals(expected))throw new IOException("Native baseline changed: "+name);}

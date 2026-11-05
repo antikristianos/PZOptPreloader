@@ -13,6 +13,8 @@ public final class WallReflectionRepair {
     private static final Map<String,Map<String,String>> PINS=Map.of(
         CELL,Map.of("renderOneLevel"+LEVEL,"45fdd97b5d63f4600a676cb219e2b2c9e8df27a884e1587971af6eb9d4954a96",
             "renderMinusFloor_DoorOrWall(Lzombie/iso/IsoObject;)V","bebeadaa4263143db5f50e98e1196d2493d7a06ca03556fecc0a6e2bdc4c63a8",
+            "renderMinusFloor_NotDoorOrWall(Lzombie/iso/IsoObject;)V","31bb3e38e2db496ccc68488ed95b4c71405540a8e5b567a70220573774b208a1",
+            "isTranslucentTree(Lzombie/iso/IsoObject;)Z","0fa4d47a5bbeb7862894605fef846e48ea47365e6fa0566593393402a98a27c8",
             "Reset()V","2df3e4f8f0c0765c5d07b4f254b8dfe1bc3478ed80f5ab2bf6d7a32dfd784ec7"),
         RING,Map.of("drawElements(IIII)V","cd05cdeb11766593a902dabf6af1a021e18bbd124df888c8dac16ed1cb13a7b2"),
         SSR,Map.of("chunkDraw(Lzombie/core/textures/TextureDraw;)V","2c0b5c9716924657030e8e605196d52caaacaf5ed9494477980568b3b697d6ce"),
@@ -23,7 +25,7 @@ public final class WallReflectionRepair {
         Map<String,String> pins=PINS.get(name);if(pins==null)return bytes;
         ClassReader reader=new ClassReader(bytes);if(!reader.getClassName().equals(name))throw new IOException("Physical wall class identity: "+name);
         Map<String,String> actual=Compatibility.methods(bytes);
-        for(var pin:pins.entrySet())if(!pin.getValue().equals(actual.get(pin.getKey())))throw new IOException("Unsupported physical-wall boundary: "+name+"."+pin.getKey());
+        for(var pin:pins.entrySet())if(!RepairProfiles.matches(pin.getValue(),actual.get(pin.getKey())))throw new IOException("Unsupported physical-wall boundary: "+name+"."+pin.getKey());
         int[] hits=new int[6];ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){
@@ -52,6 +54,7 @@ public final class WallReflectionRepair {
                         }
                     }
                     @Override public void visitInsn(int op){
+                        if(op==Opcodes.IRETURN&&name.equals(CELL)&&n.equals("isTranslucentTree"))super.visitMethodInsn(Opcodes.INVOKESTATIC,SOURCE,"translucentTree","(Z)Z",false);
                         if(op==Opcodes.RETURN&&name.equals(AO)&&(n.equals("compute")||n.equals("drawMultiply"))){
                             super.visitVarInsn(Opcodes.ALOAD,0);super.visitVarInsn(Opcodes.ALOAD,1);
                             super.visitMethodInsn(Opcodes.INVOKESTATIC,"antikristianos/pzoptpreloader/WallReflectionLighting","after","(Ljava/lang/Object;Ljava/lang/Object;)V",false);hits[5]++;
@@ -82,7 +85,7 @@ public final class WallReflectionRepair {
     }
     public static void nativeBegin(Object owner,boolean clear){if(nativeReady())WallReflectionSource.beginBake((zombie.iso.fboRenderChunk.FBORenderChunk)owner,clear);}
     public static void nativeFree(Object owner){if(nativeReady())WallReflectionSource.free((zombie.iso.fboRenderChunk.FBORenderChunk)owner);}
-    public static boolean nativeReady(){return !RuntimeState.server&&RuntimeState.payload!=null&&Compatibility.CURRENT.equals(zombie.GitVersion.REVISION)&&NativePins.VALID;}
+    public static boolean nativeReady(){return !RuntimeState.server&&RuntimeState.payload!=null&&Compatibility.currentGame()&&NativePins.VALID;}
     private static final class NativePins {
         static final boolean VALID=check();
         static boolean check(){

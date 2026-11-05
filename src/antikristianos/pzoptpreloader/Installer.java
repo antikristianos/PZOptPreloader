@@ -126,7 +126,8 @@ public final class Installer {
                         String name=asset.optString("name");
                         boolean nativeAsset=expected.equals(name);
                         String releaseTag=release.optString("tag_name","");
-                        boolean knownLegacy=Compatibility.CURRENT.equals(revision)&&legacy.equals(name)&&releaseTag.matches(".*-d1bbdcf[a-fA-F0-9]{0,33}$");
+                        boolean knownLegacy=Compatibility.isCurrent(revision)&&legacy.equals(name)
+                            && releaseTag.matches(".*-(?:d1bbdcf[a-fA-F0-9]{0,33}|154126d0[a-fA-F0-9]{0,32})$");
                         if(!nativeAsset&&!knownLegacy)continue;
                         URI uri = URI.create(asset.getString("browser_download_url"));
                         if (!"https".equals(uri.getScheme()) || !"github.com".equals(uri.getHost())
@@ -160,7 +161,9 @@ public final class Installer {
     }
 
     static boolean isNewer(Payload installed, Release release) throws IOException {
-        if(Compatibility.LEGACY.equals(installed.build.getProperty("revision"))&&release.uri.getPath().endsWith("/pzopt-"+Compatibility.CURRENT+"-classes.zip"))return true;
+        if(Compatibility.LEGACY.equals(installed.build.getProperty("revision"))
+            && (release.uri.getPath().endsWith("/pzopt-"+Compatibility.CURRENT+"-classes.zip")
+                ||release.uri.getPath().endsWith("/pzopt-"+Compatibility.BASE+"-classes.zip")))return true;
         Properties receipt = receipt(installed);
         if (!receipt.isEmpty()) {
             if (release.digest.equals(receipt.getProperty("sha256"))) return false;

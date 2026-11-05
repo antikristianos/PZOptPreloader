@@ -59,13 +59,13 @@ public final class ShoreFloorLighting {
         if(object.getSprite()==null||!object.getSprite().solidfloor||!IsoWater.getInstance().getShaderEnable())return;
         IsoWaterGeometry water=object.square.getWater();if(water==null||!water.isbShore())return;
         try{
-            Access a=Access.get();if(!(Boolean)a.enabled.invoke(null))return;
+            Access a=Access.get();boolean lighting=(Boolean)a.enabled.invoke(null);
             int player=IsoCamera.frameState.playerIndex;float zoom=Core.getInstance().getZoom(player);
             // lightverts itself is only a cached read; refresh the native lighting before reading its four colours.
             object.square.lighting[player].bCouldSee();
             FBORenderChunk chunk=object.square.chunk.getRenderLevels(player).getFBOForLevel(0,zoom);
             if(chunk==null||chunk.depth==null||chunk.getMinLevel()!=0)return;
-            CURRENT.set(new Context(chunk,player,zoom));
+            CURRENT.set(new Context(chunk,player,zoom,lighting));
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Shore lighting API unavailable",error);}
     }
     public static void tileStarted(int program){
@@ -82,8 +82,11 @@ public final class ShoreFloorLighting {
     private static final class Context {
         final int depth,w,h,chunkX,chunkY,scale,top,screenW,screenH;
         final float zoom,offX,offY;
+        final FBORenderChunk chunk;final boolean lighting;
         boolean started;
-        Context(FBORenderChunk chunk,int player,float zoom){
+        Context(FBORenderChunk chunk,int player,float zoom){this(chunk,player,zoom,true);}
+        Context(FBORenderChunk chunk,int player,float zoom,boolean lighting){
+            this.chunk=chunk;this.lighting=lighting;
             depth=chunk.depth.getID();w=chunk.w;h=chunk.h;chunkX=chunk.chunk.wx*8;chunkY=chunk.chunk.wy*8;
             scale=FBORenderLevels.getTextureScale(zoom);
             top=FBORenderChunk.PIXELS_PER_LEVEL*(chunk.getTopLevel()-chunk.getMinLevel()+1)
@@ -121,18 +124,19 @@ public final class ShoreFloorLighting {
         static Method method(Class<?> type,String name,Class<?>...args)throws ReflectiveOperationException {Method method=type.getDeclaredMethod(name,args);method.setAccessible(true);return method;}
     }
     private static final class Uniforms {
-        final int enabled,x,y,params,term,old,cloudRead,cloudP,cloudE;
+        final int enabled,x,y,params,term,old,cloudRead,cloudP,cloudE,weather,weatherEnabled;
         Uniforms(int program){
             try{Access a=Access.get();a.cloudLocations.remove(program);a.cloudApplied.remove(program);}
             catch(ReflectiveOperationException error){throw new IllegalStateException("Shore shader API unavailable",error);}
             enabled=GL20.glGetUniformLocation(program,"pzShoreEnabled");x=GL20.glGetUniformLocation(program,"pzShoreX");y=GL20.glGetUniformLocation(program,"pzShoreY");
+            weather=GL20.glGetUniformLocation(program,"pzShoreWeather");weatherEnabled=GL20.glGetUniformLocation(program,"pzShoreWeatherEnabled");
             params=GL20.glGetUniformLocation(program,"pzShoreParams");term=GL20.glGetUniformLocation(program,"pzShoreTerm");old=GL20.glGetUniformLocation(program,"pzShoreOld");
             cloudRead=GL20.glGetUniformLocation(program,"pzShoreCloudRead");
             cloudP=GL20.glGetUniformLocation(program,"pzCloudP");cloudE=GL20.glGetUniformLocation(program,"pzCloudE");
         }
     }
     private static final class Bound {
-        int program,active,term,old,cloud;
+        int program,active,term,old,cloud,weather;
         Uniforms uniforms;
     }
     private static final ArrayDeque<Bound> BOUND=new ArrayDeque<>(); // render thread only
@@ -143,14 +147,16 @@ public final class ShoreFloorLighting {
             Uniforms u=PROGRAMS.computeIfAbsent(program,Uniforms::new);
             if(u.enabled<0)return;
             Bound state=new Bound();state.program=program;state.uniforms=u;state.active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-            state.term=texture(TERM_UNIT);state.old=texture(OLD_UNIT);state.cloud=texture(CLOUD_UNIT);BOUND.push(state);
+            state.term=texture(TERM_UNIT);state.old=texture(OLD_UNIT);state.cloud=texture(CLOUD_UNIT);state.weather=texture(ShoreWeatherState.UNIT);BOUND.push(state);
             try{
-                Access a=Access.get();Object entry=a.entries.get(context.depth);int term=0,old=0;float fade=0,direct=0;boolean share=false;
+                Access a=Access.get();Object entry=context.lighting?a.entries.get(context.depth):null;int term=0,old=0;float fade=0,direct=0;boolean share=false;
                 if(entry!=null&&a.valid.getBoolean(entry)&&a.owner.getInt(entry)==context.depth){
                     term=a.tex.getInt(entry);old=a.fadeTex.getInt(entry);
                     share=a.hasShare.getBoolean(entry);
                     if(old>0)fade=(Float)a.remaining.invoke(null,entry,System.nanoTime());
-                }else if(Integer.valueOf(1).equals(a.bare.get(context.depth)))direct=((float[])a.dir.get(null))[3];
+                }else if(context.lighting&&Integer.valueOf(1).equals(a.bare.get(context.depth)))direct=((float[])a.dir.get(null))[3];
+                int weather=ShoreWeatherState.texture(context.chunk);bind(ShoreWeatherState.UNIT,weather);
+                GL20.glUniform1i(u.weather,ShoreWeatherState.UNIT);GL20.glUniform1f(u.weatherEnabled,weather>0?1:0);
                 bind(TERM_UNIT,term);bind(OLD_UNIT,old>0?old:term);
                 GL20.glUniform1i(u.term,TERM_UNIT);GL20.glUniform1i(u.old,OLD_UNIT);
                 GL20.glUniform4f(u.params,term>0?1:0,direct,fade,0);
@@ -162,13 +168,14 @@ public final class ShoreFloorLighting {
                 float texel=context.scale*64f;
                 GL20.glUniform4f(u.x,dx*texel/context.w,0,0,(context.w*0.5f+cx*texel)/context.w);
                 GL20.glUniform4f(u.y,0,dy*context.scale*32f/context.h,0,(cy*32f+context.top)*context.scale/context.h);
-                if(a.waterPatched.getBoolean(null)&&!a.cloudFailed.getBoolean(null)&&(Boolean)a.cloudEnabled.invoke(null)){
+                if(context.lighting&&a.waterPatched.getBoolean(null)&&!a.cloudFailed.getBoolean(null)&&(Boolean)a.cloudEnabled.invoke(null)){
                     a.waterUniforms.invoke(null);bind(CLOUD_UNIT,a.fieldTex.getInt(null));
                     GL20.glUniform4f(u.cloudE,1,0,0,0);
                 }else GL20.glUniform4f(u.cloudP,0,0,0,0);
                 GL20.glUniform1f(u.enabled,1);
             }catch(Throwable error){
                 GL20.glUniform1f(u.enabled,0);
+                GL20.glUniform1f(u.weatherEnabled,0);
                 if(!warned){warned=true;System.err.println("[PZOptPreloader] shore lighting unavailable; native draw retained: "+error);}
             }finally{GL13.glActiveTexture(state.active);}
         }
@@ -179,8 +186,8 @@ public final class ShoreFloorLighting {
         @Override public void render(){
             while(!BOUND.isEmpty()){
                 Bound state=BOUND.pop();int previous=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
-                GL20.glUseProgram(state.program);GL20.glUniform1f(state.uniforms.enabled,0);GL20.glUseProgram(previous);
-                bind(TERM_UNIT,state.term);bind(OLD_UNIT,state.old);bind(CLOUD_UNIT,state.cloud);GL13.glActiveTexture(state.active);
+                GL20.glUseProgram(state.program);GL20.glUniform1f(state.uniforms.enabled,0);GL20.glUniform1f(state.uniforms.weatherEnabled,0);GL20.glUseProgram(previous);
+                bind(TERM_UNIT,state.term);bind(OLD_UNIT,state.old);bind(CLOUD_UNIT,state.cloud);bind(ShoreWeatherState.UNIT,state.weather);GL13.glActiveTexture(state.active);
             }
         }
     }
