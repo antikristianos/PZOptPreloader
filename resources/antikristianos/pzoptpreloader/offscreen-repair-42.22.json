@@ -1,0 +1,53 @@
+{
+  "payload": {
+    "zombie/core/opengl/ShaderUnit": {"compile()Z": [
+      "a43a93d2ecf24a3ab29197ac9ca9ea395ed6b389d54480b8904a0388be1dd923",
+      "e96ead3f65cde6483086ec619294b6e5e4a033faf9bb022b5b2c7638cbed97d2"
+    ]},
+    "pzopt/Ssr": {
+      "puddleUniforms(I)V": ["3bde4f2c675cf55b3249e4d384663dc81d70eac66396f391210cff6578d15ff2"],
+      "surfaceUniforms()V": [
+        "c953d97f64a937ec594189c700f17dfbe7bea9ffb9ca15ebfeccc35884371375",
+        "3feb6681a8cb0c1a543a156501bba220c31ecac3c1963f1a2f2217cc14d766ea"
+      ],
+      "chunkDraw(Lzombie/core/textures/TextureDraw;)V": ["eb5fe980de1431e882d677589f4b357d548a4a2738df7b8205134edbaf331205"],
+      "beforeComposite(ILjava/util/ArrayList;)V": ["634889c9cd63b1788c0ac7794e2eb15fecee57a5a07a5ce07c867a52139b0b1a"]
+    },
+    "zombie/iso/IsoWorld": {
+      "sceneCullAnimals()V": ["47af904423084e53370035d0d9672f4d499f05fbcc7efcdfb7a493af8c336710"],
+      "sceneCullZombies()V": ["23010e19e308631d000b680ddd83437a2c0522a69d59d80b8cc13297274983d2"]
+    },
+    "pzopt/CharDraw": {"runWalk(Ljava/util/Set;ZZ)V": ["0430b9492257becbcb3a7c3a97052bd3c4a38637353d4065ca3f5d6d16d19e88"]},
+    "zombie/iso/fboRenderChunk/FBORenderCell": {
+      "renderWater(I)V": ["10a67806509abfd9f45b9c4cc5664c19c25a7410d48ad99997683f1e3ee43ba1"],
+      "renderMovingObject(Lzombie/iso/IsoMovingObject;)V": ["d2d124835ae9018e61733b16e493c3388120e48fa91d7ebcacf747a997120abb"],
+      "renderPlayer(ILzombie/characters/IsoPlayer;)V": ["4cb787259fd33032da5b38072392b40a66c9e3d37bf618a108fc95459bd5bf07"],
+      "renderPuddles(I)V": ["8281e6879b8d0479684cd44e59f1fe7b7803871f6876537e8a18cf96dd9bc444"]
+    }
+  },
+  "native": {
+    "zombie/iso/fboRenderChunk/FBORenderLevels": {"calculateOnScreen(I)Z": "f695daa9235c3e7f90e5b8fb5196c07744213e0e7ca56d9dc2b1c90cb5802775"},
+    "zombie/vehicles/VehicleModelCamera": {"Begin()V": "4e1ece26ab771da0f689e338ad6df607e0ffc42efe3e1b072cf3507ddcccd66b"},
+    "zombie/core/ShaderHelper": {"glUseProgramObjectARB(I)V": "f91aca7c303a2c07173a83e3d6feea7f924eb64a4e54e5e920d04db30d2a27d7"},
+    "zombie/core/opengl/MatrixStack": {
+      "pop()V": "6d6cb9b4bed371ad35725a9e7658825f6881b818f348ef4050c11f46d58606e6",
+      "push(Lorg/joml/Matrix4f;)V": "39bb6b1491210f7b3c9b74438f26019ed0ebf020f78f1669db0330ac6beacb41"
+    },
+    "zombie/core/opengl/CharacterModelCamera": {"Begin()V": "da315bf68084223c935ff2ec00512cc08ebc8349cc96ff956cd3f9761a1a052d"},
+    "zombie/core/skinnedmodel/model/ModelSlotRenderData": {
+      "checkReady()Z": "e3af7e7b17b731ea8b5e6172bb65930d55d36e12cda5f94c27433a50a586ed32",
+      "postRender()V": "9fb3fe7bdf716aed7d84815bc2d2507e2476bd74589a3bf1a518afdf12fa728a",
+      "alloc()Lzombie/core/skinnedmodel/model/ModelSlotRenderData;": "e95ca35adda60ceed4a1a40e32e98ed0d73a716c14bf385f2b91e13d026bc7e0",
+      "initModel(Lzombie/core/skinnedmodel/ModelManager$ModelSlot;)V": "59b7e92835ea856b5442092b780d21df7089200660a3c8ab11aadb6cc8dd6706",
+      "renderVehicle()V": "0cf188d806d34fe00969f72455c01964a031e5e76af67c34fd02622c36645b6d",
+      "init(Lzombie/core/skinnedmodel/ModelManager$ModelSlot;)Lzombie/core/skinnedmodel/model/ModelSlotRenderData;": "5668ed29e8b1895a9d58dd936869f908edde91ff8eab76ea889cc3f5196447ac",
+      "performRenderCharacter()V": "fa7a71760f1b3b3edcd8e083cf390f48ecba7adf73a790a76c956f6b984cb823"
+    },
+    "zombie/core/skinnedmodel/ModelCameraRenderData": {
+      "init(Lzombie/core/skinnedmodel/ModelCamera;FZFFFZ)Lzombie/core/skinnedmodel/ModelCameraRenderData;": "943cb51e29d7ef64c5931e90b89f65eec245a858669e0d7eb170f6be94ea3df7",
+      "postRender()V": "54bd77f1d9053c532f258cc91128f074fe790db1d1c053f84902ab5cfa120c9f",
+      "render()V": "d8de82502cf970619e77ee592c885a27dfa70932456cd1d4f4cd724c661070bc",
+      "init(Lzombie/core/skinnedmodel/ModelCamera;Lzombie/core/skinnedmodel/ModelManager$ModelSlot;)Lzombie/core/skinnedmodel/ModelCameraRenderData;": "4fda6dfbc02bab9716251498a457c4b3d2ee60568a208d3548a1b8cffd9066c1"
+    }
+  }
+}

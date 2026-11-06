@@ -51,4 +51,20 @@ public final class LoadedFields {
             state.put(field, value);
         }
     }
+    public static int getInt(Object owner,String field) { Object v=get(owner,field); return v==null?0:(Integer)v; }
+    public static void putInt(Object owner,int value,String field) { put(owner,value,field); }
+    public static boolean getBoolean(Object owner,String field) { Object v=get(owner,field); return v!=null&&(Boolean)v; }
+    public static void putBoolean(Object owner,boolean value,String field) { put(owner,value,field); }
+    public static byte getByte(Object owner,String field) { Object v=get(owner,field); return v==null?0:(Byte)v; }
+    public static void putByte(Object owner,byte value,String field) { put(owner,value,field); }
+    public static short getShort(Object owner,String field) { Object v=get(owner,field); return v==null?0:(Short)v; }
+    public static void putShort(Object owner,short value,String field) { put(owner,value,field); }
+    public static char getChar(Object owner,String field) { Object v=get(owner,field); return v==null?0:(Character)v; }
+    public static void putChar(Object owner,char value,String field) { put(owner,value,field); }
+    public static long getLong(Object owner,String field) { Object v=get(owner,field); return v==null?0L:(Long)v; }
+    public static void putLong(Object owner,long value,String field) { put(owner,value,field); }
+    public static float getFloat(Object owner,String field) { Object v=get(owner,field); return v==null?0F:(Float)v; }
+    public static void putFloat(Object owner,float value,String field) { put(owner,value,field); }
+    public static double getDouble(Object owner,String field) { Object v=get(owner,field); return v==null?0D:(Double)v; }
+    public static void putDouble(Object owner,double value,String field) { put(owner,value,field); }
 }
