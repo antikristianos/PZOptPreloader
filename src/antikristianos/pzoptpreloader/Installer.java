@@ -163,6 +163,7 @@ public final class Installer {
     static boolean isNewer(Payload installed, Release release) throws IOException {
         if(Compatibility.LEGACY.equals(installed.build.getProperty("revision"))
             && (release.uri.getPath().endsWith("/pzopt-"+Compatibility.CURRENT+"-classes.zip")
+                ||release.uri.getPath().endsWith("/pzopt-"+HotfixCompatibility.REVISION_2+"-classes.zip")
                 ||release.uri.getPath().endsWith("/pzopt-"+Compatibility.BASE+"-classes.zip")))return true;
         Properties receipt = receipt(installed);
         if (!receipt.isEmpty()) {

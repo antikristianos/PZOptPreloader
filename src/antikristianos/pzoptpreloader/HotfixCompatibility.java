@@ -6,9 +6,9 @@ import java.util.jar.JarFile;
 import net.bytebuddy.jar.asm.*;
 import org.json.*;
 
-/** Exact 42.22.1 menu rebase; all unchanged input and emitted-method checks remain in force. */
+/** Exact 42.22.1/42.22.2 menu rebases; other input and emitted-method checks remain in force. */
 public final class HotfixCompatibility {
-    public static final String REVISION="71e8410c42";
+    public static final String REVISION="71e8410c42", REVISION_2="3d39148846";
     private static final String MENU="zombie/gameStates/MainScreenState";
     private static final Map<String,String> BEFORE=Map.of(
         MENU,"5396302bb52db409dc71e6a933bf30671714d2a9d02a1d72371b1fd1232dbf53",
@@ -18,14 +18,19 @@ public final class HotfixCompatibility {
         MENU,"aa34d69f7f424b27b3833d278958f8f5d4f021177fd524db838d61557b309eb6",
         MENU+"$Credit","d9cce8951804108b8228aed058e84cf039ac5e3ce0ac772427163e7f4d9b488e",
         MENU+"$ScreenElement","18c7a980c509b8c53488cab1b5f139e7eb1cc681f54e119ec3de5f70907b6623");
+    private static final Map<String,String> AFTER_2=Map.of(
+        MENU,"9f17e1516c62eca74e83d8a7cb838221f72d9e6514ad2fac1f200fb7834ee5c1",
+        MENU+"$Credit",AFTER.get(MENU+"$Credit"),MENU+"$ScreenElement",AFTER.get(MENU+"$ScreenElement"));
     private HotfixCompatibility(){ }
+    public static boolean supports(String revision){return REVISION.equals(revision)||REVISION_2.equals(revision);}
+    private static Map<String,String> hashes(String revision){return REVISION_2.equals(revision)?AFTER_2:AFTER;}
     public static String stockHash(String revision,String name,String baseline)throws IOException{
-        if(!REVISION.equals(revision)||!BEFORE.containsKey(name))return baseline;
+        if(!supports(revision)||!BEFORE.containsKey(name))return baseline;
         if(!BEFORE.get(name).equals(baseline))throw new IOException("Hotfix baseline changed: "+name);
-        return AFTER.get(name);
+        return hashes(revision).get(name);
     }
     public static JSONObject recipes(JSONObject original,String revision)throws IOException{
-        if(!REVISION.equals(revision))return original;
+        if(!supports(revision))return original;
         JSONObject plan=new JSONObject(original.toString());
         if(!BEFORE.get(MENU).equals(plan.getJSONObject("inputs").getString("g:"+MENU)))throw new IOException("Hotfix recipe input changed");
         // The only use of this native input is the old version writer. Supply its complete new native
@@ -43,13 +48,15 @@ public final class HotfixCompatibility {
         return plan;
     }
     public static void rebase(Map<String,byte[]> classes,String revision,JarFile game)throws IOException{
-        if(!REVISION.equals(revision))return;
+        if(!supports(revision))return;
         var entry=game.getJarEntry(MENU+".class");if(entry==null)throw new IOException("Hotfix native menu missing");
         byte[] nativeBytes;try(InputStream in=game.getInputStream(entry)){nativeBytes=in.readAllBytes();}
+        if(!hashes(revision).get(MENU).equals(Compatibility.hash(nativeBytes)))throw new IOException("Hotfix native menu/revision pair changed");
         classes.put(MENU,menu(classes.get(MENU),nativeBytes));
     }
     public static byte[] menu(byte[] ported,byte[] nativeBytes)throws IOException{
-        if(!AFTER.get(MENU).equals(Compatibility.hash(nativeBytes)))throw new IOException("Hotfix native menu changed");
+        String nativeHash=Compatibility.hash(nativeBytes);
+        if(!AFTER.get(MENU).equals(nativeHash)&&!AFTER_2.get(MENU).equals(nativeHash))throw new IOException("Hotfix native menu changed");
         ClassReader nativeReader=new ClassReader(nativeBytes);Object[][] kickoff={null};int[] nativeCalls={0};
         nativeReader.accept(new ClassVisitor(Opcodes.ASM9){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){

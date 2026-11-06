@@ -47,8 +47,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/Compatibility.class",
-      "Size": 13473,
-      "Sha256": "B119051835F5CBC588F52D5D1350B468278839732A794C1539A2AB51BD29BFD6"
+      "Size": 13481,
+      "Sha256": "183D794F1CF24A5513E68D8FC9D05F16C589B2223D290DC558133276AB0D216F"
     },
     {
       "Path": "antikristianos/pzoptpreloader/DoorRenderDiagnostics$1.class",
@@ -168,32 +168,32 @@
     {
       "Path": "antikristianos/pzoptpreloader/HotfixCompatibility$1$1.class",
       "Size": 1759,
-      "Sha256": "5DB94238FD65FB53586B42BA25A390D2DC93F36488467DD21E3CF05AA3F6C8AB"
+      "Sha256": "CD6CC69F9EF6CBCA312DB4EE21DB1F1171B72FF3ECE44BA3FEA762CA9169245C"
     },
     {
       "Path": "antikristianos/pzoptpreloader/HotfixCompatibility$1.class",
       "Size": 1094,
-      "Sha256": "1B3C4994F6F73AA222208C3C076B0969028005CCF13FAB8560EEA4D2C0252897"
+      "Sha256": "4FF4E76A0D355EA9084DD831182F4017B9EAC4C3CF4925CC2D5226E9338FDE86"
     },
     {
       "Path": "antikristianos/pzoptpreloader/HotfixCompatibility$2$1.class",
       "Size": 1713,
-      "Sha256": "29F2ED35F7B27B9AF1F91FBDCCB3926CB5CC076E5E39A681F84C56A057DA28FD"
+      "Sha256": "A1A16BFCE5F771E439F33BFF7F5B8762883323813065B5A86790E74C5920F457"
     },
     {
       "Path": "antikristianos/pzoptpreloader/HotfixCompatibility$2$2.class",
       "Size": 1549,
-      "Sha256": "5712E1E0D879A1AB66DB396C1233621152291E5D9DED4C3ED8C278B67F6F746F"
+      "Sha256": "31A344F065C58C8AF8793579F7F56D16DF344D1F283258C232690D9FD9FCF645"
     },
     {
       "Path": "antikristianos/pzoptpreloader/HotfixCompatibility$2.class",
       "Size": 2349,
-      "Sha256": "282B293F8ECC0CC29FE2B3D4E10D99C85CD0F127E95023E15E8DBAE42A6D4874"
+      "Sha256": "111220C033218A97F622580BC6001F137DB270360A4EACA965F7A1ED37F29B1A"
     },
     {
       "Path": "antikristianos/pzoptpreloader/HotfixCompatibility.class",
-      "Size": 6164,
-      "Sha256": "6BE2818B4FC0A5223ECB7F2BF0344DE9AB5DA5AAAF2499339FFF2E70A1187947"
+      "Size": 6812,
+      "Sha256": "2109AF811DD625B644D7D06D1AAD3611D450E25D2E1FBDC7CA2F9C220E6913AF"
     },
     {
       "Path": "antikristianos/pzoptpreloader/InputCode$1$1.class",
@@ -278,7 +278,7 @@
     {
       "Path": "antikristianos/pzoptpreloader/Installer$SourceUse.class",
       "Size": 844,
-      "Sha256": "DDBA4A75A6E5A9BDBEA29E5887485B6857039DC9BA3C19BA176CDB9268BBA21F"
+      "Sha256": "ABB10228E3759B687369A8FF5D0215EE7AD0057F9DE3986EA6EE60AF6C4B2064"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Installer$Transport.class",
@@ -287,8 +287,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/Installer.class",
-      "Size": 24639,
-      "Sha256": "769E2CD0F201248FBF8C6228E9A38C000E376DBEC9A50B2DBE2B9BED984C088A"
+      "Size": 24751,
+      "Sha256": "CDEDA2FDA4F947587FA4BFD5A3D22D11DE3C4D2CFD73CE8A09EA816AA0876CAF"
     },
     {
       "Path": "antikristianos/pzoptpreloader/LambdaAdapter$1$1.class",
@@ -1994,8 +1994,8 @@
   "Dependencies": [
     {
       "Path": "projectzomboid.jar",
-      "Size": 68816080,
-      "Sha256": "531DAAD77C92DCB93534E66FF37BECF86DC119F55C62345C622C52021170723E"
+      "Size": 68815659,
+      "Sha256": "3C4A7C5F149D784758C6FB5F8FA85F3A21D572E38BC081400E89035F8120D287"
     },
     {
       "Path": "ZombieBuddy.jar",
