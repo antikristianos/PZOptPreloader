@@ -10,10 +10,10 @@ import org.json.*;
 
 /** Validates native sources and the separately verified full-feature legacy port. */
 public final class Compatibility {
-    public static final String LEGACY = "4a0e9546ec", BASE = "e013dbb529", CURRENT = HotfixCompatibility.REVISION;
+    public static final String LEGACY = "4a0e9546ec", CURRENT = "e013dbb529";
     private static final String RUNTIME_REVISION=readRevision();
-    private static String readRevision(){try{return String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));}catch(ReflectiveOperationException error){throw new ExceptionInInitializerError(error);}}
-    public static boolean isCurrent(String revision){return BASE.equals(revision)||HotfixCompatibility.supports(revision);}
+    private static String readRevision(){try{return String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));}catch(ReflectiveOperationException e){throw new ExceptionInInitializerError(e);}}
+    public static boolean isCurrent(String revision){return CURRENT.equals(revision)||HotfixCompatibility.supports(revision);}
     public static boolean currentGame(){return isCurrent(RUNTIME_REVISION);}
     private static JSONObject profile;
     private static JSONObject updateProfile;

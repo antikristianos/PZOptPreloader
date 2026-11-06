@@ -1,7 +1,7 @@
 package antikristianos.pzoptpreloader;
 public final class PreMain {
     public static void premain(String[] args) {
-        try { RuntimeState.install(); WallReflectionRepair.prepareNativeHooks(); OffscreenReflectionRepair.prepareNativeHooks(); }
+        try { RuntimeState.install(); }
         catch (Payload.SourceUnavailable error) {
             RuntimeState.status = "source unavailable: " + error.getMessage();
             Installation.unavailable(error);

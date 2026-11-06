@@ -44,7 +44,6 @@ public final class RuntimeState {
         Field field = Class.forName("me.zed_0xff.zombie_buddy.Loader").getDeclaredField("g_instrumentation");
         field.setAccessible(true); instrumentation = (Instrumentation) field.get(null);
         if (instrumentation == null) throw new IllegalStateException("ZombieBuddy instrumentation is unavailable");
-        PzfbSignedPackages.Prepared signedPzfb=server?null:PzfbSignedPackages.prepare(instrumentation);
         if(!Compatibility.LEGACY.equals(actual))ListStorage.install(instrumentation);
         Map<Class<?>, LambdaAdapter.Prepared> pending = new LinkedHashMap<>();
         try{
@@ -56,31 +55,23 @@ public final class RuntimeState {
             try (InputStream input = cls.getClassLoader().getResourceAsStream(name + ".class")) {
                 if (input == null) throw new IOException("Cannot read the already loaded schema: " + name);
                 byte[] original=input.readAllBytes();
-                if (extended) loaded.put(cls,original);
-                else pending.put(cls, LambdaAdapter.prepare(name, original, candidate.classBytes(name, server)));
+                if(extended)loaded.put(cls,original);else pending.put(cls,LambdaAdapter.prepare(name,original,candidate.classBytes(name,server)));
             }
         }
-        if (extended) {
+        if(extended){
             Map<String,byte[]> schemas=new TreeMap<>();
             loaded.forEach((cls,bytes)->schemas.put(cls.getName().replace('.','/'),bytes));
             candidate.prepareEarlyEmission(schemas);
-            for(Class<?> cls:loaded.keySet()) pending.put(cls,new LambdaAdapter.Prepared(
-                candidate.classBytes(cls.getName().replace('.','/'),false),null,null));
+            for(Class<?> cls:loaded.keySet())pending.put(cls,new LambdaAdapter.Prepared(candidate.classBytes(cls.getName().replace('.','/'),false),null,null));
         }
         helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
         }catch(Exception failed){
             releaseSource();throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed.getMessage(),candidate.root);
         }
         payload = candidate;
-        if(!server&&candidate.manualAdpPhysics())
-            System.out.println("[PZOptPreloader] Verified installed manual ADP owns WorldSimulation; massScaler and complete ADP physics retained. "
-                +(candidate.manualAdpOptimizedPhysics()?"Existing optcompat vehicle smoothing/step hooks retained.":"PZOpt vehicle smoothing/step overrides are inactive for this standard ADP process; saved options are unchanged."));
         instrumentation.appendToSystemClassLoaderSearch(helperJar);
         instrumentation.addTransformer(new Transformer(), false);
-        if(signedPzfb!=null)PzfbSignedPackages.define(signedPzfb);
-        if(!server)ManualAdpCompatibility.defineSignedPhysics(candidate,instrumentation);
-        int signedHelpers=SignedPackageHelpers.define(candidate,server,instrumentation,helperJar);
-        if(signedHelpers>0)System.out.println("[PZOptPreloader] "+signedHelpers+" installed helpers defined in their native package protection domains");
+        SignedPackageHelpers.define(candidate,server,instrumentation,helperJar);
         // Define every member of the chosen families before other transformers resolve their types.
         // JVM instrumentation suppresses recursive transformation during a transformer callback.
         Set<String> buddyTargets = Set.of("zombie/GameWindow", "zombie/gameStates/GameLoadingState", "org/lwjglx/opengl/Display");
@@ -102,7 +93,7 @@ public final class RuntimeState {
             throw new IllegalStateException("Selected class escaped early injection: " + name);
         }
         status = "active " + (server ? "server (" + candidate.serverFamilyCount() + " selected override families; " + eager.size() + " class definitions)"
-            : "client (" + (candidate.manualAdpPhysics() ? candidate.targets.stream().filter(name -> candidate.selected(name,false)).count()+" selected" : "all "+payload.targets.size()) + " override families; " + eager.size() + " class definitions including nested)")
+            : "client (all " + payload.targets.size() + " override families; " + eager.size() + " class definitions including nested)")
             + "; source=" + payload.root + "; commit=" + payload.build.getProperty("commit");
         System.out.println("[PZOptPreloader] " + status);
         if(!server)try{SourceHistory.remember(candidate,actual);}catch(IOException error){System.err.println("[PZOptPreloader] original-source backup unavailable; existing snapshots retained: "+error);}

@@ -89,17 +89,12 @@ public final class LauncherAot {
             jars.add(path.toAbsolutePath().toString());
         }
         if (jars.isEmpty()) throw new IOException("Launcher has no JAR classpath");
+        String classpath = String.join(File.pathSeparator, jars);
         List<String> retained = vm.stream().filter(value -> !managedOption(value)).toList();
         // Explicit classpath choices remain authoritative; never silently discard another directory/resource root.
-        String baseClasspath = String.join(File.pathSeparator, jars);
-        for (String value : retained) if (value.startsWith("-Djava.class.path=")
-                && !(owned ? InstalledClasspath.previousManagedClasspath(value.substring("-Djava.class.path=".length()), jars, cacheDirectory)
-                    : value.equals("-Djava.class.path=" + baseClasspath)))
+        for (String value : retained) if (value.startsWith("-Djava.class.path=") && !value.equals("-Djava.class.path=" + classpath))
             throw new IOException("Existing custom java.class.path needs manual AOT setup");
-        retained = retained.stream().filter(value -> !value.startsWith("-Djava.class.path=")).toList();
-        Path installedClasses = InstalledClasspath.prepare(launcher.getParent(), cacheDirectory);
-        if (installedClasses != null) jars.add(0, installedClasses.toString());
-        String classpath = String.join(File.pathSeparator, jars);
+        retained = retained.stream().filter(value -> !value.equals("-Djava.class.path=" + classpath)).toList();
         StringBuilder identity = new StringBuilder(System.getProperty("java.runtime.version")).append('\n').append(payloadCommit)
                 .append('\n').append(json.getJSONArray("classpath")).append('\n').append(json.opt("windows"))
                 .append('\n').append(retained);

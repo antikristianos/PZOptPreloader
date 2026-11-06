@@ -2,7 +2,7 @@
 
 Maintained by Antikristianos. Developed with ChatGPT / Codex assistance.
 
-Source for package `PZOptPreloader`, game slice `42.21`, mod version `1.5.1`. Java 25 bytecode; use JDK 25 to read the game's dependencies.
+Source for package `PZOptPreloader`, game slice `42.22`, mod version `1.5.2`. Java 25 bytecode; use JDK 25 to read the game's dependencies.
 
 This repository contains the Java files used by this artifact, its embedded data, and the associated runtime scripts. It excludes internal planning, reports, credentials, compiled mods and third-party dependencies.
 
@@ -18,7 +18,7 @@ The script checks dependency hashes and every rebuilt class/resource against the
 
 `source-publication.json` identifies the Steam upload, branch, tag and original JAR SHA-256. Hashes and matching bytecode establish correspondence; they do not constitute a security audit.
 
-Other frozen game slices in the Workshop download are not represented by this branch's Java source. Their source must be inspected at the corresponding historical publication.
+Additional active game-slice sources and independent build checks are under `profiles/`; `profiles.json` pins each corresponding Workshop JAR.
 
 ## Distribution
 
