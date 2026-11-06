@@ -11,7 +11,7 @@ import org.json.*;
 public final class SourceHistory {
     public record Previous(Path root,String id,String label){}
     private SourceHistory(){}
-    private static Path directory(Path config,String revision)throws IOException{
+    static Path directory(Path config,String revision)throws IOException{
         if(!revision.matches("[A-Za-z0-9_-]{1,100}"))throw new IOException("Invalid game revision for source history");
         return config.toAbsolutePath().normalize().resolve("PZOptPreloader/sources").resolve(revision);
     }
@@ -19,10 +19,10 @@ public final class SourceHistory {
         Path actual=path.toRealPath();if(!actual.startsWith(root))throw new IOException("Source file leaves its installation");
         return root.relativize(path.toAbsolutePath().normalize()).toString().replace('\\','/');
     }
-    private static Properties properties(Path path)throws IOException{
+    static Properties properties(Path path)throws IOException{
         Properties result=new Properties();if(Files.isRegularFile(path))try(InputStream in=Files.newInputStream(path)){result.load(in);}return result;
     }
-    private static void atomicProperties(Path path,Properties data)throws IOException{
+    static void atomicProperties(Path path,Properties data)throws IOException{
         Files.createDirectories(path.getParent());Path temporary=Files.createTempFile(path.getParent(),"state-",".tmp");
         try{
             try(OutputStream out=Files.newOutputStream(temporary)){data.store(out,"PZOptPreloader original-source selection");}
@@ -95,7 +95,7 @@ public final class SourceHistory {
             }
         }
     }
-    private static Previous load(Path base,String id,String revision)throws IOException{
+    static Previous load(Path base,String id,String revision)throws IOException{
         if(!id.matches("[a-f0-9]{64}"))throw new IOException("Invalid snapshot identity");
         Path folder=base.resolve(id),payload=folder.resolve("payload");JSONObject meta=new JSONObject(Files.readString(folder.resolve("snapshot.json")));
         if(!revision.equals(meta.getString("gameRevision"))||!id.equals(meta.getString("id")))throw new IOException("Snapshot identity mismatch");
@@ -115,6 +115,33 @@ public final class SourceHistory {
             try{return load(base,id,revision);}catch(IOException|RuntimeException invalid){failed=new IOException("Retained source unavailable: "+id,invalid);}
         }
         if(failed!=null)throw failed;return null;
+    }
+    /** Compare runtime bytes, excluding transport receipts and physical installation paths. */
+    static String runtimeIdentity(Path candidate)throws IOException{
+        Path root=Payload.normalizeSource(candidate);SortedMap<String,String> hashes=new TreeMap<>();long count=0,bytes=0;
+        Set<String> declared=new HashSet<>();Path manifest=root.resolve("pzopt-files.txt");
+        if(Files.isRegularFile(manifest))for(String line:Files.readAllLines(manifest))if(!line.isBlank()&&!line.startsWith("#"))declared.add(line.replace('\\','/'));
+        try(var paths=Files.walk(root)){
+            for(Path file:paths.filter(Files::isRegularFile).sorted().toList()){
+                String name=root.relativize(file).toString().replace('\\','/');
+                if(name.equals("pzoptpreloader-release.properties")||name.equals("snapshot.json"))continue;
+                if(!name.endsWith(".class")&&!name.startsWith("pzopt/")&&!name.startsWith("media/")&&!name.equals("pzopt-files.txt")&&!declared.contains(name))continue;
+                if(!file.toRealPath().startsWith(root))throw new IOException("Source runtime symlink escapes installation");
+                if(++count>10000||(bytes+=Files.size(file))>256L*1024*1024)throw new IOException("Source runtime exceeds snapshot bounds");
+                hashes.put(name,Compatibility.hash(Files.readAllBytes(file)));
+            }
+        }
+        StringBuilder identity=new StringBuilder();hashes.forEach((name,hash)->identity.append(name).append('\0').append(hash).append('\n'));
+        return Compatibility.hash(identity.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+    static Previous previousDifferent(Path config,String revision,String rejected)throws IOException{
+        Path base=directory(config,revision);Properties index=properties(base.resolve("latest.properties"));
+        for(String key:List.of("snapshot","previous")){
+            String id=index.getProperty(key);if(id==null)continue;
+            try{Previous previous=load(base,id,revision);if(!runtimeIdentity(previous.root()).equals(rejected)&&!StartupFallback.quarantined(config,revision,previous.root()))return previous;}
+            catch(IOException|RuntimeException invalid){System.err.println("[PZOptPreloader] retained candidate refused: "+invalid);}
+        }
+        return null;
     }
     /** Bind fallback to the exact rejected source; a newer compatible input always wins normal discovery. */
     static String rejectedToken(Path source)throws IOException{
@@ -167,6 +194,13 @@ public final class SourceHistory {
         Path path=directory(config,revision).resolve("retained-releases.properties");Properties ignored=properties(path);ignored.setProperty(digest,"keep previous");atomicProperties(path,ignored);
     }
     public static boolean ignoredRelease(Path config,String revision,String digest)throws IOException{
-        return properties(directory(config,revision).resolve("retained-releases.properties")).containsKey(digest);
+        String value=properties(directory(config,revision).resolve("retained-releases.properties")).getProperty(digest);
+        return value!=null&&(value.equals("keep previous")||value.equals("automatic:"+StartupFallback.loaderContext()));
+    }
+    static void ignoreAutomaticRelease(Path config,String revision,String digest)throws IOException{
+        if(!digest.matches("[a-f0-9]{64}"))throw new IOException("Invalid rejected release digest");
+        Path path=directory(config,revision).resolve("retained-releases.properties");Properties ignored=properties(path);
+        if(!"keep previous".equals(ignored.getProperty(digest)))ignored.setProperty(digest,"automatic:"+StartupFallback.loaderContext());
+        atomicProperties(path,ignored);
     }
 }

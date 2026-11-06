@@ -159,12 +159,13 @@ public final class WallReflectionSource {
     /** Native chunk destruction is queued, preserving the already submitted render-state ownership. */
     public static void free(FBORenderChunk owner){
         nativeFrees++;if(owner==null)return;Texture key=owner.depth;
-        SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){Source source=SOURCES.remove(key);if(source!=null)source.release();}});
+        int depth=key==null?0:key.getID();
+        SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){SunCompositeState.free(depth);Source source=SOURCES.remove(key);if(source!=null)source.release();}});
     }
     public static void clear(){
         if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.clear();
         SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){
-            for(Source source:SOURCES.values())source.release();SOURCES.clear();BY_COLOUR.clear();BY_DEPTH.clear();WANTED.clear();REBUILD.clear();WallReflectionLighting.clear();PhysicalShadowSources.clear();COMPOSITES.clear();pendingComposite=renderingSource=null;
+            for(Source source:SOURCES.values())source.release();SOURCES.clear();BY_COLOUR.clear();BY_DEPTH.clear();WANTED.clear();REBUILD.clear();WallReflectionLighting.clear();PhysicalShadowSources.clear();SunCompositeState.clear();COMPOSITES.clear();pendingComposite=renderingSource=null;
         }});
     }
     /** After Ssr.chunkDraw set the current real native program's mapping and frame. */
@@ -190,8 +191,10 @@ public final class WallReflectionSource {
             }catch(Throwable error){source.valid=false;fail(error);}finally{GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,fbo);GL11.glPopAttrib();}
             return;
         }
-        GL12.glDrawRangeElements(mode,start,end,count,type,offset);
-        if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
+        try(SunCompositeState.Scope sun=SunCompositeState.bind(0,0)){
+            GL12.glDrawRangeElements(mode,start,end,count,type,offset);
+            if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
+        }
         source=pendingComposite;pendingComposite=null;if(source==null)return;
         int program=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         if(!COMPOSITES.computeIfAbsent(program,p->GL20.glGetUniformLocation(p,"pzSsrMapC")>=0&&GL20.glGetUniformLocation(p,"chunkDepth")>=0))return;
@@ -200,8 +203,10 @@ public final class WallReflectionSource {
             GL11.glColorMask(false,false,false,false);GL11.glDepthMask(false);GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL13.glActiveTexture(GL13.GL_TEXTURE0);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.colourId);
             GL13.glActiveTexture(GL13.GL_TEXTURE1);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depthId);GL13.glActiveTexture(GL13.GL_TEXTURE0);
-            GL12.glDrawRangeElements(mode,start,end,count,type,offset);compositeDraws++;
-            if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
+            try(SunCompositeState.Scope sun=SunCompositeState.bind(source.depth.getID(),source.depthId)){
+                GL12.glDrawRangeElements(mode,start,end,count,type,offset);compositeDraws++;
+                if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
+            }
         }catch(Throwable error){source.valid=false;fail(error);}finally{
             GL13.glActiveTexture(GL13.GL_TEXTURE0);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.colour.getID());
             GL13.glActiveTexture(GL13.GL_TEXTURE1);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depth.getID());GL13.glActiveTexture(GL13.GL_TEXTURE0);

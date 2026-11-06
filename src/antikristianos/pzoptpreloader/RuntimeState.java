@@ -20,9 +20,35 @@ public final class RuntimeState {
     private static JarFile helperJar;
     private static Installer.SourceUse sourceUse;
     private static boolean installed;
+    private static boolean installationStarted, sourceCommitted, sourcePreparation;
+    private static volatile Throwable injectionFailure;
+    private static StartupFallback.Attempt startupAttempt;
 
     public static synchronized void install() throws Exception {
         if (installed) return;
+        if(Installation.disabled()){status="disabled by user setting";return;}
+        if(installationStarted)throw new IllegalStateException("Injection already attempted; a full game restart is required",injectionFailure);
+        installationStarted=true;
+        try{installOnce();}
+        catch(Exception|LinkageError error){
+            if(!server&&(sourceCommitted||StartupFallback.sourceFailure(error)))recordFailure(error);
+            if(!sourceCommitted)releaseSource();
+            throw error;
+        }
+    }
+    static synchronized void recordFailure(Throwable error){
+        if(injectionFailure!=null)return;injectionFailure=error;installed=false;status="FAILED: "+error;
+        if(server||StartupFallback.environmentFailure(error))return;
+        boolean rejectedSource=error instanceof Payload.SourceUnavailable||sourcePreparation;
+        if(!sourceCommitted&&(!rejectedSource||!StartupFallback.sourceFailure(error)))return;
+        try{
+            StartupFallback.Attempt attempt=startupAttempt;
+            if(attempt==null&&error instanceof Payload.SourceUnavailable source&&source.candidate!=null)
+                attempt=StartupFallback.capture(SourcePaths.configDirectory(),StartupFallback.revision(),source.candidate);
+            if(attempt!=null){StartupFallback.reject(attempt,error);Installation.recoveryNotice();}
+        }catch(IOException|RuntimeException recovery){System.err.println("[PZOptPreloader] recovery preparation failed; original failure retained: "+recovery);}
+    }
+    private static void installOnce() throws Exception {
         if (Installation.disabled()) {
             status = "disabled by user setting"; return;
         }
@@ -37,9 +63,10 @@ public final class RuntimeState {
         Payload candidate;
         try{
             candidate=Payload.discovered();
+            if(!server)startupAttempt=StartupFallback.capture(SourcePaths.configDirectory(),actual,candidate.root);
             if(sourceUse!=null&&!candidate.root.equals(SourcePaths.installationDirectory().toRealPath()))releaseSource();
             candidate.prepare(actual);
-        }catch(Throwable failed){releaseSource();throw failed;}
+        }catch(Throwable failed){throw failed;}
         if (server) candidate.prepareServerVehicleZones();
         Field field = Class.forName("me.zed_0xff.zombie_buddy.Loader").getDeclaredField("g_instrumentation");
         field.setAccessible(true); instrumentation = (Instrumentation) field.get(null);
@@ -47,6 +74,7 @@ public final class RuntimeState {
         PzfbSignedPackages.Prepared signedPzfb=server?null:PzfbSignedPackages.prepare(instrumentation);
         if(!Compatibility.LEGACY.equals(actual))ListStorage.install(instrumentation);
         Map<Class<?>, LambdaAdapter.Prepared> pending = new LinkedHashMap<>();
+        sourcePreparation=true;
         try{
         boolean extended=!server&&Compatibility.extendedSource(candidate);
         Map<Class<?>,byte[]> loaded=new LinkedHashMap<>();
@@ -69,13 +97,15 @@ public final class RuntimeState {
         }
         helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
         }catch(Exception failed){
-            releaseSource();throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed.getMessage(),candidate.root);
+            throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed,candidate.root,failed);
         }
         payload = candidate;
+        sourcePreparation=false;
         if(!server&&candidate.manualAdpPhysics())
             System.out.println("[PZOptPreloader] Verified installed manual ADP owns WorldSimulation; massScaler and complete ADP physics retained. "
                 +(candidate.manualAdpOptimizedPhysics()?"Existing optcompat vehicle smoothing/step hooks retained.":"PZOpt vehicle smoothing/step overrides are inactive for this standard ADP process; saved options are unchanged."));
         instrumentation.appendToSystemClassLoaderSearch(helperJar);
+        sourceCommitted=true;
         instrumentation.addTransformer(new Transformer(), false);
         if(signedPzfb!=null)PzfbSignedPackages.define(signedPzfb);
         if(!server)ManualAdpCompatibility.defineSignedPhysics(candidate,instrumentation);
@@ -97,15 +127,17 @@ public final class RuntimeState {
             instrumentation.redefineClasses(new ClassDefinition(entry.getKey(), bytes));
             definitions.put(entry.getKey().getName().replace('.', '/'), bytes);
         }
-        installed = true;
         for (String name : eager) if (!definitions.containsKey(name)) {
             throw new IllegalStateException("Selected class escaped early injection: " + name);
         }
+        if(injectionFailure!=null)throw new IllegalStateException("Injection failed before completion",injectionFailure);
+        installed = true;
         status = "active " + (server ? "server (" + candidate.serverFamilyCount() + " selected override families; " + eager.size() + " class definitions)"
             : "client (" + (candidate.manualAdpPhysics() ? candidate.targets.stream().filter(name -> candidate.selected(name,false)).count()+" selected" : "all "+payload.targets.size()) + " override families; " + eager.size() + " class definitions including nested)")
             + "; source=" + payload.root + "; commit=" + payload.build.getProperty("commit");
         System.out.println("[PZOptPreloader] " + status);
-        if(!server)try{SourceHistory.remember(candidate,actual);}catch(IOException error){System.err.println("[PZOptPreloader] original-source backup unavailable; existing snapshots retained: "+error);}
+        if(!server)try{SourceHistory.remember(candidate,actual);}catch(IOException|RuntimeException error){System.err.println("[PZOptPreloader] original-source backup unavailable; existing snapshots retained: "+error);}
+        if(!server)try{StartupFallback.active(candidate,actual);}catch(IOException|RuntimeException notice){System.err.println("[PZOptPreloader] recovery notice unavailable: "+notice);}
     }
 
     private static void releaseSource(){
@@ -159,7 +191,7 @@ public final class RuntimeState {
                     return helperBridges(name, input);
                 }
             } catch (Exception error) {
-                status = "FAILED loading " + name + ": " + error;
+                recordFailure(new IllegalStateException("Loading "+name+" failed",error));
                 System.err.println("[PZOptPreloader] " + status);
                 throw new IllegalStateException(status, error);
             }

@@ -71,6 +71,10 @@ public final class ManualAdpCompatibility {
 
     /** Verified manual physics keeps its schema while joining the native signed package domain. */
     public static void defineSignedPhysics(Payload payload,java.lang.instrument.Instrumentation instrumentation)throws Exception{
+        try{defineInstalledPhysics(payload,instrumentation);}
+        catch(Exception|LinkageError error){throw new StartupFallback.EnvironmentFailure("Installed manual ADP signed-package preparation refused: "+error,error);}
+    }
+    private static void defineInstalledPhysics(Payload payload,java.lang.instrument.Instrumentation instrumentation)throws Exception{
         if(!payload.manualAdpPhysics())return;
         ClassLoader loader=ManualAdpCompatibility.class.getClassLoader();
         Class<?> anchor=Class.forName("zombie.core.physics.Bullet",false,loader);
@@ -131,6 +135,10 @@ public final class ManualAdpCompatibility {
     }
 
     static Kind detect()throws IOException {
+        try{return detectInstalled();}
+        catch(IOException|RuntimeException|LinkageError error){throw new StartupFallback.EnvironmentFailure("Installed manual ADP inputs refused: "+error,error);}
+    }
+    private static Kind detectInstalled()throws IOException {
         ClassLoader loader=ManualAdpCompatibility.class.getClassLoader();
         byte[] world=resource(loader,SIMULATION),controller=resource(loader,CONTROLLER);
         if(world==null||controller==null)return Kind.ABSENT;
