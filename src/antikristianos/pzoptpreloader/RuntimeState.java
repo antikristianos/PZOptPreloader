@@ -39,8 +39,7 @@ public final class RuntimeState {
     static synchronized void recordFailure(Throwable error){
         if(injectionFailure!=null)return;injectionFailure=error;installed=false;status="FAILED: "+error;
         if(server||StartupFallback.environmentFailure(error))return;
-        boolean rejectedSource=error instanceof Payload.SourceUnavailable||sourcePreparation;
-        if(!sourceCommitted&&(!rejectedSource||!StartupFallback.sourceFailure(error)))return;
+        if(!sourcePreparation&&!StartupFallback.sourceFailure(error))return;
         try{
             StartupFallback.Attempt attempt=startupAttempt;
             if(attempt==null&&error instanceof Payload.SourceUnavailable source&&source.candidate!=null)
@@ -95,10 +94,13 @@ public final class RuntimeState {
             for(Class<?> cls:loaded.keySet()) pending.put(cls,new LambdaAdapter.Prepared(
                 candidate.classBytes(cls.getName().replace('.','/'),false),null,null));
         }
-        helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
         }catch(Exception failed){
-            throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed,candidate.root,failed);
+            throw new Payload.SourceUnavailable("incompatible","Early class preparation refused: "+failed,candidate.root,
+                new StartupFallback.SourceFailure("PZOpt early definitions refused",failed));
+        }finally{
+            sourcePreparation=false;
         }
+        helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
         payload = candidate;
         sourcePreparation=false;
         if(!server&&candidate.manualAdpPhysics())
@@ -109,6 +111,7 @@ public final class RuntimeState {
         instrumentation.addTransformer(new Transformer(), false);
         if(signedPzfb!=null)PzfbSignedPackages.define(signedPzfb);
         if(!server)ManualAdpCompatibility.defineSignedPhysics(candidate,instrumentation);
+        sourcePreparation=true;
         int signedHelpers=SignedPackageHelpers.define(candidate,server,instrumentation,helperJar);
         if(signedHelpers>0)System.out.println("[PZOptPreloader] "+signedHelpers+" installed helpers defined in their native package protection domains");
         // Define every member of the chosen families before other transformers resolve their types.
@@ -131,6 +134,7 @@ public final class RuntimeState {
             throw new IllegalStateException("Selected class escaped early injection: " + name);
         }
         if(injectionFailure!=null)throw new IllegalStateException("Injection failed before completion",injectionFailure);
+        sourcePreparation=false;
         installed = true;
         status = "active " + (server ? "server (" + candidate.serverFamilyCount() + " selected override families; " + eager.size() + " class definitions)"
             : "client (" + (candidate.manualAdpPhysics() ? candidate.targets.stream().filter(name -> candidate.selected(name,false)).count()+" selected" : "all "+payload.targets.size()) + " override families; " + eager.size() + " class definitions including nested)")
@@ -191,7 +195,7 @@ public final class RuntimeState {
                     return helperBridges(name, input);
                 }
             } catch (Exception error) {
-                recordFailure(new IllegalStateException("Loading "+name+" failed",error));
+                recordFailure(new StartupFallback.SourceFailure("Loading PZOpt definition "+name+" failed",error));
                 System.err.println("[PZOptPreloader] " + status);
                 throw new IllegalStateException(status, error);
             }

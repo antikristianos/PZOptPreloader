@@ -172,7 +172,7 @@ public final class Installation {
                     reason = error instanceof Payload.SourceUnavailable source ? source.reason : error instanceof Installer.Failure failure ? failure.reason : "failed";
                     progress = new Installer.Progress("failed", 0, 0, error.getMessage() == null ? error.toString() : error.getMessage());
                     if(updateMode&&offeredRelease!=null&&RuntimeState.payload!=null&&RuntimeState.status.startsWith("active client")
-                            &&!StartupFallback.environmentFailure(error)&&(reason.equals("incompatible")||reason.equals("invalid"))){
+                            &&StartupFallback.sourceFailure(error)&&(reason.equals("incompatible")||reason.equals("invalid"))){
                         try{StartupFallback.rejectedDownload(SourcePaths.configDirectory(),revision(),offeredRelease.digest(),RuntimeState.payload,error);
                             recoveryNotice();
                         }catch(Exception persistence){System.err.println("[PZOptPreloader] rejected update persistence failed: "+persistence);}

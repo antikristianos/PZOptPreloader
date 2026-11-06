@@ -20,7 +20,7 @@ public final class ShoreFloorLighting {
     private static boolean warned;
     private ShoreFloorLighting() { }
     public static boolean active(){return ShoreLandState.active()||CURRENT.get()!=null||ShoreReceiverState.active();}
-    public static void shaderReload(){PROGRAMS.clear();KERNELS.clear();ShoreLandState.shaderReload();SunCompositeShaders.generation++;}
+    public static void shaderReload(){PROGRAMS.clear();KERNELS.clear();ShoreLandState.shaderReload();}
     /** Native water draws pop texture attributes. Uniform caching cannot retain this sampler binding. */
     public static void waterCloudBind(){
         try{
@@ -138,7 +138,6 @@ public final class ShoreFloorLighting {
     private static final class Bound {
         int program,active,term,old,cloud,weather;
         Uniforms uniforms;
-        SunCompositeState.Scope sun;
     }
     private static final ArrayDeque<Bound> BOUND=new ArrayDeque<>(); // render thread only
     private static final class Binding extends TextureDraw.GenericDrawer {
@@ -160,7 +159,7 @@ public final class ShoreFloorLighting {
                 GL20.glUniform1i(u.weather,ShoreWeatherState.UNIT);GL20.glUniform1f(u.weatherEnabled,weather>0?1:0);
                 bind(TERM_UNIT,term);bind(OLD_UNIT,old>0?old:term);
                 GL20.glUniform1i(u.term,TERM_UNIT);GL20.glUniform1i(u.old,OLD_UNIT);
-                GL20.glUniform4f(u.params,term>0?1:0,direct,fade,SunCompositeShaders.enabled()?1:0);
+                GL20.glUniform4f(u.params,term>0?1:0,direct,fade,0);
                 GL20.glUniform4f(u.cloudRead,share?1:0,a.cloudBindless.getBoolean(null)?1:0,a.cloudTermMips?a.cloudTermLod:0,a.cloudTermMips?1:-8);
                 int[] viewport=new int[4];GL11.glGetIntegerv(GL11.GL_VIEWPORT,viewport);
                 float dx=context.screenW*context.zoom/(viewport[2]*64f),dy=-context.screenH*context.zoom/(viewport[3]*32f);
@@ -173,9 +172,10 @@ public final class ShoreFloorLighting {
                     a.waterUniforms.invoke(null);bind(CLOUD_UNIT,a.fieldTex.getInt(null));
                     GL20.glUniform4f(u.cloudE,1,0,0,0);
                 }else GL20.glUniform4f(u.cloudP,0,0,0,0);
-                state.sun=SunCompositeState.bind(context.depth,context.depth);
                 GL20.glUniform1f(u.enabled,1);
+                WorldSunLayerCapture.shoreBegin(context.lighting?context.depth:0);
             }catch(Throwable error){
+                WorldSunLayerCapture.shoreEnd();
                 GL20.glUniform1f(u.enabled,0);
                 GL20.glUniform1f(u.weatherEnabled,0);
                 if(!warned){warned=true;System.err.println("[PZOptPreloader] shore lighting unavailable; native draw retained: "+error);}
@@ -187,8 +187,9 @@ public final class ShoreFloorLighting {
     private static final class Reset extends TextureDraw.GenericDrawer {
         @Override public void render(){
             while(!BOUND.isEmpty()){
+                WorldSunLayerCapture.shoreEnd();
                 Bound state=BOUND.pop();int previous=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
-                GL20.glUseProgram(state.program);GL20.glUniform1f(state.uniforms.enabled,0);GL20.glUniform1f(state.uniforms.weatherEnabled,0);if(state.sun!=null)state.sun.close();GL20.glUseProgram(previous);
+                GL20.glUseProgram(state.program);GL20.glUniform1f(state.uniforms.enabled,0);GL20.glUniform1f(state.uniforms.weatherEnabled,0);GL20.glUseProgram(previous);
                 bind(TERM_UNIT,state.term);bind(OLD_UNIT,state.old);bind(CLOUD_UNIT,state.cloud);bind(ShoreWeatherState.UNIT,state.weather);GL13.glActiveTexture(state.active);
             }
         }

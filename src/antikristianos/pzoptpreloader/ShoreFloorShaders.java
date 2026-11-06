@@ -49,7 +49,7 @@ public final class ShoreFloorShaders {
         if(header<0||!source.startsWith("#version"))throw new IllegalStateException("Unsupported shore shader header: "+path);
         source=source.substring(0,header+1)+"#ifdef GL_ARB_shader_texture_lod\n#extension GL_ARB_shader_texture_lod : enable\n#endif\n"+source.substring(header+1);
         source=replaceOnce(source,"void main()","void pzShoreOriginal()");
-        return source+"\n#define PZ_SHORE_OUT "+output+"\n"+SunCompositeShaders.shore(TILE);
+        return source+"\n#define PZ_SHORE_OUT "+output+"\n"+TILE;
     }
     /** Keep native per-pixel bank coverage when the installed reflection pass blends over water. */
     private static CharSequence water(CharSequence text){
@@ -77,8 +77,6 @@ public final class ShoreFloorShaders {
         uniform vec4 pzShoreCloudRead;
         uniform sampler2D pzShoreWeather;
         uniform float pzShoreWeatherEnabled;
-        uniform sampler2D pzSunLayer, pzSunLayerOld;
-        uniform vec2 pzSunLayerParams;
         uniform sampler2D pzCloudFieldW;
         uniform vec4 pzCloudU, pzCloudV, pzCloudP, pzCloudD, pzCloudE;
         float pzShoreDirectShare(vec2 uv) {
@@ -111,7 +109,6 @@ public final class ShoreFloorShaders {
                 light = texture2D(pzShoreTerm, uv, -8.0).r;
                 if (pzShoreParams.z > 0.0) light = mix(light, texture2D(pzShoreOld, uv, -8.0).r, pzShoreParams.z);
             }
-            if (pzSunLayerParams.x > 0.5) light *= mix(texture2D(pzSunLayer, uv).r, texture2D(pzSunLayerOld, uv).r, pzSunLayerParams.y);
             // The land composite samples the current direct share at its configured LOD.
             // Its separate sun-step fade adjusts baked light, never this cloud share.
             float factor = clamp(light, 0.0, 1.0) * (1.0 - clamp(pzShoreDirectShare(uv), 0.0, 1.0) * (1.0 - pzShoreCloud()));

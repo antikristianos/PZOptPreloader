@@ -6,9 +6,9 @@ import java.util.*;
 
 /** Persisted next-process recovery; never retries injection in the current JVM. */
 public final class StartupFallback {
-    /** A refusal of installed foreign inputs does not identify a defective PZOpt release. */
-    public static final class EnvironmentFailure extends IOException {
-        public EnvironmentFailure(String message,Throwable cause){super(message,cause);}
+    /** Only an explicitly identified PZOpt recipe/input refusal identifies its source as incompatible. */
+    public static final class SourceFailure extends IOException {
+        public SourceFailure(String message,Throwable cause){super(message,cause);}
     }
     public record Attempt(Path config,String revision,Path root,String identity,String token,String digest) { }
     public record Notice(String phase,String detail,String previous) { }
@@ -115,15 +115,14 @@ public final class StartupFallback {
     }
     static boolean environmentFailure(Throwable error){
         Set<Throwable> seen=Collections.newSetFromMap(new IdentityHashMap<>());
-        for(;error!=null&&seen.add(error);error=error.getCause())if(error instanceof EnvironmentFailure||error instanceof VirtualMachineError||error instanceof ThreadDeath
+        for(;error!=null&&seen.add(error);error=error.getCause())if(error instanceof VirtualMachineError||error instanceof ThreadDeath
             ||error instanceof java.nio.file.FileSystemException||error instanceof java.nio.file.ReadOnlyFileSystemException||error instanceof SecurityException)return true;
         return false;
     }
     static boolean sourceFailure(Throwable error){
         if(environmentFailure(error))return false;Set<Throwable> seen=Collections.newSetFromMap(new IdentityHashMap<>());
         for(;error!=null&&seen.add(error);error=error.getCause()){
-            if(error instanceof Payload.SourceUnavailable source&&(source.reason.equals("incompatible")||source.reason.equals("invalid")))return true;
-            if(error instanceof LinkageError||error instanceof java.lang.instrument.UnmodifiableClassException)return true;
+            if(error instanceof SourceFailure)return true;
         }
         return false;
     }

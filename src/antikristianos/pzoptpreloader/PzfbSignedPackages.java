@@ -24,10 +24,6 @@ public final class PzfbSignedPackages {
     public record Prepared(Class<?> anchor,Map<String,byte[]> definitions){ }
     private PzfbSignedPackages(){ }
     public static Prepared prepare(Instrumentation instrumentation)throws Exception{
-        try{return prepareInstalled(instrumentation);}
-        catch(Exception|LinkageError error){throw new StartupFallback.EnvironmentFailure("Installed PZFB signed-package inputs refused: "+error,error);}
-    }
-    private static Prepared prepareInstalled(Instrumentation instrumentation)throws Exception{
         ClassLoader loader=PzfbSignedPackages.class.getClassLoader();var resource=loader.getResource(PREFIX+"Color.class");
         Path game=Compatibility.gameJar();
         if(resource==null||resource.openConnection() instanceof java.net.JarURLConnection connection
@@ -49,10 +45,6 @@ public final class PzfbSignedPackages {
         return new Prepared(anchor,definitions);
     }
     public static void define(Prepared prepared)throws Exception{
-        try{defineInstalled(prepared);}
-        catch(Exception|LinkageError error){throw new StartupFallback.EnvironmentFailure("Installed PZFB signed-package definition refused: "+error,error);}
-    }
-    private static void defineInstalled(Prepared prepared)throws Exception{
         if(prepared.definitions.isEmpty())return;
         var lookup=MethodHandles.privateLookupIn(prepared.anchor,MethodHandles.lookup());
         for(var entry:prepared.definitions.entrySet()){

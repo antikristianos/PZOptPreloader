@@ -3,11 +3,6 @@ public final class PreMain {
     public static void premain(String[] args) {
         try { RuntimeState.install(); WallReflectionRepair.prepareNativeHooks(); OffscreenReflectionRepair.prepareNativeHooks(); }
         catch (Payload.SourceUnavailable error) {
-            if(StartupFallback.environmentFailure(error)){
-                RuntimeState.recordFailure(error);
-                System.err.println("[PZOptPreloader] installed environment refused; optimization source not quarantined: "+StartupFallback.describe(error));
-                return;
-            }
             RuntimeState.status = "source unavailable: " + error.getMessage();
             if(!Installation.recoveryNotice())Installation.unavailable(error);
         }

@@ -232,7 +232,7 @@ public final class Installer {
                 if(StartupFallback.quarantined(config,revision,pending))return false;
                 try{Payload.verifiedSource(pending, revision);}
                 catch(Payload.SourceUnavailable error){
-                    if(!StartupFallback.environmentFailure(error)&&(error.reason.equals("incompatible")||error.reason.equals("invalid")))try{StartupFallback.rejectedPending(config,revision,pending,error);}catch(IOException recovery){error.addSuppressed(recovery);}
+                    if(StartupFallback.sourceFailure(error)&&(error.reason.equals("incompatible")||error.reason.equals("invalid")))try{StartupFallback.rejectedPending(config,revision,pending,error);}catch(IOException recovery){error.addSuppressed(recovery);}
                     throw error;
                 }
                 publish(pending, config.resolve("PZ_Optimization"));

@@ -31,8 +31,13 @@ public final class Payload {
     }
     public synchronized void prepare(String actual)throws IOException {
         if(prepared!=null)return;
-        Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
-        Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
+        Map<String,byte[]> candidate;
+        Properties metadata;
+        try{
+            candidate=Compatibility.prepare(this,actual);
+            metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
+        }catch(IOException|RuntimeException error){throw new StartupFallback.SourceFailure("PZOpt source preparation refused: "+error,error);}
+        // Installed foreign-mod detection retains its own behavior and is outside PZOpt source attribution.
         ManualAdpCompatibility.Kind installedManualAdp=Compatibility.isCurrent(actual)&&!RuntimeState.server
             ?ManualAdpCompatibility.detect():ManualAdpCompatibility.Kind.ABSENT;
         if(installedManualAdp!=ManualAdpCompatibility.Kind.ABSENT){
@@ -129,7 +134,11 @@ public final class Payload {
         if(shoreLighting)bytes=SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes));
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
-        return shoreLighting?SunCompositeRepair.patch(name,DoorVisibilityRepair.patch(name,OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))))):bytes;
+        if(shoreLighting){
+            bytes=WorldSunLayerRepair.patch(name,OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))));
+            bytes=DoorRenderDiagnosticsRepair.patch(name,bytes,source);
+        }
+        return bytes;
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {
@@ -205,12 +214,18 @@ public final class Payload {
         try { root = normalizeSource(candidate); }
         catch (IOException error) { throw new SourceUnavailable("missing", error.getMessage(),candidate); }
         try {
-            Payload payload = new Payload(root);
-            if (!Compatibility.supports(payload,revision))
-                throw new SourceUnavailable("incompatible", "PZ Optimization targets revision " + payload.build.getProperty("revision") + "; installed game is " + revision + "; source=" + root);
-            if (!payload.classes.containsKey("pzopt/Overrides")) throw new IOException("Missing pzopt/Overrides.class");
+            Payload payload;
+            try{
+                payload = new Payload(root);
+                if (!Compatibility.supports(payload,revision))
+                    throw new SourceUnavailable("incompatible", "PZ Optimization targets revision " + payload.build.getProperty("revision") + "; installed game is " + revision + "; source=" + root);
+                if (!payload.classes.containsKey("pzopt/Overrides")) throw new IOException("Missing pzopt/Overrides.class");
+            }catch(IOException|RuntimeException error){throw new StartupFallback.SourceFailure("PZOpt source input refused: "+error,error);}
             payload.prepare(revision); VERIFIED.set(payload);
             return root;
+        } catch (StartupFallback.SourceFailure error) {
+            String reason=error.getCause() instanceof SourceUnavailable source?source.reason:"invalid";
+            throw new SourceUnavailable(reason,error.toString(),root,error);
         } catch (SourceUnavailable error) { throw new SourceUnavailable(error.reason,error.getMessage(),root,error); }
         catch (IOException | RuntimeException error) { throw new SourceUnavailable("invalid", error.toString(),root,error); }
     }
