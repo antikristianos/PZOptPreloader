@@ -31,13 +31,8 @@ public final class Payload {
     }
     public synchronized void prepare(String actual)throws IOException {
         if(prepared!=null)return;
-        Map<String,byte[]> candidate;
-        Properties metadata;
-        try{
-            candidate=Compatibility.prepare(this,actual);
-            metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
-        }catch(IOException|RuntimeException error){throw new StartupFallback.SourceFailure("PZOpt source preparation refused: "+error,error);}
-        // Installed foreign-mod detection retains its own behavior and is outside PZOpt source attribution.
+        Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
+        Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
         ManualAdpCompatibility.Kind installedManualAdp=Compatibility.isCurrent(actual)&&!RuntimeState.server
             ?ManualAdpCompatibility.detect():ManualAdpCompatibility.Kind.ABSENT;
         if(installedManualAdp!=ManualAdpCompatibility.Kind.ABSENT){
@@ -134,11 +129,7 @@ public final class Payload {
         if(shoreLighting)bytes=SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes));
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
-        if(shoreLighting){
-            bytes=WorldSunLayerRepair.patch(name,OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))));
-            bytes=DoorRenderDiagnosticsRepair.patch(name,bytes,source);
-        }
-        return bytes;
+        return shoreLighting?OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))):bytes;
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {
@@ -170,10 +161,7 @@ public final class Payload {
         String revision = String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
         String explicit = System.getProperty("pzoptpreloader.source");
         if(explicit!=null&&!explicit.isBlank()){
-            try{
-                Path retained=StartupFallback.selected(SourcePaths.configDirectory(),revision,Path.of(explicit));
-                return retained!=null?retained:verifiedSource(Path.of(explicit),revision);
-            }
+            try{return verifiedSource(Path.of(explicit),revision);}
             catch(SourceUnavailable failure){
                 Path retained=SourceHistory.selected(SourcePaths.configDirectory(),revision,List.of(failure));
                 if(retained!=null)return retained;throw failure;
@@ -194,10 +182,7 @@ public final class Payload {
         SourceUnavailable failure = new SourceUnavailable("missing", "No PZ Optimization payload found; install the matching GitHub release in " + configSource);
         List<SourceUnavailable> rejected=new ArrayList<>();
         for (Path candidate : candidates) {
-            try {
-                Path retained=StartupFallback.selected(configSource.toAbsolutePath().normalize().getParent(),revision,candidate);
-                return retained!=null?retained:verifiedSource(candidate, revision);
-            }
+            try { return verifiedSource(candidate, revision); }
             catch (SourceUnavailable error) {
                 rejected.add(error);
                 if (!error.reason.equals("missing")) failure = error;
@@ -214,20 +199,14 @@ public final class Payload {
         try { root = normalizeSource(candidate); }
         catch (IOException error) { throw new SourceUnavailable("missing", error.getMessage(),candidate); }
         try {
-            Payload payload;
-            try{
-                payload = new Payload(root);
-                if (!Compatibility.supports(payload,revision))
-                    throw new SourceUnavailable("incompatible", "PZ Optimization targets revision " + payload.build.getProperty("revision") + "; installed game is " + revision + "; source=" + root);
-                if (!payload.classes.containsKey("pzopt/Overrides")) throw new IOException("Missing pzopt/Overrides.class");
-            }catch(IOException|RuntimeException error){throw new StartupFallback.SourceFailure("PZOpt source input refused: "+error,error);}
+            Payload payload = new Payload(root);
+            if (!Compatibility.supports(payload,revision))
+                throw new SourceUnavailable("incompatible", "PZ Optimization targets revision " + payload.build.getProperty("revision") + "; installed game is " + revision + "; source=" + root);
+            if (!payload.classes.containsKey("pzopt/Overrides")) throw new IOException("Missing pzopt/Overrides.class");
             payload.prepare(revision); VERIFIED.set(payload);
             return root;
-        } catch (StartupFallback.SourceFailure error) {
-            String reason=error.getCause() instanceof SourceUnavailable source?source.reason:"invalid";
-            throw new SourceUnavailable(reason,error.toString(),root,error);
-        } catch (SourceUnavailable error) { throw new SourceUnavailable(error.reason,error.getMessage(),root,error); }
-        catch (IOException | RuntimeException error) { throw new SourceUnavailable("invalid", error.toString(),root,error); }
+        } catch (SourceUnavailable error) { throw new SourceUnavailable(error.reason,error.getMessage(),root); }
+        catch (IOException | RuntimeException error) { throw new SourceUnavailable("invalid", error.toString(),root); }
     }
 
     public static final class SourceUnavailable extends IOException {
@@ -235,10 +214,9 @@ public final class Payload {
         public final Path candidate;
         public SourceUnavailable(String reason,String message){this(reason,message,null);}
         public SourceUnavailable(String reason,String message,Path candidate){super(message);this.reason=reason;this.candidate=candidate;}
-        public SourceUnavailable(String reason,String message,Path candidate,Throwable cause){super(message,cause);this.reason=reason;this.candidate=candidate;}
     }
 
-    static Path normalizeSource(Path candidate) throws IOException {
+    private static Path normalizeSource(Path candidate) throws IOException {
         for (Path path : List.of(candidate, candidate.resolve("pzopt-classes"),
                 candidate.resolve("mods/PZ_Optimization/42/pzopt-classes"),
                 candidate.resolve("mods/PZ_Optimization/42.21/pzopt-classes"))) {

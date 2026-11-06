@@ -173,9 +173,7 @@ public final class ShoreFloorLighting {
                     GL20.glUniform4f(u.cloudE,1,0,0,0);
                 }else GL20.glUniform4f(u.cloudP,0,0,0,0);
                 GL20.glUniform1f(u.enabled,1);
-                WorldSunLayerCapture.shoreBegin(context.lighting?context.depth:0);
             }catch(Throwable error){
-                WorldSunLayerCapture.shoreEnd();
                 GL20.glUniform1f(u.enabled,0);
                 GL20.glUniform1f(u.weatherEnabled,0);
                 if(!warned){warned=true;System.err.println("[PZOptPreloader] shore lighting unavailable; native draw retained: "+error);}
@@ -187,7 +185,6 @@ public final class ShoreFloorLighting {
     private static final class Reset extends TextureDraw.GenericDrawer {
         @Override public void render(){
             while(!BOUND.isEmpty()){
-                WorldSunLayerCapture.shoreEnd();
                 Bound state=BOUND.pop();int previous=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
                 GL20.glUseProgram(state.program);GL20.glUniform1f(state.uniforms.enabled,0);GL20.glUniform1f(state.uniforms.weatherEnabled,0);GL20.glUseProgram(previous);
                 bind(TERM_UNIT,state.term);bind(OLD_UNIT,state.old);bind(CLOUD_UNIT,state.cloud);bind(ShoreWeatherState.UNIT,state.weather);GL13.glActiveTexture(state.active);

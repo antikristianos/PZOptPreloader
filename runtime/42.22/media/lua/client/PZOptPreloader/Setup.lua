@@ -73,9 +73,6 @@ function SetupPanel:refresh()
             key = issue
         end
         local text = plainText(getText(prefix .. key))
-        if state == "rollback" or (state == "retained" and (issue == "incompatible" or issue == "invalid")) then
-            text = plainText(getText(prefix .. "incompatible")) .. " <BR> " .. text
-        end
         if state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback" then
             text = text .. " <BR> " .. plainText(getText(prefix .. (self.updateMode and "UpdateIntro" or "Intro")))
         end

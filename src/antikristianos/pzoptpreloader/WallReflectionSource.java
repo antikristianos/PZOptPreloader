@@ -132,7 +132,7 @@ public final class WallReflectionSource {
                     throw new IllegalStateException("Physical wall source framebuffer incomplete");
             }finally{GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,previous);GL11.glBindTexture(GL11.GL_TEXTURE_2D,texture);GL13.glActiveTexture(active);}
         }
-        void dropImages(){if(depthId!=0)WorldSunLayerSources.free(depthId);if(fbo!=0)GL30.glDeleteFramebuffers(fbo);if(colourId!=0)GL11.glDeleteTextures(colourId);if(depthId!=0)GL11.glDeleteTextures(depthId);fbo=colourId=depthId=0;valid=false;hasPixels=false;clear=true;}
+        void dropImages(){if(fbo!=0)GL30.glDeleteFramebuffers(fbo);if(colourId!=0)GL11.glDeleteTextures(colourId);if(depthId!=0)GL11.glDeleteTextures(depthId);fbo=colourId=depthId=0;valid=false;hasPixels=false;clear=true;}
         void release(){dropImages();removed=true;WANTED.remove(depth);if(BY_COLOUR.get(originalColour)==this)BY_COLOUR.remove(originalColour);if(BY_DEPTH.get(depth.getID())==this)BY_DEPTH.remove(depth.getID());WallReflectionLighting.remove(depth.getID());}
     }
     private static int texture(int w,int h,int internal,int format){
@@ -158,13 +158,12 @@ public final class WallReflectionSource {
     }
     /** Native chunk destruction is queued, preserving the already submitted render-state ownership. */
     public static void free(FBORenderChunk owner){
-        nativeFrees++;if(owner==null)return;Texture key=owner.depth;int sunDepth=key==null?0:key.getID();
-        SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){Source source=SOURCES.remove(key);if(source!=null)source.release();WorldSunLayerState.free(sunDepth);}});
+        nativeFrees++;if(owner==null)return;Texture key=owner.depth;
+        SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){Source source=SOURCES.remove(key);if(source!=null)source.release();}});
     }
     public static void clear(){
         if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.clear();
         SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){
-            WorldSunLayerState.clear();
             for(Source source:SOURCES.values())source.release();SOURCES.clear();BY_COLOUR.clear();BY_DEPTH.clear();WANTED.clear();REBUILD.clear();WallReflectionLighting.clear();PhysicalShadowSources.clear();COMPOSITES.clear();pendingComposite=renderingSource=null;
         }});
     }
@@ -201,10 +200,8 @@ public final class WallReflectionSource {
             GL11.glColorMask(false,false,false,false);GL11.glDepthMask(false);GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL13.glActiveTexture(GL13.GL_TEXTURE0);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.colourId);
             GL13.glActiveTexture(GL13.GL_TEXTURE1);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depthId);GL13.glActiveTexture(GL13.GL_TEXTURE0);
-            try(WorldSunLayerCapture.Receiver receiver=WorldSunLayerCapture.receiver(source.depth.getID(),source.depthId)){
-                GL12.glDrawRangeElements(mode,start,end,count,type,offset);compositeDraws++;
-                if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
-            }
+            GL12.glDrawRangeElements(mode,start,end,count,type,offset);compositeDraws++;
+            if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.compositeElements(mode,start,end,count,type,offset);
         }catch(Throwable error){source.valid=false;fail(error);}finally{
             GL13.glActiveTexture(GL13.GL_TEXTURE0);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.colour.getID());
             GL13.glActiveTexture(GL13.GL_TEXTURE1);GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depth.getID());GL13.glActiveTexture(GL13.GL_TEXTURE0);
@@ -227,13 +224,6 @@ public final class WallReflectionSource {
     public static long rebuilds(){return rebuilds;}
     /** Same installed AO ratio/multiply draw, into the physical layer after its original colour draw. */
     public static void mirrorLighting(int mode,int first,int count,int originalColour){
-        mirrorLighting(mode,first,count,originalColour,false);
-    }
-    /** Sun-only work updates its own physical source without touching the physical colour cache. */
-    public static void mirrorSunSource(int mode,int first,int count,int originalColour){
-        mirrorLighting(mode,first,count,originalColour,true);
-    }
-    private static void mirrorLighting(int mode,int first,int count,int originalColour,boolean sunOnly){
         if(sourceGpu||failed)return;
         Source source=BY_COLOUR.get(originalColour);if(source==null||!source.valid||!source.hasPixels||source.fbo==0)return;
         int fbo=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);if(fbo!=source.nativeFbo)return;
@@ -241,7 +231,7 @@ public final class WallReflectionSource {
         GL13.glActiveTexture(GL13.GL_TEXTURE2);int depth=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D,source.depthId);GL13.glActiveTexture(active);
         GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,source.fbo);
-        try{WorldSunLayerSources.mirrorPhysical(mode,first,count,source.depthId,source.colourId);if(!sunOnly)GL11.glDrawArrays(mode,first,count);}finally{
+        try{GL11.glDrawArrays(mode,first,count);}finally{
             GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,fbo);
             GL13.glActiveTexture(GL13.GL_TEXTURE2);GL11.glBindTexture(GL11.GL_TEXTURE_2D,depth);GL13.glActiveTexture(active);
         }

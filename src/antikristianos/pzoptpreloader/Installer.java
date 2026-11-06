@@ -230,12 +230,7 @@ public final class Installer {
                 sourceLock = source.tryLock();
                 if (sourceLock == null) return false;
                 if (!Files.isDirectory(pending)) return false;
-                if(StartupFallback.quarantined(config,revision,pending))return false;
-                try{Payload.verifiedSource(pending, revision);}
-                catch(Payload.SourceUnavailable error){
-                    if(StartupFallback.sourceFailure(error)&&(error.reason.equals("incompatible")||error.reason.equals("invalid")))try{StartupFallback.rejectedPending(config,revision,pending,error);}catch(IOException recovery){error.addSuppressed(recovery);}
-                    throw error;
-                }
+                Payload.verifiedSource(pending, revision);
                 publish(pending, config.resolve("PZ_Optimization"));
                 System.out.println("[PZOptPreloader] verified pending update activated before class injection");
                 return true;

@@ -39,7 +39,6 @@ public final class Installation {
     public static synchronized void startup() {
         if (startupChecked || disabled()) return;
         startupChecked = true;
-        if(recoveryNotice())return;
         try {
             Payload installed = RuntimeState.payload != null ? RuntimeState.payload : new Payload(Payload.discover());
             if (RuntimeState.detectServer(System.getProperty("sun.java.command", ""))
@@ -99,16 +98,7 @@ public final class Installation {
     public static String installedVersion() { return installedVersion; }
     public static String offeredVersion() { return offeredVersion; }
     public static String updateStatus() { return updateStatus; }
-    public static void dismiss() {
-        dismissed = true;
-        try{StartupFallback.acknowledge();}catch(IOException error){System.err.println("[PZOptPreloader] recovery notice acknowledgement failed: "+error);}
-    }
-    static synchronized boolean recoveryNotice(){
-        StartupFallback.Notice notice=StartupFallback.notice();if(notice==null)return false;
-        setupNeeded=true;dismissed=false;reason="incompatible";updateMode=false;previous=null;rejectedSource=null;
-        installedVersion=notice.previous();progress=new Installer.Progress(notice.phase(),0,0,notice.detail());
-        updateStatus="incompatible source quarantined; "+notice.phase();return true;
-    }
+    public static void dismiss() { dismissed = true; }
     public static void dismissUpdate() { if (updateMode && !busy()) dismiss(); }
     public static synchronized void cancelDownload() {
         if (progress.phase().equals("publish") || progress.phase().equals("complete")) return;
@@ -140,7 +130,7 @@ public final class Installation {
             && ((updateMode&&offeredRelease!=null&&RuntimeState.payload!=null&&progress.phase().equals("failed")
                 && (reason.equals("incompatible")||reason.equals("invalid"))) || (previous!=null&&rejectedSource!=null));
     }
-    public static String previousVersion(){return updateMode||StartupFallback.notice()!=null?installedVersion:previous==null?"":previous.label();}
+    public static String previousVersion(){return updateMode?installedVersion:previous==null?"":previous.label();}
     public static synchronized boolean keepPrevious(){
         if(!canKeepPrevious()||disabled())return false;
         try{
@@ -171,12 +161,6 @@ public final class Installation {
                 if (!cancelled) {
                     reason = error instanceof Payload.SourceUnavailable source ? source.reason : error instanceof Installer.Failure failure ? failure.reason : "failed";
                     progress = new Installer.Progress("failed", 0, 0, error.getMessage() == null ? error.toString() : error.getMessage());
-                    if(updateMode&&offeredRelease!=null&&RuntimeState.payload!=null&&RuntimeState.status.startsWith("active client")
-                            &&StartupFallback.sourceFailure(error)&&(reason.equals("incompatible")||reason.equals("invalid"))){
-                        try{StartupFallback.rejectedDownload(SourcePaths.configDirectory(),revision(),offeredRelease.digest(),RuntimeState.payload,error);
-                            recoveryNotice();
-                        }catch(Exception persistence){System.err.println("[PZOptPreloader] rejected update persistence failed: "+persistence);}
-                    }
                     System.err.println("[PZOptPreloader] install failed: " + error);
                 }
             }
