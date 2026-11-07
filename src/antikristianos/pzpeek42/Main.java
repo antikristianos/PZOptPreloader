@@ -49,7 +49,7 @@ public final class Main {
         byte[] effective=(byte[])preloader.getMethod("getEffectiveClassBytes",String.class).invoke(null,CELL);
         preparedShape=RenderPaths.inspect(effective,false);
         TreeOpacity.initialize();TreeCache.initialize();FastPeek.initialize();WindowAccess.initialize();ShadeCache.initialize();
-        PerformanceTransforms.prepare();prepared=true;
+        PerformanceTransforms.prepare();PropCutaway.initialize();prepared=true;
     }
     /** GameWindow calls this Lua lifecycle only after ZFS/Buddy finished loading every mod JAR. */
     public static synchronized void initializeAfterModsLoaded() {

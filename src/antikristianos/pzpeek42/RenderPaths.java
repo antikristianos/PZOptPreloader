@@ -88,6 +88,15 @@ public final class RenderPaths {
                 };
             }
         },ClassReader.SKIP_DEBUG|ClassReader.SKIP_FRAMES);
+        String scoped="pzoptPreloaderStandingPlain("+OBJECT+")V";
+        if(methods.containsKey(scoped)){
+            MethodPath wrapper=instance(methods,DRAW),body=instance(methods,scoped);
+            long begin=wrapper.calls.stream().filter(c->c.opcode==Opcodes.INVOKESTATIC&&c.owner.equals("antikristianos/pzoptpreloader/StandingObjectCutaway")&&c.method.equals("beginDepth("+OBJECT+")V")).count();
+            long end=wrapper.calls.stream().filter(c->c.opcode==Opcodes.INVOKESTATIC&&c.owner.equals("antikristianos/pzoptpreloader/StandingObjectCutaway")&&c.method.equals("endDepth()V")).count();
+            long call=wrapper.calls.stream().filter(c->c.opcode==Opcodes.INVOKESPECIAL&&c.owner.equals(CELL)&&c.method.equals(scoped)).count();
+            if(begin!=1||end!=2||call!=1||wrapper.calls.size()!=4||(body.access&Opcodes.ACC_PRIVATE)==0)throw mismatch("standing-object scope changed");
+            methods.put(DRAW,body);methods.remove(scoped);
+        }
         for(String key:WRAPPERS.keySet())instance(methods,key);
         // The entry shortcut is safe only while the superseded classifier itself is read-only.
         for(String dependency:instance(methods,NEED).fields.keySet()){

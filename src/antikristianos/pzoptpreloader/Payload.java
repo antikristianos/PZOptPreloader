@@ -18,6 +18,8 @@ public final class Payload {
     private Map<String,byte[]> prepared;
     private Map<String,byte[]> emitted;
     private Properties effectiveBuild;
+    private boolean shoreLighting;
+    private ManualAdpCompatibility.Kind manualAdp=ManualAdpCompatibility.Kind.ABSENT;
     private static final ThreadLocal<Payload> VERIFIED = new ThreadLocal<>();
     public static Payload discovered()throws Exception {
         Path root=discover();Payload cached=VERIFIED.get();VERIFIED.remove();
@@ -31,18 +33,34 @@ public final class Payload {
         if(prepared!=null)return;
         Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
         Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
-        prepared=candidate;effectiveBuild=metadata;
+        ManualAdpCompatibility.Kind installedManualAdp=Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this)&&!RuntimeState.server
+            ?ManualAdpCompatibility.detect():ManualAdpCompatibility.Kind.ABSENT;
+        if(installedManualAdp!=ManualAdpCompatibility.Kind.ABSENT){
+            Properties owned=new Properties();owned.putAll(metadata==null?build:metadata);
+            owned.setProperty("overrides",String.join(",",Arrays.stream(owned.getProperty("overrides","").split(","))
+                .filter(name->!name.equals(ManualAdpCompatibility.SIMULATION)).toList()));
+            metadata=owned;
+        }
+        boolean restoreStartup=!RuntimeState.server&&Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this);
+        if(restoreStartup){
+            StartupScreens.retainNativeLogos(candidate);
+            Properties owned=new Properties();owned.putAll(metadata==null?build:metadata);
+            owned.setProperty("overrides",String.join(",",Arrays.stream(owned.getProperty("overrides","").split(",")).filter(name->!StartupScreens.nativeLogo(name)).toList()));metadata=owned;
+        }
+        prepared=candidate;effectiveBuild=metadata;shoreLighting=Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this);manualAdp=installedManualAdp;
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
     public Set<String> classNames(){return Collections.unmodifiableSet(emitted!=null?emitted.keySet():prepared==null?classes.keySet():prepared.keySet());}
     public boolean hasClass(String name){return emitted!=null?emitted.containsKey(name):prepared==null?classes.containsKey(name):prepared.containsKey(name);}
     public void prepareEarlyEmission(Map<String,byte[]> loaded) throws IOException {
         Map<String,byte[]> definitions=new TreeMap<>();
-        for(String name:classNames())definitions.put(name,classBytes(name,false));
+        for (String name:classNames()) definitions.put(name,classBytes(name,false));
         EarlyClassAdapter adapter=EarlyClassAdapter.prepare(definitions,loaded);
-        try(JarFile game=new JarFile(Compatibility.gameJar().toFile())){ClassReferences.verify(definitions,game);}
-        emitted=definitions;adapter.activate();
+        try (JarFile game=new JarFile(Compatibility.gameJar().toFile())) { ClassReferences.verify(definitions,game); }
+        emitted=definitions; adapter.activate();
     }
+    public boolean manualAdpPhysics(){return manualAdp!=ManualAdpCompatibility.Kind.ABSENT;}
+    public boolean manualAdpOptimizedPhysics(){return manualAdp==ManualAdpCompatibility.Kind.OPTCOMPAT;}
     public static final Set<String> SERVER_TARGETS = Set.of(
         "zombie/scripting/ScriptParser", "zombie/iso/FishSchoolManager",
         "zombie/scripting/objects/Item", "zombie/MapCollisionData", "zombie/iso/IsoMetaCell",
@@ -79,6 +97,8 @@ public final class Payload {
     }
 
     public boolean selected(String name, boolean server) {
+        if(!server&&shoreLighting&&StartupScreens.nativeLogo(name))return false;
+        if(!server&&manualAdpPhysics()&&name.equals(ManualAdpCompatibility.SIMULATION))return false;
         if (server && name.equals(VehicleZoneRepair.TARGET)) return serverVehicleZones != null;
         Set<String> selected = server ? SERVER_TARGETS : targets;
         return selected.stream().anyMatch(target -> name.equals(target) || name.startsWith(target + "$"));
@@ -100,15 +120,26 @@ public final class Payload {
     public int serverFamilyCount() { return SERVER_TARGETS.size() + (serverVehicleZones == null ? 0 : 1); }
 
     public byte[] classBytes(String name, boolean server) throws IOException {
-        if(emitted!=null&&!server){byte[] bytes=emitted.get(name);if(bytes==null)throw new IOException("Missing emitted definition: "+name);return bytes.clone();}
+        if (emitted!=null&&!server) {
+            byte[] bytes=emitted.get(name);
+            if (bytes==null) throw new IOException("Missing emitted definition: "+name);
+            return bytes.clone();
+        }
         if (server && name.equals(VehicleZoneRepair.TARGET)) {
             if (serverVehicleZones == null) throw new IOException("Unverified server vehicle-zone override refused");
             return serverVehicleZones.clone();
         }
         byte[] source=baseClassBytes(name);
         if(source==null)throw new IOException("Missing prepared definition: "+name);
+        if(!server&&manualAdp==ManualAdpCompatibility.Kind.STANDARD)source=ManualAdpCompatibility.keepManualPhysics(name,source);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
-        return server ? bytes : UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
+        if(server)return bytes;
+        if(shoreLighting)bytes=StartupScreens.patch(name,bytes);
+        if(shoreLighting)bytes=PhysicalShadowSources.patch(name,ShoreCloudRepair.patch(name,StandingObjectCutaway.patch(name,SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes)))));
+        if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
+        if(shoreLighting)bytes=StandingObjectCutaway.depthScope(name,bytes);
+        bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
+        return shoreLighting?OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))):bytes;
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {
@@ -120,6 +151,7 @@ public final class Payload {
         VisualExclusions.prepareMedia(this,directory);
         try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar))) {
             for (String name : classNames()) {
+                if(!server&&manualAdpPhysics()&&name.equals(ManualAdpCompatibility.SIMULATION))continue;
                 if (server && !name.startsWith("pzopt/") && !selected(name, true)) continue;
                 output.putNextEntry(new JarEntry(name + ".class"));
                 output.write(classBytes(name, server)); output.closeEntry();
@@ -144,6 +176,12 @@ public final class Payload {
                 Path retained=SourceHistory.selected(SourcePaths.configDirectory(),revision,List.of(failure));
                 if(retained!=null)return retained;throw failure;
             }
+        }
+        LinkedHashSet<Path> anchors = new LinkedHashSet<>();
+        anchors.add(Path.of(System.getProperty("user.dir")));
+        anchors.add(Path.of(Payload.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
+        for (String entry : System.getProperty("java.class.path", "").split(File.pathSeparator)) {
+            if (!entry.isBlank()) anchors.add(Path.of(entry).toAbsolutePath());
         }
         return discover(List.of(), SourcePaths.installationDirectory(), revision);
     }

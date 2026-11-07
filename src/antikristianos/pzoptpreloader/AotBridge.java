@@ -12,6 +12,7 @@ public final class AotBridge {
     private AotBridge() { }
     public static String takeSetupNotice() { return LauncherAot.takeSetupNotice(); }
     public static String launcherStatus() { return LauncherAot.status; }
+    public static boolean ownsAotLifecycle() { return !RuntimeState.server && RuntimeState.status.startsWith("active client"); }
     public static void validate() {
         if (!configured()) return;
         List<String> args = ManagementFactory.getRuntimeMXBean().getInputArguments();

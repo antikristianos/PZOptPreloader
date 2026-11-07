@@ -86,6 +86,10 @@ public final class PeekIntegration {
     public static boolean selected(){return ready && selected;}
     public static boolean stairsSelected(){return ready && stairs;}
     public static boolean isActive(){return ready && selected && bridgeLoaded && antikristianos.pzpeek42.Main.active;}
+    public static void extendPropCutaway(zombie.iso.fboRenderChunk.FBORenderCell renderer,int player,ArrayList<zombie.characters.IsoGameCharacter.Location> locations){
+        if(!isActive()||RuntimeState.payload==null||!"154126d0".equals(RuntimeState.payload.build.getProperty("commit"))||WallReflectionSource.sourcePass())return;
+        antikristianos.pzpeek42.PropCutaway.extend(renderer,player,locations);
+    }
     public static String getStatus(){return status;}
     public static double getVisibility(){return bridgeLoaded?antikristianos.pzpeek42.Main.getVisibility():30;}
     public static void setVisibility(double value){if(bridgeLoaded)antikristianos.pzpeek42.Main.setVisibility(value);}
