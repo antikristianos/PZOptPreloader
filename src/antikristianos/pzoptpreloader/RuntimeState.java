@@ -102,7 +102,7 @@ public final class RuntimeState {
             throw new IllegalStateException("Selected class escaped early injection: " + name);
         }
         status = "active " + (server ? "server (" + candidate.serverFamilyCount() + " selected override families; " + eager.size() + " class definitions)"
-            : "client (" + (candidate.manualAdpPhysics() ? candidate.targets.stream().filter(name -> candidate.selected(name,false)).count()+" selected" : "all "+payload.targets.size()) + " override families; " + eager.size() + " class definitions including nested)")
+            : "client (" + (candidate.manualAdpPhysics()||!candidate.selected(StartupScreens.LOGO,false) ? candidate.targets.stream().filter(name -> candidate.selected(name,false)).count()+" selected" : "all "+payload.targets.size()) + " override families; " + eager.size() + " class definitions including nested)")
             + "; source=" + payload.root + "; commit=" + payload.build.getProperty("commit");
         System.out.println("[PZOptPreloader] " + status);
         if(!server)try{SourceHistory.remember(candidate,actual);}catch(IOException error){System.err.println("[PZOptPreloader] original-source backup unavailable; existing snapshots retained: "+error);}

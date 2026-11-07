@@ -1,6 +1,7 @@
 package antikristianos.pzoptpreloader;
 
 import java.lang.reflect.*;
+import java.lang.invoke.*;
 import java.util.*;
 import org.lwjgl.opengl.*;
 import zombie.core.Core;
@@ -52,6 +53,10 @@ public final class ShoreFloorLighting {
         if(location<0)throw new IllegalStateException("Shore receiver mask absent from active AO kernel");
         int[] mask=MASKS.get(job);GL30.glUniform1uiv(location,mask==null?EMPTY_MASK:mask);
     }
+    public static int vertexCloud(int abgr,float x,float y,float z){
+        Context context=CURRENT.get();if(context!=null&&context.pixelCloud)return abgr;
+        try{return (int)Access.get().shoreVertex.invokeExact(abgr,x,y,z);}catch(Throwable error){throw new IllegalStateException("Native shore vertex cloud fallback unavailable",error);}
+    }
     public static void begin(IsoObject object){
         ShoreLandState.begin(object);
         ShoreReceiverState.begin(object);
@@ -65,7 +70,9 @@ public final class ShoreFloorLighting {
             object.square.lighting[player].bCouldSee();
             FBORenderChunk chunk=object.square.chunk.getRenderLevels(player).getFBOForLevel(0,zoom);
             if(chunk==null||chunk.depth==null||chunk.getMinLevel()!=0)return;
-            CURRENT.set(new Context(chunk,player,zoom,lighting));
+            Context context=new Context(chunk,player,zoom,lighting);
+            context.pixelCloud=lighting&&a.waterPatched.getBoolean(null)&&!a.cloudFailed.getBoolean(null)&&(Boolean)a.cloudEnabled.invoke(null);
+            CURRENT.set(context);
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Shore lighting API unavailable",error);}
     }
     public static void tileStarted(int program){
@@ -83,10 +90,10 @@ public final class ShoreFloorLighting {
         final int depth,w,h,chunkX,chunkY,scale,top,screenW,screenH;
         final float zoom,offX,offY;
         final FBORenderChunk chunk;final boolean lighting;
-        boolean started;
+        boolean started,pixelCloud;
         Context(FBORenderChunk chunk,int player,float zoom){this(chunk,player,zoom,true);}
         Context(FBORenderChunk chunk,int player,float zoom,boolean lighting){
-            this.chunk=chunk;this.lighting=lighting;
+            this.chunk=chunk;this.lighting=lighting;this.pixelCloud=lighting;
             depth=chunk.depth.getID();w=chunk.w;h=chunk.h;chunkX=chunk.chunk.wx*8;chunkY=chunk.chunk.wy*8;
             scale=FBORenderLevels.getTextureScale(zoom);
             top=FBORenderChunk.PIXELS_PER_LEVEL*(chunk.getTopLevel()-chunk.getMinLevel()+1)
@@ -105,6 +112,7 @@ public final class ShoreFloorLighting {
         final int cloudTermLod;
         final Map<?,?> cloudLocations,cloudApplied;
         final Method enabled,cloudEnabled,waterUniforms,remaining;
+        final MethodHandle shoreVertex;
         private Access()throws ReflectiveOperationException {
             Class<?> ao=Class.forName("pzopt.ChunkAo"),entry=Class.forName("pzopt.ChunkAo$Entry"),cloud=Class.forName("pzopt.CloudShadow");
             gl=field(ao,"GL").get(null);Class<?> glClass=gl.getClass();
@@ -118,6 +126,7 @@ public final class ShoreFloorLighting {
             cloudLocations=(Map<?,?>)field(cloud,"WATER_LOCATIONS").get(null);cloudApplied=(Map<?,?>)field(cloud,"WATER_APPLIED").get(null);
             enabled=method(ao,"enabled");cloudEnabled=method(cloud,"enabled");waterUniforms=method(cloud,"waterUniforms");
             remaining=method(glClass,"remaining",entry,long.class);
+            shoreVertex=MethodHandles.publicLookup().findStatic(cloud,"shoreLight",MethodType.methodType(int.class,int.class,float.class,float.class,float.class));
         }
         static synchronized Access get()throws ReflectiveOperationException {if(instance==null)instance=new Access();return instance;}
         static Field field(Class<?> type,String name)throws ReflectiveOperationException {Field field=type.getDeclaredField(name);field.setAccessible(true);return field;}
@@ -168,7 +177,7 @@ public final class ShoreFloorLighting {
                 float texel=context.scale*64f;
                 GL20.glUniform4f(u.x,dx*texel/context.w,0,0,(context.w*0.5f+cx*texel)/context.w);
                 GL20.glUniform4f(u.y,0,dy*context.scale*32f/context.h,0,(cy*32f+context.top)*context.scale/context.h);
-                if(context.lighting&&a.waterPatched.getBoolean(null)&&!a.cloudFailed.getBoolean(null)&&(Boolean)a.cloudEnabled.invoke(null)){
+                if(context.pixelCloud&&a.waterPatched.getBoolean(null)&&!a.cloudFailed.getBoolean(null)&&(Boolean)a.cloudEnabled.invoke(null)){
                     a.waterUniforms.invoke(null);bind(CLOUD_UNIT,a.fieldTex.getInt(null));
                     GL20.glUniform4f(u.cloudE,1,0,0,0);
                 }else GL20.glUniform4f(u.cloudP,0,0,0,0);

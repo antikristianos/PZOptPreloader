@@ -41,6 +41,12 @@ public final class Payload {
                 .filter(name->!name.equals(ManualAdpCompatibility.SIMULATION)).toList()));
             metadata=owned;
         }
+        boolean restoreStartup=!RuntimeState.server&&Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this);
+        if(restoreStartup){
+            StartupScreens.retainNativeLogos(candidate);
+            Properties owned=new Properties();owned.putAll(metadata==null?build:metadata);
+            owned.setProperty("overrides",String.join(",",Arrays.stream(owned.getProperty("overrides","").split(",")).filter(name->!StartupScreens.nativeLogo(name)).toList()));metadata=owned;
+        }
         prepared=candidate;effectiveBuild=metadata;shoreLighting=Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this);manualAdp=installedManualAdp;
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
@@ -90,6 +96,7 @@ public final class Payload {
     }
 
     public boolean selected(String name, boolean server) {
+        if(!server&&shoreLighting&&StartupScreens.nativeLogo(name))return false;
         if(!server&&manualAdpPhysics()&&name.equals(ManualAdpCompatibility.SIMULATION))return false;
         if (server && name.equals(VehicleZoneRepair.TARGET)) return serverVehicleZones != null;
         Set<String> selected = server ? SERVER_TARGETS : targets;
@@ -126,8 +133,10 @@ public final class Payload {
         if(!server&&manualAdp==ManualAdpCompatibility.Kind.STANDARD)source=ManualAdpCompatibility.keepManualPhysics(name,source);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
         if(server)return bytes;
-        if(shoreLighting)bytes=SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes));
+        if(shoreLighting)bytes=StartupScreens.patch(name,bytes);
+        if(shoreLighting)bytes=PhysicalShadowSources.patch(name,ShoreCloudRepair.patch(name,StandingObjectCutaway.patch(name,SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes)))));
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
+        if(shoreLighting)bytes=StandingObjectCutaway.depthScope(name,bytes);
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
         return shoreLighting?OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))):bytes;
     }

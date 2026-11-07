@@ -178,6 +178,7 @@ public final class WallReflectionSource {
         SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){Source source=SOURCES.remove(key);if(source!=null)source.release();}});
     }
     public static void clear(){
+        StandingObjectCutaway.clear();
         if(OffscreenReflectionRepair.nativeReady())OffscreenReflectionState.clear();
         SpriteRenderer.instance.drawGeneric(new TextureDraw.GenericDrawer(){@Override public void render(){
             for(Source source:SOURCES.values())source.release();SOURCES.clear();BY_COLOUR.clear();BY_DEPTH.clear();WANTED.clear();REBUILD.clear();WallReflectionLighting.clear();PhysicalShadowSources.clear();COMPOSITES.clear();pendingComposite=renderingSource=null;

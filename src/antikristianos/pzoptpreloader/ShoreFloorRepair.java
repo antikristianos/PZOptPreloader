@@ -19,7 +19,8 @@ public final class ShoreFloorRepair {
         "pzopt/CloudShadow",Map.of("waterUniforms()V","d08ec7eeb546e0b810df4e685429e14d3c52cfc37a7eefa89d495423bd9b9643"),
         "pzopt/TileBatch",Map.of("start(IFF)Z","8e914df264ebb22047245990a3379854cc9ff9526a9064bef260d7c681e0ef29"),
         "zombie/iso/fboRenderChunk/FBORenderCell",Map.of("renderFloor(Lzombie/iso/IsoObject;)V","2723610f0ac15ad0bb3766cd524a36f731969378e197ed6abeea1bf7f18cb70b"),
-        "zombie/iso/sprite/IsoSprite",Map.of("startTileDepthShader(Lzombie/iso/IsoObject;FFFFZ)V","c067869f65eb5e88dfb5e1123c7073c4867fcb62f22131c3c421b5d1da25a66f"),
+        "zombie/iso/sprite/IsoSprite",Map.of("startTileDepthShader(Lzombie/iso/IsoObject;FFFFZ)V","c067869f65eb5e88dfb5e1123c7073c4867fcb62f22131c3c421b5d1da25a66f",
+            "renderCurrentAnim_FBORender(Lzombie/iso/sprite/IsoSpriteInstance;Lzombie/iso/IsoObject;FFFLzombie/iso/IsoDirections;FFLzombie/core/textures/ColorInfo;ZLjava/util/function/Consumer;)V","d0fde9eba3dbb49b2ab2acf021cec3b35aee88e50a6c89c0f06a2d874fa5cf6f"),
         "zombie/core/opengl/ShaderUnit",Map.of("compile()Z","b841076222dbbde924b79a4c378e18aa4c3ad1eb7e102867f0b685a1d6e36cda"));
     private ShoreFloorRepair() { }
     public static byte[] patch(String name,byte[] bytes)throws IOException {
@@ -59,6 +60,9 @@ public final class ShoreFloorRepair {
                         }
                     }
                     @Override public void visitInsn(int op){
+                        if(name.equals("zombie/iso/sprite/IsoSprite")&&n.equals("startTileDepthShader")&&op==Opcodes.RETURN){
+                            super.visitVarInsn(Opcodes.ALOAD,1);super.visitVarInsn(Opcodes.ALOAD,0);call("zombie/iso/fboRenderChunk/FBORenderCell","pzoptTranslucentOnly","()Z");call("antikristianos/pzoptpreloader/StandingObjectCutaway","writeDepth","(Lzombie/iso/IsoObject;Lzombie/iso/sprite/IsoSprite;Z)V");
+                        }
                         if(op==Opcodes.RETURN&&name.equals("pzopt/ChunkAo$Gl")&&n.equals("kernelUniforms")&&d.equals("([ILpzopt/ChunkAo$Job;F)V")){
                             hits[0]++;super.visitVarInsn(Opcodes.ALOAD,2);call(LIGHT,"uploadMask","(Ljava/lang/Object;)V");
                         }
@@ -81,6 +85,9 @@ public final class ShoreFloorRepair {
                             call(SHADERS,"tile","(Ljava/lang/CharSequence;Ljava/lang/String;)Ljava/lang/CharSequence;");
                         }
                         super.visitMethodInsn(op,owner,method,desc,itf);
+                        if(name.equals("zombie/iso/sprite/IsoSprite")&&n.equals("renderCurrentAnim_FBORender")&&owner.equals("zombie/IndieGL")&&method.equals("glDepthMask")&&desc.equals("(Z)V")){
+                            hits[2]++;super.visitVarInsn(Opcodes.ALOAD,2);super.visitVarInsn(Opcodes.ALOAD,0);call("zombie/iso/fboRenderChunk/FBORenderCell","pzoptTranslucentOnly","()Z");call("antikristianos/pzoptpreloader/StandingObjectCutaway","writeDepth","(Lzombie/iso/IsoObject;Lzombie/iso/sprite/IsoSprite;Z)V");
+                        }
                         if(tile){hits[0]++;super.visitInsn(Opcodes.POP);super.visitInsn(Opcodes.DUP);super.visitVarInsn(Opcodes.ALOAD,0);call("antikristianos/pzoptpreloader/ShoreLandState","tileStarted","(ILzombie/iso/sprite/IsoSprite;)V");call(LIGHT,"tileStarted","(I)V");}
                     }
                 };
@@ -88,7 +95,7 @@ public final class ShoreFloorRepair {
         },0);
         boolean valid=switch(name){
             case "pzopt/ChunkAo" -> hits[0]==1&&hits[1]==1;
-            case "zombie/iso/sprite/IsoSprite" -> hits[0]==2;
+            case "zombie/iso/sprite/IsoSprite" -> hits[0]==2&&hits[2]==3;
             default -> hits[0]==1;
         };
         if(!valid)throw new IOException("Unsupported shore lighting boundary: "+name+" ("+java.util.Arrays.toString(hits)+")");

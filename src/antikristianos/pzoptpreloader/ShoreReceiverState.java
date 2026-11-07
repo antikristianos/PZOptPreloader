@@ -21,12 +21,20 @@ public final class ShoreReceiverState {
     private static final ThreadLocal<Floor> FLOOR=ThreadLocal.withInitial(Floor::new);
     private static final Map<Integer,Marker[]> MARKERS=new ConcurrentHashMap<>();
     private static final Map<Integer,int[]> LOCATIONS=new ConcurrentHashMap<>();
-    private static final class Floor { boolean active; float owner; int n; final int[] programs=new int[16]; }
+    private static final class Floor { boolean active,standing; float owner; int n; final int[] programs=new int[16]; }
     private static int receiver,width,height,receiverFbo;
     private static boolean valid,prepared;
     private static Pass renderPass;
     private static boolean warned;
+    private static final float[] GAME_SHAPES=new float[64*4];
+    private static int gameShapeCount,renderShapeCount;
+    private static float[] renderShapes;
+    private static final Map<Integer,int[]> SHAPE_LOCATIONS=new ConcurrentHashMap<>();
+    private static final ThreadLocal<ArrayDeque<Pass>> STANDING=ThreadLocal.withInitial(ArrayDeque::new);
+    private static final Pass NO_STANDING=new Pass();
+    private static final FloatBuffer SHAPE_UPLOAD=BufferUtils.createFloatBuffer(64*4);
     private static final FrameCommands[] COMMANDS={new FrameCommands(),new FrameCommands(),new FrameCommands()};
+    private static final ThreadLocal<FrameCommands[]> STANDING_COMMANDS=ThreadLocal.withInitial(()->new FrameCommands[]{new FrameCommands(),new FrameCommands(),new FrameCommands()});
     private static final Map<Integer,Dimensions> DIMENSIONS=new HashMap<>();
     private static final float[] CLEAR={1,0,0,1};
     private static final int[] PUDDLE_VIEWPORT=new int[4];
@@ -34,18 +42,19 @@ public final class ShoreReceiverState {
     private static final class Access {
         static final Access INSTANCE=new Access();
         final Method enabled;
-        final Field shadows,characters,vehicles,players,floorChunks;
+        final Field shadows,characters,vehicles,players,floorChunks,propChunks;
         Access(){try{
             Class<?> config=Class.forName("pzopt.Config");enabled=Class.forName("pzopt.Overrides").getMethod("enabled");
             shadows=config.getField("SUN_SHADOWS");characters=config.getField("SUN_SHADOW_CHARACTERS");vehicles=config.getField("SUN_SHADOW_VEHICLES");
             players=zombie.iso.fboRenderChunk.FBORenderCell.class.getDeclaredField("perPlayerData");players.setAccessible(true);
             Class<?> pp=Class.forName("zombie.iso.fboRenderChunk.FBORenderCell$PerPlayerData");floorChunks=pp.getDeclaredField("chunksWithTranslucentFloor");floorChunks.setAccessible(true);
+            propChunks=pp.getDeclaredField("chunksWithTranslucentNonFloor");propChunks.setAccessible(true);
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Shore shadow receiver API unavailable",error);}}
         boolean enabled(){try{return (Boolean)enabled.invoke(null)&&shadows.getBoolean(null)&&(characters.getBoolean(null)||vehicles.getBoolean(null));}
             catch(ReflectiveOperationException error){throw new IllegalStateException(error);}}
     }
     public static void prepareFrame(List<IsoChunk> chunks,int player){
-        shadowEnabled=Access.INSTANCE.enabled();gameEnabled=shadowEnabled||PuddleFootprintState.enabled();needsLate=false;
+        shadowEnabled=Access.INSTANCE.enabled();gameEnabled=shadowEnabled||PuddleFootprintState.enabled();needsLate=false;gameShapeCount=0;
         if(!gameEnabled||chunks==null||!IsoWater.getInstance().getShaderEnable())return;
         for(int i=0;i<chunks.size();i++){IsoChunk chunk=chunks.get(i);if(chunk!=null&&!chunk.getRenderLevels(player).getCachedSquares_WaterShore(0).isEmpty()){needsLate=true;break;}}
     }
@@ -53,6 +62,8 @@ public final class ShoreReceiverState {
     public static void preparePlayerFrame(int player){
         try{Access a=Access.INSTANCE;Object[] players=(Object[])a.players.get(zombie.iso.fboRenderChunk.FBORenderCell.instance);
             prepareFrame(player<0||player>=players.length||players[player]==null?null:(List<IsoChunk>)a.floorChunks.get(players[player]),player);
+            gameShapeCount=shadowEnabled&&player>=0&&player<players.length&&players[player]!=null?StandingObjectCutaway.shadowShapes((List<IsoChunk>)a.propChunks.get(players[player]),player,GAME_SHAPES):0;
+            needsLate|=gameShapeCount>0;
         }catch(IllegalAccessException error){throw new IllegalStateException("Native shoreline frame list unavailable",error);}
     }
     public static boolean needsLateReceiver(){return shadowEnabled&&needsLate;}
@@ -61,13 +72,24 @@ public final class ShoreReceiverState {
         shadowEnabled=Access.INSTANCE.enabled();gameEnabled=shadowEnabled||PuddleFootprintState.enabled();
         Object next=IsoWorld.instance.currentCell;boolean changed=world.get()!=next;
         if(changed)world=new WeakReference<>(next);
-        FrameStart packet=commands().frameStart();packet.enabled=gameEnabled;packet.changed=changed;SpriteRenderer.instance.drawGeneric(packet);
+        FrameStart packet=commands().frameStart();packet.enabled=gameEnabled;packet.changed=changed;packet.count=gameShapeCount;System.arraycopy(GAME_SHAPES,0,packet.shapes,0,gameShapeCount*4);SpriteRenderer.instance.drawGeneric(packet);
     }
     public static void reset(){
-        gameEnabled=needsLate=false;world.clear();GAME_PASS.remove();FLOOR.remove();MARKERS.clear();LOCATIONS.clear();
+        gameEnabled=needsLate=false;gameShapeCount=0;world.clear();GAME_PASS.remove();FLOOR.remove();STANDING.remove();STANDING_COMMANDS.remove();MARKERS.clear();LOCATIONS.clear();SHAPE_LOCATIONS.clear();
         if(SpriteRenderer.instance!=null)SpriteRenderer.instance.drawGeneric(RELEASE);
     }
-    public static void shaderReload(){LOCATIONS.clear();}
+    public static void shaderReload(){LOCATIONS.clear();SHAPE_LOCATIONS.clear();}
+    public static void beginStanding(IsoObject object){
+        ArrayDeque<Pass> scopes=STANDING.get();
+        if(!shadowEnabled||!StandingObjectCutaway.pillar(object)||WallReflectionSource.sourcePass()||zombie.iso.fboRenderChunk.FBORenderChunkManager.instance.isCaching()||object.getAlpha(IsoCamera.frameState.playerIndex)<=0){scopes.push(NO_STANDING);return;}
+        Pass pass=standingCommands().pass();scopes.push(pass);
+        pass.standing=true;pass.hasShore=true;SpriteRenderer.instance.drawGeneric(pass.begin);
+        pass.previousFloor=FLOOR.get();Floor floor=pass.floor;floor.active=true;floor.standing=true;floor.n=0;floor.owner=-1;FLOOR.set(floor);
+    }
+    public static void endStanding(){
+        ArrayDeque<Pass> scopes=STANDING.get();if(scopes.isEmpty())return;Pass pass=scopes.pop();if(!pass.standing)return;
+        end();FLOOR.set(pass.previousFloor);pass.previousFloor=null;SpriteRenderer.instance.drawGeneric(pass.end);pass.standing=false;
+    }
     public static void startPass(int level){
         if(level==0&&commands().nextFrame==0){preparePlayerFrame(IsoCamera.frameState.playerIndex);startFrame();}
         if(level!=0||!gameEnabled||!needsLate)return;
@@ -89,7 +111,7 @@ public final class ShoreReceiverState {
         Floor floor=FLOOR.get();if(!floor.active)return;
         for(int i=0;i<floor.n;i++)if(floor.programs[i]==program)return;
         if(floor.n==floor.programs.length)throw new IllegalStateException("Unexpected shore tile program fanout");
-        floor.programs[floor.n++]=program;Marker marker=commands().marker();marker.program=program;marker.on=true;marker.owner=floor.owner;SpriteRenderer.instance.drawGeneric(marker);
+        floor.programs[floor.n++]=program;Marker marker=(floor.standing?standingCommands():commands()).marker();marker.program=program;marker.on=true;marker.owner=floor.owner;SpriteRenderer.instance.drawGeneric(marker);
     }
     public static void end(){
         Floor floor=FLOOR.get();if(!floor.active)return;floor.active=false;
@@ -108,14 +130,15 @@ public final class ShoreReceiverState {
         }
     }
     private static final class FrameStart extends TextureDraw.GenericDrawer {
-        boolean enabled,changed;
+        boolean enabled,changed;int count;final float[] shapes=new float[64*4];
         @Override public void render(){
             if(renderPass!=null)renderPass.restore();valid=false;prepared=false;
             if(changed||!enabled)releaseRender();
+            renderShapes=shapes;renderShapeCount=enabled?count:0;
         }
     }
     private static final TextureDraw.GenericDrawer RELEASE=new TextureDraw.GenericDrawer(){@Override public void render(){if(renderPass!=null)renderPass.restore();releaseRender();}};
-    private static void releaseRender(){if(receiver!=0)GL11.glDeleteTextures(receiver);receiver=0;width=height=receiverFbo=0;valid=prepared=false;LOCATIONS.clear();DIMENSIONS.clear();}
+    private static void releaseRender(){if(receiver!=0)GL11.glDeleteTextures(receiver);receiver=0;width=height=receiverFbo=0;valid=prepared=false;renderShapeCount=0;renderShapes=null;LOCATIONS.clear();SHAPE_LOCATIONS.clear();DIMENSIONS.clear();}
     private static void allocate(int w,int h){
         if(receiver!=0&&width==w&&height==h&&GL11.glIsTexture(receiver))return;
         if(receiver!=0)GL11.glDeleteTextures(receiver);receiver=GL11.glGenTextures();width=w;height=h;prepared=false;
@@ -126,9 +149,13 @@ public final class ShoreReceiverState {
         }finally{GL11.glBindTexture(GL11.GL_TEXTURE_2D,prior);GL13.glActiveTexture(active);}
     }
     private static FrameCommands commands(){
+        return commands(COMMANDS);
+    }
+    private static FrameCommands standingCommands(){return commands(STANDING_COMMANDS.get());}
+    private static FrameCommands commands(FrameCommands[] pools){
         int index=Math.floorMod(SpriteRenderer.instance.getMainStateIndex(),COMMANDS.length);
         // Native hand-off stamps each reused render state even while world updates are paused.
-        FrameCommands commands=COMMANDS[index];long generation=SpriteRenderer.instance.states.getPopulating().time;
+        FrameCommands commands=pools[index];long generation=SpriteRenderer.instance.states.getPopulating().time;
         if(commands.generation!=generation){commands.generation=generation;commands.nextFrame=commands.nextPass=commands.nextMarker=0;}return commands;
     }
     private static final class FrameCommands {
@@ -162,7 +189,7 @@ public final class ShoreReceiverState {
         return size;
     }
     private static final class Pass {
-        volatile boolean hasShore;
+        volatile boolean hasShore;boolean standing;final Floor floor=new Floor();Floor previousFloor;
         boolean active;int fbo;
         final int[] buffers=new int[8],outputs=new int[8],viewport=new int[4];
         final ByteBuffer mask=BufferUtils.createByteBuffer(4);
@@ -212,6 +239,9 @@ public final class ShoreReceiverState {
         if(program==0||shadowDepth==0)return;
         int[] u=locations(program);
         if(u[1]>=0)GL20.glUniform1i(u[1],UNIT);if(u[2]>=0)GL20.glUniform1f(u[2],SHADOWS.get(shadowDepth-1).usable?1:0);
+        int[] shapes=SHAPE_LOCATIONS.computeIfAbsent(program,p->new int[]{GL20.glGetUniformLocation(p,"pzStandingCount"),GL20.glGetUniformLocation(p,"pzStandingPillars[0]")});
+        if(shapes[0]>=0)GL20.glUniform1i(shapes[0],renderShapeCount);
+        if(renderShapeCount>0&&shapes[1]>=0){SHAPE_UPLOAD.clear();SHAPE_UPLOAD.put(renderShapes,0,renderShapeCount*4).flip();GL20.glUniform4fv(shapes[1],SHAPE_UPLOAD);}
     }
     public static void shadowEnd(){
         if(shadowDepth==0)return;ShadowScope state=SHADOWS.get(--shadowDepth);if(state.texture<0)return;int active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);GL13.glActiveTexture(GL13.GL_TEXTURE0+state.unit);

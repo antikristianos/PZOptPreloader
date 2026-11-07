@@ -2,7 +2,10 @@ package antikristianos.pzoptpreloader;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.io.IOException;
+import net.bytebuddy.jar.asm.*;
 import org.lwjgl.opengl.*;
+import zombie.iso.IsoGridSquare;
 
 /** Physical cached geometry is consulted by sun rays, never by the camera's receiver reconstruction. */
 public final class PhysicalShadowSources {
@@ -10,6 +13,21 @@ public final class PhysicalShadowSources {
     private static final Map<Integer,int[]> LOCATIONS=new HashMap<>();
     private static final int[] PREVIOUS=new int[COUNT];
     private PhysicalShadowSources(){ }
+    public static byte[] patch(String name,byte[] bytes)throws IOException {
+        if(!name.equals("pzopt/ChunkAo"))return bytes;
+        String key="exteriorMask([ILzombie/iso/IsoChunk;I)V";
+        if(!"d5bc768eac1d89357a051b24c84645c3634d1ef6673efbd6db8267e85cf145d6".equals(Compatibility.methods(bytes).get(key)))throw new IOException("Unsupported exterior receiver mask");
+        ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);int[] calls={0};
+        reader.accept(new ClassVisitor(Opcodes.ASM9,writer){@Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){return new MethodVisitor(Opcodes.ASM9,super.visitMethod(a,n,d,s,e)){
+            @Override public void visitMethodInsn(int op,String owner,String method,String desc,boolean itf){
+                if((n+d).equals(key)&&op==Opcodes.INVOKEVIRTUAL&&owner.equals("zombie/iso/IsoGridSquare")&&method.equals("isOutside")&&desc.equals("()Z")){
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC,"antikristianos/pzoptpreloader/PhysicalShadowSources","exterior","(Lzombie/iso/IsoGridSquare;)Z",false);calls[0]++;return;
+                }super.visitMethodInsn(op,owner,method,desc,itf);
+            }
+        };}},0);
+        if(calls[0]!=1)throw new IOException("Exterior receiver call count="+calls[0]);return writer.toByteArray();
+    }
+    public static boolean exterior(IsoGridSquare square){return square.isOutside()||square.getRoomID()==-1L;}
     public static String shader(String input){
         String anchor="float sd = depthAt(sp);";
         int at=input.indexOf(anchor);if(at<0||at!=input.lastIndexOf(anchor))throw new IllegalStateException("Unsupported physical sun depth query");
