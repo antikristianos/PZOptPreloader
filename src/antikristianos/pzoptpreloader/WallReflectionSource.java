@@ -14,7 +14,9 @@ import zombie.iso.SpriteDetails.IsoObjectType;
 
 /** A physical wall layer built only while the corresponding native chunk is rebuilt. */
 public final class WallReflectionSource {
-    private static boolean sourceCpu,sourceGpu;
+    private static boolean sourceGpu;
+    private static final ThreadLocal<CaptureContext> CPU=ThreadLocal.withInitial(CaptureContext::new);
+    private static final java.util.concurrent.atomic.AtomicInteger ACTIVE_CPU=new java.util.concurrent.atomic.AtomicInteger();
     private static volatile boolean failed;
     private static Source renderingSource, pendingComposite;
     private static final Map<Texture,Source> SOURCES=new IdentityHashMap<>();
@@ -22,16 +24,25 @@ public final class WallReflectionSource {
     private static final Map<Integer,Source> BY_DEPTH=new HashMap<>();
     private static final java.util.concurrent.ConcurrentHashMap<Texture,Boolean> WANTED=new java.util.concurrent.ConcurrentHashMap<>(); // render thread
     private static final Map<Integer,Boolean> COMPOSITES=new HashMap<>();
-    private static final FrameCommands[] COMMANDS={new FrameCommands(),new FrameCommands(),new FrameCommands()};
     private static long captures,sourceDraws,compositeDraws,nativeBegins,nativeFrees,rebuilds;
     private static final java.util.concurrent.ConcurrentLinkedQueue<Source> REBUILD=new java.util.concurrent.ConcurrentLinkedQueue<>();
     private static long drainFrame=Long.MIN_VALUE;
     private WallReflectionSource() { }
 
     /** Only calls made by the explicit physical-source pass bypass camera cutaway. */
-    public static int cutaway(int value){return sourceCpu?0:value;}
-    public static boolean translucentTree(boolean value){return !sourceCpu&&value;}
-    public static boolean sourcePass(){return sourceCpu;}
+    public static int cutaway(int value){return sourcePass()?0:value;}
+    public static boolean translucentTree(boolean value){return !sourcePass()&&value;}
+    public static boolean sourcePass(){return ACTIVE_CPU.get()!=0&&CPU.get().active;}
+    /** Physical geometry is not evidence that its mirror receiver is camera-visible. */
+    public static void mirrorWallDrawn(IsoObject object,int cutaway){if(!sourcePass())Access.mirrorWallDrawn(object,cutaway);}
+    private static final class CaptureContext {
+        boolean active;IsoObject object;int player;ObjectRenderInfo info;
+        final FrameCommands[] commands={new FrameCommands(),new FrameCommands(),new FrameCommands()};
+    }
+    /** Only the current producer sees opaque values; native object arrays remain untouched. */
+    public static boolean localAlpha(IsoObject object,int player){if(ACTIVE_CPU.get()==0)return false;CaptureContext c=CPU.get();return c.active&&c.object==object&&c.player==player;}
+    public static float alpha(float original,IsoObject object,int player){return localAlpha(object,player)?1.0f:original;}
+    public static ObjectRenderInfo renderInfo(ObjectRenderInfo original,IsoObject object,int player){return localAlpha(object,player)?CPU.get().info:original;}
     public static long captures(){return captures;}
     public static long nativeBegins(){return nativeBegins;}
     public static long nativeFrees(){return nativeFrees;}
@@ -40,7 +51,7 @@ public final class WallReflectionSource {
 
     /** Invoked before native endRenderChunkLevel, while the native bake coordinates remain active. */
     public static void captureLevel(boolean clearDirty,Object cell,IsoChunk chunk,int level){
-        if(failed||!clearDirty||sourceCpu||chunk==null||!FBORenderChunkManager.instance.isCaching()||!enabled())return;
+        if(failed||!clearDirty||sourcePass()||chunk==null||!FBORenderChunkManager.instance.isCaching()||!enabled())return;
         FBORenderChunk owner=FBORenderChunkManager.instance.renderChunk;
         if(owner==null||owner.chunk!=chunk||level!=owner.getTopLevel()||!WANTED.containsKey(owner.depth))return;
         int player=IsoCamera.frameState.playerIndex;
@@ -49,7 +60,7 @@ public final class WallReflectionSource {
         SpriteRenderer.instance.drawGeneric(command.begin);
         boolean previousCircle=IsoGridSquare.circleStencil,previousLowLight=IsoObject.lowLightingQualityHack;
         IsoObject previousRendered=IsoObject.lastRendered,previousPreviousRendered=IsoObject.lastRenderedRendered;
-        sourceCpu=true;
+        CaptureContext context=CPU.get();context.active=true;ACTIVE_CPU.incrementAndGet();
         try{
             for(int sourceLevel=owner.getMinLevel();sourceLevel<=owner.getTopLevel();sourceLevel++)
             for(int y=0;y<8;y++)for(int x=0;x<8;x++){
@@ -58,25 +69,23 @@ public final class WallReflectionSource {
                 for(int i=0;i<objects.size();i++){
                     IsoObject object=objects.get(i);if(!physical(object))continue;command.candidates=true;
                     ObjectRenderInfo info=object.getRenderInfo(player);
-                    float alpha=object.getAlpha(player),target=object.getTargetAlpha(player),sx=object.sx,sy=object.sy;
-                    float targetInfo=info.targetAlpha,renderAlpha=info.renderAlpha;
-                    float rx=info.renderX,ry=info.renderY,rw=info.renderWidth,rh=info.renderHeight,rsx=info.renderScaleX,rsy=info.renderScaleY;
-                    boolean cut=info.cutaway,outline=info.cutawayOutline,noPicking=object.noPicking;
+                    float sx=object.sx,sy=object.sy;boolean noPicking=object.noPicking;
                     boolean treeFlag=object instanceof IsoTree tree&&tree.renderFlag;
                     try{
-                        info.targetAlpha=1.0f;info.cutaway=false;info.cutawayOutline=false;object.setAlphaAndTarget(player,1.0f);
+                        ObjectRenderInfo local=new ObjectRenderInfo(object);local.layer=info.layer;
+                        local.renderX=info.renderX;local.renderY=info.renderY;local.renderWidth=info.renderWidth;local.renderHeight=info.renderHeight;
+                        local.renderScaleX=info.renderScaleX;local.renderScaleY=info.renderScaleY;
+                        local.targetAlpha=1.0f;local.renderAlpha=1.0f;
+                        context.info=local;context.object=object;context.player=player;
                         Access.render(cell,object,wall(object));captures++;
                     }finally{
-                        object.setAlpha(player,alpha);object.setTargetAlpha(player,target);object.sx=sx;object.sy=sy;
-                        info.targetAlpha=targetInfo;info.renderAlpha=renderAlpha;info.renderX=rx;info.renderY=ry;
-                        info.renderWidth=rw;info.renderHeight=rh;info.renderScaleX=rsx;info.renderScaleY=rsy;
-                        info.cutaway=cut;info.cutawayOutline=outline;object.noPicking=noPicking;
+                        context.object=null;context.info=null;object.sx=sx;object.sy=sy;object.noPicking=noPicking;
                         if(object instanceof IsoTree tree)tree.renderFlag=treeFlag;
                     }
                 }
             }
         }catch(Throwable error){fail(error);}finally{
-            sourceCpu=false;IsoGridSquare.circleStencil=previousCircle;IsoObject.lowLightingQualityHack=previousLowLight;
+            context.object=null;context.info=null;context.active=false;ACTIVE_CPU.decrementAndGet();IsoGridSquare.circleStencil=previousCircle;IsoObject.lowLightingQualityHack=previousLowLight;
             IsoObject.lastRendered=previousRendered;IsoObject.lastRenderedRendered=previousPreviousRendered;
             SpriteRenderer.instance.drawGeneric(command.end);
         }
@@ -93,7 +102,7 @@ public final class WallReflectionSource {
         return object!=null&&object.getDoRender()&&!object.isSpriteInvisible()&&object.getSprite()!=null&&!object.getSprite().solidfloor;
     }
     private static FrameCommands commands(){
-        int index=SpriteRenderer.instance.getMainStateIndex();FrameCommands commands=COMMANDS[Math.floorMod(index,COMMANDS.length)];
+        int index=SpriteRenderer.instance.getMainStateIndex();FrameCommands[] frames=CPU.get().commands;FrameCommands commands=frames[Math.floorMod(index,frames.length)];
         long frame=SpriteRenderer.instance.states.getPopulating().time;
         if(commands.frame!=frame){commands.frame=frame;commands.next=0;}return commands;
     }
@@ -103,15 +112,22 @@ public final class WallReflectionSource {
     }
     private static final class Capture {
         FBORenderChunk owner;Texture depth,colour;IsoChunk chunk;int width,height;boolean candidates;
+        int drawFbo,readFbo;boolean bound;final int[] viewport=new int[4];
         final TextureDraw.GenericDrawer begin=new TextureDraw.GenericDrawer(){@Override public void render(){
             sourceGpu=true;pendingComposite=null;
+            drawFbo=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);readFbo=GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
+            GL11.glGetIntegerv(GL11.GL_VIEWPORT,viewport);bound=false;
             try{renderingSource=failed?null:source(Capture.this);if(renderingSource!=null){
-                renderingSource.nativeFbo=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+                renderingSource.nativeFbo=drawFbo;
                 if(!candidates){if(renderingSource.fbo!=0)renderingSource.dropImages();renderingSource.valid=true;renderingSource.hasPixels=false;}
-                else prepare(renderingSource);
+                else {prepare(renderingSource);GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER,renderingSource.fbo);GL11.glViewport(0,0,width,height);bound=true;}
             }}catch(Throwable error){renderingSource=null;fail(error);}
         }};
-        final TextureDraw.GenericDrawer end=new TextureDraw.GenericDrawer(){@Override public void render(){Source completed=renderingSource;renderingSource=null;sourceGpu=false;if(completed!=null&&completed.valid){completed.rebuildQueued=false;if(completed.hasPixels)try{WallReflectionLighting.finish(completed.depth.getID(),completed.fbo,completed.depthId);}catch(Throwable error){completed.valid=false;fail(error);}}}};
+        final TextureDraw.GenericDrawer end=new TextureDraw.GenericDrawer(){@Override public void render(){
+            Source completed=renderingSource;renderingSource=null;sourceGpu=false;
+            if(bound){if(completed!=null&&completed.valid)completed.hasPixels=true;GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,drawFbo);GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,readFbo);GL11.glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);bound=false;}
+            if(completed!=null&&completed.valid){completed.rebuildQueued=false;if(completed.hasPixels)try{WallReflectionLighting.finish(completed.depth.getID(),completed.fbo,completed.depthId);}catch(Throwable error){completed.valid=false;fail(error);}}
+        }};
     }
     private static final class Source {
         final FBORenderChunk owner;final Texture depth,colour;final IsoChunk chunk;final int w,h,storageW,storageH,originalColour;
@@ -252,9 +268,10 @@ public final class WallReflectionSource {
     private static void fail(Throwable error){if(!failed)System.err.println("[PZOptPreloader] Physical wall reflections disabled: "+error);failed=true;}
     private static final class Access {
         static final Access INSTANCE=new Access();
-        final MethodHandle active,render,renderOther,shadowEnabled;final Field frame,near,view,on,sun;
+        final MethodHandle active,render,renderOther,shadowEnabled,mirrorWallDrawn;final Field frame,near,view,on,sun;
         Access(){try{
             MethodHandles.Lookup lookup=MethodHandles.lookup();Class<?> ssr=Class.forName("pzopt.Ssr"),frameClass=Class.forName("pzopt.Ssr$Frame"),viewClass=Class.forName("pzopt.Ssr$View");
+            mirrorWallDrawn=lookup.unreflect(Class.forName("pzopt.Mirrors").getMethod("wallDrawn",IsoObject.class,int.class));
             Method a=ssr.getDeclaredMethod("active");active=lookup.unreflect(a);
             Method r=FBORenderCell.class.getDeclaredMethod("renderMinusFloor_DoorOrWall",IsoObject.class);r.setAccessible(true);render=lookup.unreflect(r).asType(MethodType.methodType(void.class,Object.class,IsoObject.class));
             Method other=FBORenderCell.class.getDeclaredMethod("renderMinusFloor_NotDoorOrWall",IsoObject.class);other.setAccessible(true);renderOther=lookup.unreflect(other).asType(MethodType.methodType(void.class,Object.class,IsoObject.class));
@@ -263,6 +280,7 @@ public final class WallReflectionSource {
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Physical wall input API unavailable",error);}}
         static Field field(Class<?> type,String name)throws ReflectiveOperationException{Field field=type.getDeclaredField(name);field.setAccessible(true);return field;}
         static boolean active(){try{return (boolean)INSTANCE.active.invokeExact();}catch(Throwable error){throw new IllegalStateException("Physical wall active query",error);}}
+        static void mirrorWallDrawn(IsoObject object,int cutaway){try{INSTANCE.mirrorWallDrawn.invokeExact(object,cutaway);}catch(Throwable error){throw new IllegalStateException("Camera mirror cutaway",error);}}
         static boolean shadowActive(){try{return INSTANCE.sun.getBoolean(null)&&(boolean)INSTANCE.shadowEnabled.invokeExact();}catch(Throwable error){throw new IllegalStateException("Physical shadow active query",error);}}
         static void render(Object cell,IsoObject object,boolean wall){try{if(wall)INSTANCE.render.invokeExact(cell,object);else INSTANCE.renderOther.invokeExact(cell,object);}catch(Throwable error){throw new IllegalStateException("Physical object bake",error);}}
         static boolean near(Texture texture){try{Object f=INSTANCE.frame.get(null);return f!=null&&INSTANCE.on.getBoolean(INSTANCE.view.get(f))&&((Map<?,?>)INSTANCE.near.get(f)).containsKey(texture);}catch(IllegalAccessException error){throw new IllegalStateException(error);}}

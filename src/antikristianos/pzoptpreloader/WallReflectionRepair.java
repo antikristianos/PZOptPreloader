@@ -9,6 +9,7 @@ import net.bytebuddy.jar.asm.*;
 public final class WallReflectionRepair {
     public static final String CELL="zombie/iso/fboRenderChunk/FBORenderCell",RING="zombie/core/SpriteRenderer$RingBuffer",SSR="pzopt/Ssr",AO="pzopt/ChunkAo$Gl";
     private static final String SOURCE="antikristianos/pzoptpreloader/WallReflectionSource";
+    private static final String OBJECT="zombie/iso/IsoObject",INFO="Lzombie/iso/fboRenderChunk/ObjectRenderInfo;";
     private static final String LEVEL="(Lzombie/iso/IsoChunk;ILzombie/iso/IsoCell$PerPlayerRender;IJLzombie/core/opengl/Shader;Lzombie/core/opengl/Shader;)V";
     private static final Map<String,Map<String,String>> PINS=Map.of(
         CELL,Map.of("renderOneLevel"+LEVEL,"45fdd97b5d63f4600a676cb219e2b2c9e8df27a884e1587971af6eb9d4954a96",
@@ -22,11 +23,12 @@ public final class WallReflectionRepair {
             "drawMultiply(Lpzopt/ChunkAo$Job;Lpzopt/ChunkAo$Entry;FII)V","17b07104bc722055f7c93ac9c8d21c49c9c54612263d0443374deb314f62af78"));
     private WallReflectionRepair() { }
     public static byte[] patch(String name,byte[] bytes)throws IOException {
+        if(name.equals(OBJECT))return isolateObject(bytes);
         Map<String,String> pins=PINS.get(name);if(pins==null)return bytes;
         ClassReader reader=new ClassReader(bytes);if(!reader.getClassName().equals(name))throw new IOException("Physical wall class identity: "+name);
         Map<String,String> actual=Compatibility.methods(bytes);
         for(var pin:pins.entrySet())if(!RepairProfiles.matches(pin.getValue(),actual.get(pin.getKey())))throw new IOException("Unsupported physical-wall boundary: "+name+"."+pin.getKey());
-        int[] hits=new int[6];ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
+        int[] hits=new int[7];ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){
                 return new MethodVisitor(Opcodes.ASM9,super.visitMethod(a,n,d,s,e)){
@@ -36,6 +38,9 @@ public final class WallReflectionRepair {
                         }
                     }
                     @Override public void visitMethodInsn(int op,String owner,String method,String desc,boolean itf){
+                        if(name.equals(CELL)&&n.equals("renderMinusFloor_DoorOrWall")&&owner.equals("pzopt/Mirrors")&&method.equals("wallDrawn")&&desc.equals("(Lzombie/iso/IsoObject;I)V")){
+                            super.visitMethodInsn(Opcodes.INVOKESTATIC,SOURCE,"mirrorWallDrawn",desc,false);hits[6]++;return;
+                        }
                         if(name.equals(AO)&&(n.equals("compute")||n.equals("drawMultiply"))&&owner.equals("org/lwjgl/opengl/GL11")&&method.equals("glDrawArrays")&&desc.equals("(III)V")){
                             super.visitVarInsn(Opcodes.ALOAD,0);super.visitVarInsn(Opcodes.ALOAD,1);
                             super.visitMethodInsn(Opcodes.INVOKESTATIC,"antikristianos/pzoptpreloader/WallReflectionLighting","drawArrays","(IIILjava/lang/Object;Ljava/lang/Object;)V",false);hits[4]++;return;
@@ -70,9 +75,41 @@ public final class WallReflectionRepair {
                 };
             }
         },0);
-        if(name.equals(CELL)?hits[0]<1||hits[2]!=5||hits[3]!=1:name.equals(RING)?hits[1]!=1:name.equals(AO)?hits[4]<1||hits[5]<2:hits[3]<1)
+        if(name.equals(CELL)?hits[0]<1||hits[2]!=5||hits[3]!=1||hits[6]!=1:name.equals(RING)?hits[1]!=1:name.equals(AO)?hits[4]<1||hits[5]<2:hits[3]<1)
             throw new IOException("Unsupported physical-wall call shape: "+name+" "+Arrays.toString(hits));
         return writer.toByteArray();
+    }
+    private static byte[] isolateObject(byte[] bytes)throws IOException {
+        Map<String,String> expected=Map.of(
+            "getAlpha(I)F","dfdaa94c41c1a97e3dc6730c3fd9723e348d3e39e576ed2db877839a028e37e3",
+            "getTargetAlpha(I)F","9470b6ce864fbeafd3c40ebc4082b9aa4378e2c2490f934cd6912020c421438b",
+            "setAlpha(IF)V","559e619b189da67703812b883fcbfd0364a87e10a47f2c3315abb17d7f015246",
+            "setTargetAlpha(IF)V","1976345adae381537dd40722783146bf540ecdfb4d4cb6b6b339ce8ed8e1cb3a",
+            "getRenderInfo(I)"+INFO,"418904316991a109b81b05d610572e9bfa77c4f775a5f09f35167b0ce2c668bc");
+        ClassReader reader=new ClassReader(bytes);
+        if(!reader.getClassName().equals(OBJECT))throw new IOException("Capture object identity changed");
+        Map<String,String> methods=Compatibility.methods(bytes);
+        for(var pin:expected.entrySet())if(!pin.getValue().equals(methods.get(pin.getKey())))throw new IOException("Capture object boundary changed: "+pin.getKey());
+        ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);int[] hits={0};
+        reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
+            @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){
+                MethodVisitor out=super.visitMethod(a,n,d,s,e);if(!expected.containsKey(n+d))return out;hits[0]++;
+                return new MethodVisitor(Opcodes.ASM9,out){
+                    @Override public void visitCode(){super.visitCode();if(n.startsWith("set")){
+                        super.visitVarInsn(Opcodes.ALOAD,0);super.visitVarInsn(Opcodes.ILOAD,1);
+                        super.visitMethodInsn(Opcodes.INVOKESTATIC,SOURCE,"localAlpha","(L"+OBJECT+";I)Z",false);
+                        Label normal=new Label();super.visitJumpInsn(Opcodes.IFEQ,normal);super.visitInsn(Opcodes.RETURN);
+                        super.visitLabel(normal);super.visitFrame(Opcodes.F_SAME,0,null,0,null);
+                    }}
+                    @Override public void visitInsn(int op){
+                        if(op==Opcodes.FRETURN){super.visitVarInsn(Opcodes.ALOAD,0);super.visitVarInsn(Opcodes.ILOAD,1);super.visitMethodInsn(Opcodes.INVOKESTATIC,SOURCE,"alpha","(FL"+OBJECT+";I)F",false);}
+                        if(op==Opcodes.ARETURN){super.visitVarInsn(Opcodes.ALOAD,0);super.visitVarInsn(Opcodes.ILOAD,1);super.visitMethodInsn(Opcodes.INVOKESTATIC,SOURCE,"renderInfo","("+INFO+"L"+OBJECT+";I)"+INFO,false);}
+                        super.visitInsn(op);
+                    }
+                };
+            }
+        },0);
+        if(hits[0]!=5)throw new IOException("Capture object method shape changed");return writer.toByteArray();
     }
     /** Buddy snapshots loaded targets before installing transformers; avoid loading Levels reentrantly inside Chunk advice. */
     public static void prepareNativeHooks(){
@@ -85,7 +122,7 @@ public final class WallReflectionRepair {
     }
     public static void nativeBegin(Object owner,boolean clear){if(nativeReady())WallReflectionSource.beginBake((zombie.iso.fboRenderChunk.FBORenderChunk)owner,clear);}
     public static void nativeFree(Object owner){if(nativeReady())WallReflectionSource.free((zombie.iso.fboRenderChunk.FBORenderChunk)owner);}
-    public static boolean nativeReady(){return !RuntimeState.server&&RuntimeState.payload!=null&&Compatibility.currentGame()&&NativePins.VALID;}
+    public static boolean nativeReady(){return Compatibility.developmentRuntime()&&NativePins.VALID;}
     private static final class NativePins {
         static final boolean VALID=check();
         static boolean check(){

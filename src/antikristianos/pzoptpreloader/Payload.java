@@ -33,7 +33,7 @@ public final class Payload {
         if(prepared!=null)return;
         Map<String,byte[]> candidate=Compatibility.prepare(this,actual);
         Properties metadata=actual.equals(build.getProperty("revision"))?null:Compatibility.effectiveBuild(this,actual);
-        ManualAdpCompatibility.Kind installedManualAdp=Compatibility.isCurrent(actual)&&!RuntimeState.server
+        ManualAdpCompatibility.Kind installedManualAdp=Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this)&&!RuntimeState.server
             ?ManualAdpCompatibility.detect():ManualAdpCompatibility.Kind.ABSENT;
         if(installedManualAdp!=ManualAdpCompatibility.Kind.ABSENT){
             Properties owned=new Properties();owned.putAll(metadata==null?build:metadata);
@@ -41,7 +41,7 @@ public final class Payload {
                 .filter(name->!name.equals(ManualAdpCompatibility.SIMULATION)).toList()));
             metadata=owned;
         }
-        prepared=candidate;effectiveBuild=metadata;shoreLighting=Compatibility.isCurrent(actual);manualAdp=installedManualAdp;
+        prepared=candidate;effectiveBuild=metadata;shoreLighting=Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this);manualAdp=installedManualAdp;
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
     public Set<String> classNames(){return Collections.unmodifiableSet(emitted!=null?emitted.keySet():prepared==null?classes.keySet():prepared.keySet());}

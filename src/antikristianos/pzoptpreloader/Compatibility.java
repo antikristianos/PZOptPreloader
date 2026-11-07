@@ -21,6 +21,8 @@ public final class Compatibility {
     public static boolean extendedSource(Payload payload) {
         return payload.build.getProperty("commit", "").startsWith(UPDATE_COMMIT);
     }
+    /** WIP repairs belong only to the newest supported original; the former keeps the release pipeline. */
+    public static boolean developmentRuntime(){return !RuntimeState.server&&RuntimeState.payload!=null&&currentGame()&&extendedSource(RuntimeState.payload);}
     public static synchronized JSONObject profile(Payload payload) throws IOException {
         if (!extendedSource(payload)) return profile();
         if (updateProfile == null) try (InputStream input = Compatibility.class.getResourceAsStream("compatibility-154126d0-42.22.json")) {

@@ -44,7 +44,7 @@ public final class RuntimeState {
         Field field = Class.forName("me.zed_0xff.zombie_buddy.Loader").getDeclaredField("g_instrumentation");
         field.setAccessible(true); instrumentation = (Instrumentation) field.get(null);
         if (instrumentation == null) throw new IllegalStateException("ZombieBuddy instrumentation is unavailable");
-        PzfbSignedPackages.Prepared signedPzfb=server?null:PzfbSignedPackages.prepare(instrumentation);
+        PzfbSignedPackages.Prepared signedPzfb=server||!Compatibility.extendedSource(candidate)?null:PzfbSignedPackages.prepare(instrumentation);
         if(!Compatibility.LEGACY.equals(actual))ListStorage.install(instrumentation);
         Map<Class<?>, LambdaAdapter.Prepared> pending = new LinkedHashMap<>();
         try{

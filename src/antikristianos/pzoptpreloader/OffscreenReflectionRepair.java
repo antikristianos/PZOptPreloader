@@ -33,7 +33,7 @@ public final class OffscreenReflectionRepair {
         try{ClassLoader loader=OffscreenReflectionRepair.class.getClassLoader();for(String target:List.of("zombie.core.ShaderHelper","zombie.core.opengl.CharacterModelCamera","zombie.vehicles.VehicleModelCamera"))Class.forName(target,false,loader);}
         catch(ClassNotFoundException error){throw new IllegalStateException("Native offscreen source target missing",error);}
     }
-    public static boolean nativeReady(){return nativeVerified&&!RuntimeState.server&&RuntimeState.payload!=null&&Compatibility.currentGame();}
+    public static boolean nativeReady(){return nativeVerified&&Compatibility.developmentRuntime();}
     public static byte[] patch(String name,byte[] bytes)throws IOException {
         JSONObject all=pins().getJSONObject("payload");if(!all.has(name))return bytes;verifyNative();
         JSONObject expected=all.getJSONObject(name);Map<String,String> actual=Compatibility.methods(bytes);
