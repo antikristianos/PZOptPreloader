@@ -538,12 +538,12 @@
     {
       "Path": "antikristianos/pzoptpreloader/Payload$SourceUnavailable.class",
       "Size": 642,
-      "Sha256": "8EA6098588B6F30271F0E1ECE4C417AE5FE9109489971A74E24F7188ECDD5499"
+      "Sha256": "4FCFBABC2A21392FC04CCD02F5481A96AFB733E9FAB5AAC481A7F0F10EFD7F25"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Payload.class",
-      "Size": 19772,
-      "Sha256": "8DC8339D8AE069D2283871E467B1891F266873EF64015126FEDB51A69FC2B3C1"
+      "Size": 19943,
+      "Sha256": "485B039B053C25A0EBFCB8A8FCF5399E295F4DDD72E1B8B21B62EC501F0AED18"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PayloadFile.class",
@@ -1299,6 +1299,41 @@
       "Path": "antikristianos/pzoptpreloader/UiMoveReplayRepair.class",
       "Size": 3297,
       "Sha256": "1AE506B1E765FF0EF45F12E8630E19C77055944B9A5A00727C30D75761BB9110"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilRepair$1.class",
+      "Size": 984,
+      "Sha256": "504C7712E50A3701910324C314180519C0BE84EE1FC04721A261C4F67C4FFD57"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilRepair$2$1.class",
+      "Size": 2781,
+      "Sha256": "A95AE890C2F3F31826DC3B151E750B828407694D85D9BF8AAB275FFC92F37449"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilRepair$2.class",
+      "Size": 3675,
+      "Sha256": "0A464DE4330AABBE0783BB67440EC8B28F272949BAD2AB46203B29822E02FB92"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilRepair.class",
+      "Size": 4945,
+      "Sha256": "6DE83A9FD60FA395F38C86623035EEB0B43AFFB9986A0D6FBA4CAE2C83084423"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilReplay$Owner.class",
+      "Size": 420,
+      "Sha256": "32598FEDDB32F2028897DC41B1643DE3E18DD2EB8A92676337E2E48D2606AF8C"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilReplay$Span.class",
+      "Size": 443,
+      "Sha256": "8BE47F72EC8E7C4D54266F295B4465D92F63ECE944760D7497E8546A31987ACD"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/UiStencilReplay.class",
+      "Size": 2283,
+      "Sha256": "69DF73AB9998369644A272D53254319199785229CBDB25DC4BBE536BFE523714"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair$1$1.class",

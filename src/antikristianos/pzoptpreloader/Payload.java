@@ -19,6 +19,7 @@ public final class Payload {
     private Map<String,byte[]> emitted;
     private Properties effectiveBuild;
     private boolean shoreLighting;
+    private boolean uiStencil;
     private ManualAdpCompatibility.Kind manualAdp=ManualAdpCompatibility.Kind.ABSENT;
     private static final ThreadLocal<Payload> VERIFIED = new ThreadLocal<>();
     public static Payload discovered()throws Exception {
@@ -48,6 +49,7 @@ public final class Payload {
             owned.setProperty("overrides",String.join(",",Arrays.stream(owned.getProperty("overrides","").split(",")).filter(name->!StartupScreens.nativeLogo(name)).toList()));metadata=owned;
         }
         prepared=candidate;effectiveBuild=metadata;shoreLighting=Compatibility.isCurrent(actual)&&Compatibility.extendedSource(this);manualAdp=installedManualAdp;
+        uiStencil=UiStencilRepair.enabled(actual,Compatibility.extendedSource(this),RuntimeState.server);
     }
     public String originalClassHash(String name){return originalClassHashes.get(name);}
     public Set<String> classNames(){return Collections.unmodifiableSet(emitted!=null?emitted.keySet():prepared==null?classes.keySet():prepared.keySet());}
@@ -138,7 +140,8 @@ public final class Payload {
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
         if(shoreLighting)bytes=StandingObjectCutaway.depthScope(name,bytes);
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
-        return shoreLighting?OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes)))):bytes;
+        if(shoreLighting)bytes=OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes))));
+        return uiStencil?UiStencilRepair.patch(name,bytes):bytes;
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {
