@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "main",
-  "Tag": "v1.6",
-  "ModVersion": "1.6",
+  "Tag": "v1.7",
+  "ModVersion": "1.7",
   "CollectionVersion": null,
   "WorkshopId": 3818209799,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3818209799",
-  "UploadManifestSha256": "42BDC7263E77A1055C4824010B934108DF6F503C40CD43F235F29387E8D18827",
+  "UploadManifestSha256": "FE9AC7706C6E514F77352E1DCE631AA1E33D862748231790C596332FDF4D64C2",
   "Artifact": {
     "Path": "mods/PZOptPreloader/42.22/media/java/PZOptPreloader.jar",
-    "Size": 4019083,
-    "Sha256": "1E6679575672B4B0AB4E83BB16822C1C3693B1923FF07A9A31A30C2B0D780333"
+    "Size": 4027973,
+    "Sha256": "B198035DB0338F60B6D2BB9AE4B9F140B4AB0F91796AFAD2B62875D3AB7488B5"
   },
   "AdditionalArtifacts": [],
   "Sources": [
@@ -24,17 +24,17 @@
     {
       "Path": "MANIFEST.MF",
       "Size": 109,
-      "Sha256": "7B874978F896B702ADE25B16A23748D9C909D42F74021DB8A4DBE6F54F2E9D5F"
+      "Sha256": "72B4CF06D65BB5F0320C5D3B46AE1BD1F08B0AE89A9A834F89E9CEEA6E97AAE6"
     },
     {
       "Path": "README.md",
       "Size": 1483,
-      "Sha256": "ADC61D37D21D14E97455BE30C1910652E326F436BE8CF075420F942E374F8732"
+      "Sha256": "A2BF30027719B558BF827A7DAB40593585B8F15D54B9536F8370F21E4AEDA032"
     },
     {
       "Path": "build.json",
-      "Size": 74119,
-      "Sha256": "04F9D00DAC1CD686DFCFCE8BBB9CDEF0F4CE9CDA128AB50D6ACB238F4DDF0490"
+      "Size": 75465,
+      "Sha256": "7153989068AEAA9F41586E818C5EE16EB3FB3C5C23A31CE666C385BCBFF091F2"
     },
     {
       "Path": "build.ps1",
@@ -114,7 +114,7 @@
     {
       "Path": "runtime/42.22/mod.info",
       "Size": 738,
-      "Sha256": "665FA1F6017FA4F81D89A9D5DDA67AB08DF89A5DF6780F3EB09284FC44FDC110"
+      "Sha256": "633FD44C92E150E00A8C637271C243378A938A53C1354CACA82293CD62DD305A"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
@@ -268,8 +268,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/Payload.java",
-      "Size": 15384,
-      "Sha256": "EFD70A52330BE36D6C720CD02A2F13E2590ABBAE6F1FA0F5530FC38D1E7FF140"
+      "Size": 15586,
+      "Sha256": "EA1E3FE38ECCDCBDF09E4C909A9DC9089C60B41F0177F8D8BAA4BA3A39C62460"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PayloadFile.java",
@@ -510,6 +510,16 @@
       "Path": "src/antikristianos/pzoptpreloader/UiMoveReplayRepair.java",
       "Size": 5020,
       "Sha256": "FED96CD80555D6FAC210F79C20C588FE293AEE86C410EECB9A174D14F1061197"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/UiStencilRepair.java",
+      "Size": 7178,
+      "Sha256": "857BC24C30265D635E4F6667CB7E7CC509A0B90B08FBAE88D1B706FEC4BBE49A"
+    },
+    {
+      "Path": "src/antikristianos/pzoptpreloader/UiStencilReplay.java",
+      "Size": 1819,
+      "Sha256": "40D459329B557748FA651B73B66216F90A69162D39BF9F26BF6F0D68FC863D02"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/VehicleZoneRepair.java",
