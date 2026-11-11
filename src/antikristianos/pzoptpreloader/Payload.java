@@ -17,6 +17,8 @@ public final class Payload {
     private byte[] serverVehicleZones;
     private Map<String,byte[]> prepared;
     private Map<String,byte[]> emitted;
+    private boolean serverEmission;
+    private Set<String> omitted=Set.of();
     private Properties effectiveBuild;
     private boolean shoreLighting;
     private boolean uiStencil;
@@ -55,11 +57,15 @@ public final class Payload {
     public Set<String> classNames(){return Collections.unmodifiableSet(emitted!=null?emitted.keySet():prepared==null?classes.keySet():prepared.keySet());}
     public boolean hasClass(String name){return emitted!=null?emitted.containsKey(name):prepared==null?classes.containsKey(name):prepared.containsKey(name);}
     public void prepareEarlyEmission(Map<String,byte[]> loaded) throws IOException {
+        prepareEarlyEmission(loaded,false);
+    }
+    public void prepareEarlyEmission(Map<String,byte[]> loaded,boolean server) throws IOException {
         Map<String,byte[]> definitions=new TreeMap<>();
-        for (String name:classNames()) definitions.put(name,classBytes(name,false));
+        for (String name:classNames()) definitions.put(name,classBytes(name,server));
         EarlyClassAdapter adapter=EarlyClassAdapter.prepare(definitions,loaded);
+        if(NativeSource.is(this))omitted=NativeSource.omitVanilla(definitions);
         try (JarFile game=new JarFile(Compatibility.gameJar().toFile())) { ClassReferences.verify(definitions,game); }
-        emitted=definitions; adapter.activate();
+        emitted=definitions;serverEmission=server;adapter.activate();
     }
     public boolean manualAdpPhysics(){return manualAdp!=ManualAdpCompatibility.Kind.ABSENT;}
     public boolean manualAdpOptimizedPhysics(){return manualAdp==ManualAdpCompatibility.Kind.OPTCOMPAT;}
@@ -81,6 +87,7 @@ public final class Payload {
                 Path actual = file.toRealPath();
                 if (!actual.startsWith(root)) throw new IOException("Payload file leaves its source directory: " + file);
                 String relative = root.relativize(file).toString().replace(File.separatorChar, '/');
+                if(NativeSource.is(this)&&relative.startsWith("pzopt/overrides/"))relative=relative.substring("pzopt/overrides/".length());
                 if (relative.endsWith(".class")) classes.put(relative.substring(0, relative.length() - 6), file);
                 else if (relative.startsWith("media/")) media.put(relative.toLowerCase(Locale.ROOT), file);
                 else if (relative.startsWith("pzopt/")) resources.put(relative, file);
@@ -98,6 +105,7 @@ public final class Payload {
     }
 
     public boolean selected(String name, boolean server) {
+        if(omitted.contains(name))return false;
         if(!server&&shoreLighting&&StartupScreens.nativeLogo(name))return false;
         if(!server&&manualAdpPhysics()&&name.equals(ManualAdpCompatibility.SIMULATION))return false;
         if (server && name.equals(VehicleZoneRepair.TARGET)) return serverVehicleZones != null;
@@ -121,7 +129,9 @@ public final class Payload {
     public int serverFamilyCount() { return SERVER_TARGETS.size() + (serverVehicleZones == null ? 0 : 1); }
 
     public byte[] classBytes(String name, boolean server) throws IOException {
-        if (emitted!=null&&!server) {
+        boolean previousNative=NativeSource.enter(this);
+        try {
+        if (emitted!=null&&(!server||serverEmission)) {
             byte[] bytes=emitted.get(name);
             if (bytes==null) throw new IOException("Missing emitted definition: "+name);
             return bytes.clone();
@@ -142,6 +152,7 @@ public final class Payload {
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
         if(shoreLighting)bytes=OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes))));
         return uiStencil?UiStencilRepair.patch(name,bytes):bytes;
+        } finally {NativeSource.leave(previousNative);}
     }
 
     public Path cacheJar(Path configDirectory, boolean server) throws IOException {

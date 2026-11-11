@@ -17,11 +17,11 @@ public final class ShoreWeatherRepair {
         if(!TARGETS.contains(name))return bytes;
         Map<String,String> methods=Compatibility.methods(bytes);
         if(name.equals(CELL)){
-            for(var pin:CELL_PINS.entrySet())if(!pin.getValue().contains(methods.get(pin.getKey())))
+            for(var pin:CELL_PINS.entrySet())if(pin.getValue().stream().noneMatch(previous->RepairProfiles.matches(previous,methods.get(pin.getKey()))))
                 throw new IOException("Unsupported shore weather bake boundary: "+pin.getKey());
         }else if(name.endsWith("$Gpu")){
-            if(!"9b392135ebc389d4d508ea6284dd288a5d2a033d829046d0c8de23daee621bbb".equals(methods.get("draw(Lpzopt/GroundCover$Drawer;)V"))||!"c77753e989a863353b92dcdeb30f133938d7796778e23a455a9642b69cbcd74c".equals(methods.get("init()Z")))throw new IOException("Unsupported cover blend/program boundary");
-        }else if(!"aa2c2aca36078eed381cf97bc58d422efed7f24100b366e151294464b946c728".equals(methods.get("bake(Lzombie/iso/IsoChunk;II)V"))
+            if(!RepairProfiles.matches("9b392135ebc389d4d508ea6284dd288a5d2a033d829046d0c8de23daee621bbb",methods.get("draw(Lpzopt/GroundCover$Drawer;)V"))||!RepairProfiles.matches("c77753e989a863353b92dcdeb30f133938d7796778e23a455a9642b69cbcd74c",methods.get("init()Z")))throw new IOException("Unsupported cover blend/program boundary");
+        }else if(!RepairProfiles.matches("aa2c2aca36078eed381cf97bc58d422efed7f24100b366e151294464b946c728",methods.get("bake(Lzombie/iso/IsoChunk;II)V"))
             )
             throw new IOException("Unsupported installed cover weather boundary");
         ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);int[] hits=new int[3];

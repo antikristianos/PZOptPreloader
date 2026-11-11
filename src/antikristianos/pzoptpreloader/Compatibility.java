@@ -19,7 +19,7 @@ public final class Compatibility {
     private static JSONObject updateProfile;
     public static final String UPDATE_COMMIT = "154126d0";
     public static boolean extendedSource(Payload payload) {
-        return payload.build.getProperty("commit", "").startsWith(UPDATE_COMMIT);
+        return payload.build.getProperty("commit", "").startsWith(UPDATE_COMMIT)||NativeSource.is(payload);
     }
     /** WIP repairs belong only to the newest supported original; the former keeps the release pipeline. */
     public static boolean developmentRuntime(){return !RuntimeState.server&&RuntimeState.payload!=null&&currentGame()&&extendedSource(RuntimeState.payload);}
@@ -81,6 +81,7 @@ public final class Compatibility {
         }catch(java.net.URISyntaxException|ClassNotFoundException error){throw new IOException("Cannot locate game input",error);}
     }
     public static Map<String,byte[]> prepare(Payload payload,String actual)throws IOException {
+        NativeSource.verify(payload);
         if(!supports(payload,actual))throw new Payload.SourceUnavailable("incompatible","No verified adaptation for installed PZOpt/game pair");
         Map<String,byte[]> bytes=new TreeMap<>();
         for(var entry:payload.classes.entrySet()){

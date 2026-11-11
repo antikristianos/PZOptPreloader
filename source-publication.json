@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.95",
-  "ModVersion": "1.6.1",
-  "CollectionVersion": "1.95",
+  "Tag": "wip-1.96",
+  "ModVersion": "1.7.1",
+  "CollectionVersion": "1.96",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "CEB5144239B09C1DA0A2C8C6D49A4ED2FCCFE88B421D3150388BA91A73D5D5C5",
+  "UploadManifestSha256": "63361F99104BA6AB21563F765C0F8B40D26638AE0B76D75D2A9943B48BD33F0E",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.22/media/java/PZOptPreloader.jar",
-    "Size": 4020125,
-    "Sha256": "0357982E0396AAAF710ECC5AF3F1DE3307DF4250F2CB0DC68AC476FB23B42DAE"
+    "Size": 4106665,
+    "Sha256": "60F28124FEC3314C399021BDAB2BFE94CA6F5062D1DA49F2C0EDBD43C63D9527"
   },
   "AdditionalArtifacts": [],
   "Sources": [
@@ -24,17 +24,17 @@
     {
       "Path": "MANIFEST.MF",
       "Size": 111,
-      "Sha256": "280E33BE2859225D542515FF460F5976436DF601CBAB1BBD97DDD6A86C4DBE76"
+      "Sha256": "1A8B09D64AA4C6FE000BED1A2FAB9F12CFC84BA8CB1D1252EC6039ADBEBD23EB"
     },
     {
       "Path": "README.md",
       "Size": 1489,
-      "Sha256": "C0595FDC22CFF52E5EDF0F41B4F02BF59881968349FE960282C59D51FAE95285"
+      "Sha256": "A7D60B4312A32042C2284A1DBE249170FA10510C23F9D9DDADE19362AF34F148"
     },
     {
       "Path": "build.json",
-      "Size": 75278,
-      "Sha256": "E548509425718D40DB5CAFB4A15A7428DF8986B3AF2D477BA2CF336596BE2160"
+      "Size": 75656,
+      "Sha256": "C208E7C10AE5AE5C068376CA3CF7193F400231383B708F466EF7D04B739C0ECC"
     },
     {
       "Path": "build.ps1",
@@ -55,6 +55,11 @@
       "Path": "resources/antikristianos/pzoptpreloader/legacy-port-42.22.json",
       "Size": 6585664,
       "Sha256": "4D18823DF750C468F3C961E4ADA4FC2066CBC793C688E684259FB72DAD724E4D"
+    },
+    {
+      "Path": "resources/antikristianos/pzoptpreloader/native-fad57862.json",
+      "Size": 209874,
+      "Sha256": "AE1263EF10AD5B3F834E7E400AF7E8EAFC9352C0954797813D5C3FCBDD65A476"
     },
     {
       "Path": "resources/antikristianos/pzoptpreloader/offscreen-repair-42.22.json",
@@ -114,7 +119,7 @@
     {
       "Path": "runtime/42.22/mod.info",
       "Size": 673,
-      "Sha256": "B3D108C0C9DA9EE869F3A8C5170B5468C9F6639C780A4765138B681A9ADCD4E3"
+      "Sha256": "4BFADB41C00ECAD2149E78B799EE836F144FF3F45149FDBF2A349FAF7C4D34A3"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
@@ -128,13 +133,13 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/Compatibility.java",
-      "Size": 10887,
-      "Sha256": "E6A6177F1FB64F9A9F243EB3AB4111F26DADD6AA78AC2F08F86D5E89DFDE04FC"
+      "Size": 10952,
+      "Sha256": "C3380DCFA695460C150CF9EF349CAEC4D6519B202A68B432236D164CF6142094"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/DoorShadowRepair.java",
-      "Size": 6393,
-      "Sha256": "6FF124E0EBBA032D716BD0F000A8BE132CD3D7F40325722A511377CABEECCD57"
+      "Size": 6409,
+      "Sha256": "6BFB566119571A103A58724FA4EB336A248A7D8F7B90399ED11DFA515CF66C39"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/EarlyClassAdapter.java",
@@ -212,6 +217,11 @@
       "Sha256": "E204FFACA54986FCBBDB6FEC6148F87ADB89A62340E65FFFFA229928A390D567"
     },
     {
+      "Path": "src/antikristianos/pzoptpreloader/NativeSource.java",
+      "Size": 3174,
+      "Sha256": "71F3763EC868D1B414F2E3816889082952BB48B2836101A49661164F4CCC3E8E"
+    },
+    {
       "Path": "src/antikristianos/pzoptpreloader/OffscreenReflectionAccess.java",
       "Size": 7097,
       "Sha256": "5987127EDDCFC3A7D31478E84394014827274FB18667B89A86088AD9E8822BAE"
@@ -223,8 +233,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/OffscreenReflectionRepair.java",
-      "Size": 6580,
-      "Sha256": "167AFD086FBFF83ACD34D03EB64B508A96385BCF1E64D65B7121427103A2D65F"
+      "Size": 6656,
+      "Sha256": "43A05D0512423D53E5966B25FF32955DE6A11F409E5E97755F85E9995C4E5418"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/OffscreenReflectionShaders.java",
@@ -268,8 +278,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/Payload.java",
-      "Size": 15590,
-      "Sha256": "49702FFA5B6DEA94D2BBF2F7738D95B13632077BFD62541C1FFA553D9062DF98"
+      "Size": 16264,
+      "Sha256": "189863DE522DB4B8AB81BA737A792B626B724E2E1B7AE4DA5B89F2EE2A39F2BD"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PayloadFile.java",
@@ -278,8 +288,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PeekIntegration.java",
-      "Size": 5807,
-      "Sha256": "914A13A51D4B3A0EA3E1F5DC54E01123CEDF90062CB46FD5EA69BB5833EF4C83"
+      "Size": 5848,
+      "Sha256": "F0FA98757412998802ABB019A7F5ACF1DDABD0BDB8399DC76C09756BDE9924AC"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PeekNativeApi.java",
@@ -288,8 +298,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PhysicalShadowSources.java",
-      "Size": 5250,
-      "Sha256": "0458341E09F57CB2F52E80F5DD4CFEEC83E97DEBEC1F44795C6F7544874ABEA9"
+      "Size": 5266,
+      "Sha256": "45B9F2C37E04C78CB944347F484838FCB8E3296317A9DE9FFC1D89217793D220"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/PortRecipes.java",
@@ -348,8 +358,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/RepairProfiles.java",
-      "Size": 927,
-      "Sha256": "3A6AA0CDDFFC8F6421D4D17A610CA0054401C552D3DBDA8FAE56DDA0257462A0"
+      "Size": 968,
+      "Sha256": "96660B26B51F92D294C99C158419C2E9230D6DACE11A84F6E9B3D86CB8E15431"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/Resources.java",
@@ -358,8 +368,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/RuntimeState.java",
-      "Size": 16218,
-      "Sha256": "AD02E5AF5665D3F5476D1C8A327750F4E9FF5B9AF243BBE597D10D85B11F611D"
+      "Size": 16315,
+      "Sha256": "66F3ABD0DA3668DB84750DC89C10030D9F0929990FEEE1D8FBC459B8D6D2FB97"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/SchedulerProgressPolicy.java",
@@ -438,8 +448,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ShoreWeatherRepair.java",
-      "Size": 4772,
-      "Sha256": "02353671FAB2D42146F6248DA189865CA9C634EBA7D57FB0285F7A5E2090450E"
+      "Size": 4872,
+      "Sha256": "C9A263FB866C0BC45C5DCBF33B9B1555346935E4A5352531B25E6914D7D28B93"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/ShoreWeatherShaders.java",
@@ -468,8 +478,8 @@
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/StandingObjectCutaway.java",
-      "Size": 20283,
-      "Sha256": "29DCAED40E26FA3D2249E67881C8E7DFEAA7AAAA7C82A8A6C9FCB30A219212C9"
+      "Size": 20315,
+      "Sha256": "15CDC3EB1E4EBC8EE8B87E229CC4F9DAD324BF10F4DA861ED57D82EEEFE65207"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/StartPreset.java",

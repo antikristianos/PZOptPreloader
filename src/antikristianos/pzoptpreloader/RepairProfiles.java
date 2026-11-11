@@ -15,6 +15,6 @@ public final class RepairProfiles {
             if (input==null) return false;
             update=new JSONObject(new String(input.readAllBytes(),StandardCharsets.UTF_8));
         } catch (IOException error) { throw new IllegalStateException("Repair profile unavailable",error); }
-        return actual.equals(update.optString(previous));
+        return actual.equals(update.optString(previous))||NativeSource.repairPin(previous,actual);
     }
 }
