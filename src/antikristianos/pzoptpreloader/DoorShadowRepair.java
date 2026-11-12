@@ -18,7 +18,7 @@ public final class DoorShadowRepair {
     public static byte[] patch(String name,byte[] bytes)throws IOException{
         if(name.equals("pzopt/ChunkAo"))return sunShader(bytes);
         if(!TARGET.equals(name))return bytes;
-        if(!HASH.equals(Compatibility.methods(bytes).get(METHOD+DESC)))throw new IOException("Unsupported physical door shadow boundary");
+        if(!RepairProfiles.matches(HASH,Compatibility.methods(bytes).get(METHOD+DESC)))throw new IOException("Unsupported physical door shadow boundary");
         ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);int[] hits={0};
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int access,String n,String d,String signature,String[] exceptions){

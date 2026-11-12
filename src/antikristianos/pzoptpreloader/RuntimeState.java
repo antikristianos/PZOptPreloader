@@ -48,7 +48,7 @@ public final class RuntimeState {
         if(!Compatibility.LEGACY.equals(actual))ListStorage.install(instrumentation);
         Map<Class<?>, LambdaAdapter.Prepared> pending = new LinkedHashMap<>();
         try{
-        boolean extended=!server&&Compatibility.extendedSource(candidate);
+        boolean extended=(!server&&Compatibility.extendedSource(candidate))||NativeSource.is(candidate);
         Map<Class<?>,byte[]> loaded=new LinkedHashMap<>();
         for (Class<?> cls : instrumentation.getAllLoadedClasses()) {
             String name = cls.getName().replace('.', '/');
@@ -63,9 +63,9 @@ public final class RuntimeState {
         if (extended) {
             Map<String,byte[]> schemas=new TreeMap<>();
             loaded.forEach((cls,bytes)->schemas.put(cls.getName().replace('.','/'),bytes));
-            candidate.prepareEarlyEmission(schemas);
-            for(Class<?> cls:loaded.keySet()) pending.put(cls,new LambdaAdapter.Prepared(
-                candidate.classBytes(cls.getName().replace('.','/'),false),null,null));
+            candidate.prepareEarlyEmission(schemas,server);
+            for(Class<?> cls:loaded.keySet())if(candidate.selected(cls.getName().replace('.','/'),false))pending.put(cls,new LambdaAdapter.Prepared(
+                candidate.classBytes(cls.getName().replace('.','/'),server),null,null));
         }
         helperJar = new JarFile(candidate.cacheJar(Agent.configDir(), server).toFile());
         }catch(Exception failed){

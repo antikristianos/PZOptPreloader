@@ -14,8 +14,8 @@ end
 
 function SetupPanel:new(bridge)
     local core = getCore()
-    local width = math.min(840, core:getScreenWidth() - 40)
-    local height = math.min(650, core:getScreenHeight() - 40)
+    local width = math.floor(core:getScreenWidth() * 0.5)
+    local height = math.floor(core:getScreenHeight() * 0.5)
     local panel = ISPanel.new(self, (core:getScreenWidth() - width) / 2,
         (core:getScreenHeight() - height) / 2, width, height)
     panel.bridge = bridge
@@ -23,6 +23,8 @@ function SetupPanel:new(bridge)
     panel.title = getText(prefix .. "Title")
     panel.targetPath = bridge.target()
     panel.updateMode = bridge.isUpdate()
+    panel.screenWidth = core:getScreenWidth()
+    panel.screenHeight = core:getScreenHeight()
     return panel
 end
 
@@ -30,31 +32,99 @@ function SetupPanel:createChildren()
     ISPanel.createChildren(self)
     local fontHeight = getTextManager():getFontHeight(UIFont.Small)
     local buttonHeight = math.max(30, fontHeight + 12)
-    local row = buttonHeight + 6
-    local buttonsY = self.height - 16 - row * 5
-    self.description = ISRichTextPanel:new(16, 46, self.width - 32, buttonsY - 92)
+    self.buttonHeight = buttonHeight
+    self.smallFontHeight = fontHeight
+    local textTop = math.max(46, 15 + getTextManager():getFontHeight(UIFont.Medium) + 12)
+    self.description = ISRichTextPanel:new(16, textTop, self.width - 32, 32)
     self.description:initialise()
     self.description.autosetheight = false
     self.description.background = false
     self.description.clip = true
     self.description:addScrollBars()
     self:addChild(self.description)
-    self.progressBar = ISProgressBar:new(16, buttonsY - 38, self.width - 32, 28, "", UIFont.Small)
+    self.progressBar = ISProgressBar:new(16, 0, self.width - 32, math.max(28, fontHeight + 4), "", UIFont.Small)
     self.progressBar:initialise()
     self:addChild(self.progressBar)
-    local function button(offset, key, callback)
-        local control = ISButton:new(16, buttonsY + row * offset, self.width - 32, buttonHeight,
+    local function button(key, callback)
+        local control = ISButton:new(16, 0, self.width - 32, buttonHeight,
             getText(prefix .. key), self, callback)
         control:initialise()
         self:addChild(control)
         return control
     end
-    self.disableButton = button(0, self.updateMode and "Later" or "Disable", SetupPanel.onPrimary)
-    self.manualButton = button(1, "ManualButton", SetupPanel.onManual)
-    self.autoButton = button(2, self.updateMode and "UpdateButton" or "AutoButton", SetupPanel.onAutomatic)
-    self.keepButton = button(3, "KeepPrevious", SetupPanel.onKeepPrevious)
-    self.closeButton = button(4, "Close", SetupPanel.onClose)
+    self.disableButton = button(self.updateMode and "Later" or "Disable", SetupPanel.onPrimary)
+    self.manualButton = button("ManualButton", SetupPanel.onManual)
+    self.autoButton = button(self.updateMode and "UpdateButton" or "AutoButton", SetupPanel.onAutomatic)
+    self.unverifiedButton = button("TryLatest", SetupPanel.onUnverified)
+    self.keepButton = button("KeepPrevious", SetupPanel.onKeepPrevious)
+    self.closeButton = button("Close", SetupPanel.onClose)
     self:refresh()
+end
+
+function SetupPanel:layoutControls()
+    local key = self.screenWidth .. ":" .. self.screenHeight .. self.title
+        .. tostring(self.unverifiedButton:getIsVisible()) .. tostring(self.keepButton:getIsVisible())
+        .. self.autoButton.title .. self.manualButton.title .. self.disableButton.title
+        .. self.keepButton.title .. self.unverifiedButton.title .. self.closeButton.title
+    if key == self.lastLayout then return end
+    self.lastLayout = key
+    local padding, gap = 16, 6
+    local width = math.floor(self.screenWidth * 0.5)
+    width = math.max(width, getTextManager():MeasureStringX(UIFont.Medium, self.title) + padding * 2)
+    local controls = {self.autoButton, self.manualButton, self.unverifiedButton,
+        self.keepButton, self.disableButton, self.closeButton}
+    local widths = {}
+    for _, control in ipairs(controls) do
+        if control:getIsVisible() then
+            widths[control] = getTextManager():MeasureStringX(UIFont.Small, control.title) + 24
+            width = math.max(width, widths[control] + padding * 2)
+        end
+    end
+    width = math.min(width, self.screenWidth - 40)
+    local innerWidth = width - padding * 2
+    local halfWidth = math.floor((innerWidth - gap) / 2)
+    local rows = {}
+    local function single(control) rows[#rows + 1] = {control} end
+    local function pair(left, right)
+        if widths[left] <= halfWidth and widths[right] <= halfWidth then
+            rows[#rows + 1] = {left, right}
+        else
+            single(left)
+            single(right)
+        end
+    end
+    pair(self.autoButton, self.manualButton)
+    if self.unverifiedButton:getIsVisible() then single(self.unverifiedButton) end
+    if self.keepButton:getIsVisible() then
+        if self.updateMode then pair(self.keepButton, self.disableButton)
+        else single(self.keepButton); single(self.disableButton) end
+    else
+        single(self.disableButton)
+    end
+    single(self.closeButton)
+    local buttonsHeight = #rows * self.buttonHeight + (#rows - 1) * gap
+    -- Retain a scrollable text viewport at small resolutions or large UI fonts.
+    local minHeight = self.description.y + self.smallFontHeight * 2 + 10 + self.progressBar.height + 10 + buttonsHeight + padding
+    local height = math.min(math.max(math.floor(self.screenHeight * 0.5), minHeight), self.screenHeight - 40)
+    self:setWidth(width)
+    self:setHeight(height)
+    self:setX(math.floor((self.screenWidth - width) / 2))
+    self:setY(math.floor((self.screenHeight - height) / 2))
+    local buttonsY = height - padding - buttonsHeight
+    for index, row in ipairs(rows) do
+        for column, control in ipairs(row) do
+            control:setWidth(#row == 1 and innerWidth or halfWidth)
+            control:setX(padding + (column - 1) * (halfWidth + gap))
+            control:setY(buttonsY + (index - 1) * (self.buttonHeight + gap))
+        end
+    end
+    self.progressBar:setY(buttonsY - 10 - self.progressBar.height)
+    self.progressBar:setWidth(innerWidth)
+    local textHeight = self.progressBar.y - 10 - self.description.y
+    local resized = self.description.width ~= innerWidth or self.description.height ~= textHeight
+    self.description:setWidth(innerWidth)
+    self.description:setHeight(textHeight)
+    if resized then self.description:paginate() end
 end
 
 function SetupPanel:refresh()
@@ -65,7 +135,9 @@ function SetupPanel:refresh()
     local detail = bridge.detail()
     local canKeep = bridge.canKeepPrevious()
     local previousVersion = bridge.previousVersion()
-    local signature = state .. "\n" .. issue .. "\n" .. detail .. "\n" .. tostring(self.manual) .. tostring(canKeep) .. previousVersion
+    local compatibleVersion = bridge.compatibleVersion()
+    local unverifiedVersion = bridge.unverifiedVersion()
+    local signature = state .. "\n" .. issue .. "\n" .. detail .. "\n" .. tostring(self.manual) .. tostring(canKeep) .. previousVersion .. compatibleVersion .. unverifiedVersion
     if signature ~= self.lastContent then
         self.lastContent = signature
         local key = state == "idle" and issue or state
@@ -77,7 +149,10 @@ function SetupPanel:refresh()
             text = text .. " <BR> " .. plainText(getText(prefix .. (self.updateMode and "UpdateIntro" or "Intro")))
         end
         if self.updateMode then
-            text = text .. " <BR> " .. plainText(getText(prefix .. "Versions", bridge.installedVersion(), bridge.offeredVersion()))
+            text = text .. " <BR> " .. plainText(getText(prefix .. "CompatibleVersions", bridge.installedVersion(), compatibleVersion))
+            if unverifiedVersion ~= "" then
+                text = text .. " <BR> " .. plainText(getText(prefix .. "Unverified", unverifiedVersion))
+            end
         end
         text = text .. " <BR> " .. plainText(getText(prefix .. "Target")) .. " <LINE> " .. plainText(self.targetPath)
         if canKeep then text = text .. " <BR> " .. plainText(getText(prefix .. "PreviousAvailable", previousVersion)) end
@@ -107,14 +182,23 @@ function SetupPanel:refresh()
     end
     self.manualButton:setEnable(not busy and state ~= "disabled")
     self.autoButton:setEnable(not busy and state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback")
+    self.unverifiedButton:setVisible(self.updateMode and unverifiedVersion ~= "")
+    self.unverifiedButton:setEnable(not busy and state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback")
     self.keepButton:setVisible(canKeep)
     self.keepButton:setEnable(canKeep and not busy)
     self.closeButton:setEnable(true)
     self.closeButton:setVisible(true)
+    self:layoutControls()
 end
 
 function SetupPanel:update()
     ISPanel.update(self)
+    local core = getCore()
+    if self.screenWidth ~= core:getScreenWidth() or self.screenHeight ~= core:getScreenHeight() then
+        self.screenWidth = core:getScreenWidth()
+        self.screenHeight = core:getScreenHeight()
+        self:layoutControls()
+    end
     -- Poll scalar job state at most ten times per second; controls and text layout are retained.
     local now = getTimestampMs()
     if not self.nextRefresh or now >= self.nextRefresh then
@@ -156,6 +240,11 @@ end
 
 function SetupPanel:onKeepPrevious()
     self.bridge.keepPrevious()
+    self:refresh()
+end
+
+function SetupPanel:onUnverified()
+    self.bridge.startUnverifiedDownload()
     self:refresh()
 end
 

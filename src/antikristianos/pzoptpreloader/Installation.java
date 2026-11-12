@@ -21,6 +21,8 @@ public final class Installation {
     private static volatile String offeredVersion = "";
     private static volatile String updateStatus = "not checked";
     private static volatile Installer.Release offeredRelease;
+    private static volatile Installer.Release compatibleRelease;
+    private static volatile Installer.Release unverifiedRelease;
     private Installation() { }
 
     public static boolean disabled() {
@@ -50,12 +52,8 @@ public final class Installation {
             System.out.println("[PZOptPreloader] checking GitHub updates for config installation " + installedVersion);
             Thread check = new Thread(() -> {
                 try {
-                    Installer.Release release = Installer.checkUpdate(installed);
-                    if(SourceHistory.ignoredRelease(SourcePaths.configDirectory(),revision(),release.digest())){
-                        updateStatus="previous version retained for this incompatible release";return;
-                    }
-                    if (Installer.isNewer(installed, release)) {
-                        offerUpdate(release);
+                    if (considerChoices(installed,Installer.checkChoices())) {
+                        Installer.Release release=compatibleRelease;
                         if (Files.isDirectory(SourcePaths.pendingDirectory())) {
                             try {
                                 Payload pending = new Payload(Payload.verifiedSource(SourcePaths.pendingDirectory(),revision()));
@@ -78,6 +76,19 @@ public final class Installation {
     }
 
     static void offerUpdate(Installer.Release release) {
+        offerChoices(release,null);
+    }
+
+    static boolean considerChoices(Payload installed,Installer.Choices choices)throws Exception {
+        Installer.Release release=choices.compatible(),optional=choices.unverified();
+        if(optional!=null&&(!Installer.isNewer(installed,optional)
+            ||SourceHistory.ignoredRelease(SourcePaths.configDirectory(),revision(),optional.digest())))optional=null;
+        if(release==null||(!Installer.isNewer(installed,release)&&optional==null))return false;
+        offerChoices(release,optional);return true;
+    }
+
+    static void offerChoices(Installer.Release release,Installer.Release optional) {
+        compatibleRelease=release;unverifiedRelease=optional;
         offeredRelease = release; offeredVersion = release.tag();
         updateMode = true; reason = "update";
         progress = new Installer.Progress("update", 0, 0, "");
@@ -97,6 +108,8 @@ public final class Installation {
     public static boolean isUpdate() { return updateMode; }
     public static String installedVersion() { return installedVersion; }
     public static String offeredVersion() { return offeredVersion; }
+    public static String compatibleVersion() { return compatibleRelease==null?"":compatibleRelease.tag(); }
+    public static String unverifiedVersion() { return unverifiedRelease==null?"":unverifiedRelease.tag(); }
     public static String updateStatus() { return updateStatus; }
     public static void dismiss() { dismissed = true; }
     public static void dismissUpdate() { if (updateMode && !busy()) dismiss(); }
@@ -148,7 +161,15 @@ public final class Installation {
     public static synchronized boolean busy() { return worker != null && worker.isAlive(); }
 
     public static synchronized boolean startDownload() {
+        return startSelectedDownload(compatibleRelease);
+    }
+    public static synchronized boolean startUnverifiedDownload() {
+        if(!updateMode||unverifiedRelease==null)return false;
+        return startSelectedDownload(unverifiedRelease);
+    }
+    private static boolean startSelectedDownload(Installer.Release selected) {
         if (busy() || disabled() || !needsSetup() || (RuntimeState.payload != null && !updateMode)) return false;
+        if(updateMode){if(selected==null)return false;offeredRelease=selected;offeredVersion=selected.tag();}
         cancelled = false;
         progress = new Installer.Progress("checking", 0, 0, "");
         worker = new Thread(() -> {

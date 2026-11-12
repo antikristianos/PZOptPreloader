@@ -24,7 +24,7 @@ public final class OffscreenReflectionRepair {
             for(String name:classes.keySet()){
                 var entry=game.getJarEntry(name+".class");if(entry==null)throw new IOException("Missing native source hook: "+name);
                 Map<String,String> methods;try(InputStream in=game.getInputStream(entry)){methods=Compatibility.methods(in.readAllBytes());}
-                JSONObject expected=classes.getJSONObject(name);for(String key:expected.keySet())if(!expected.getString(key).equals(methods.get(key)))throw new IOException("Native source hook changed: "+name+"."+key);
+                JSONObject expected=classes.getJSONObject(name);for(String key:expected.keySet())if(!RepairProfiles.matches(expected.getString(key),methods.get(key)))throw new IOException("Native source hook changed: "+name+"."+key);
             }
         }nativeVerified=true;
     }
@@ -37,7 +37,7 @@ public final class OffscreenReflectionRepair {
     public static byte[] patch(String name,byte[] bytes)throws IOException {
         JSONObject all=pins().getJSONObject("payload");if(!all.has(name))return bytes;verifyNative();
         JSONObject expected=all.getJSONObject(name);Map<String,String> actual=Compatibility.methods(bytes);
-        for(String key:expected.keySet())if(!expected.getJSONArray(key).toList().contains(actual.get(key)))throw new IOException("Unsupported offscreen source method: "+name+"."+key);
+        for(String key:expected.keySet())if(expected.getJSONArray(key).toList().stream().noneMatch(previous->RepairProfiles.matches((String)previous,actual.get(key))))throw new IOException("Unsupported offscreen source method: "+name+"."+key);
         ClassReader reader=new ClassReader(bytes);if(!reader.getClassName().equals(name))throw new IOException("Offscreen source class identity");
         int[] hits={0};ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){

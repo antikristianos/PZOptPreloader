@@ -27,7 +27,7 @@ public final class StandingObjectCutaway {
     public static byte[] patch(String name,byte[] bytes)throws IOException {
         if(!name.equals(CELL))return bytes;
         ClassReader reader=new ClassReader(bytes);if(!reader.getClassName().equals(CELL))throw new IOException("Standing-object class identity");
-        Map<String,String> actual=Compatibility.methods(bytes);for(var pin:PINS.entrySet())if(!pin.getValue().equals(actual.get(pin.getKey())))throw new IOException("Unsupported standing-object boundary: "+pin.getKey());
+        Map<String,String> actual=Compatibility.methods(bytes);for(var pin:PINS.entrySet())if(!RepairProfiles.matches(pin.getValue(),actual.get(pin.getKey())))throw new IOException("Unsupported standing-object boundary: "+pin.getKey());
         int[] hits={0,0,0,0,0};ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){
@@ -66,7 +66,7 @@ public final class StandingObjectCutaway {
     public static byte[] depthScope(String name,byte[] bytes)throws IOException{
         if(!name.equals(CELL))return bytes;
         String signature="renderMinusFloor_NotDoorOrWall("+OBJECT+")V";
-        if(!PINS.get(signature).equals(Compatibility.methods(bytes).get(signature)))throw new IOException("Standing-object depth boundary changed");
+        if(!RepairProfiles.matches(PINS.get(signature),Compatibility.methods(bytes).get(signature)))throw new IOException("Standing-object depth boundary changed");
         ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){

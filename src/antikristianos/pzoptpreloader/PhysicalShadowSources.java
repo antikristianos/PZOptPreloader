@@ -16,7 +16,7 @@ public final class PhysicalShadowSources {
     public static byte[] patch(String name,byte[] bytes)throws IOException {
         if(!name.equals("pzopt/ChunkAo"))return bytes;
         String key="exteriorMask([ILzombie/iso/IsoChunk;I)V";
-        if(!"d5bc768eac1d89357a051b24c84645c3634d1ef6673efbd6db8267e85cf145d6".equals(Compatibility.methods(bytes).get(key)))throw new IOException("Unsupported exterior receiver mask");
+        if(!RepairProfiles.matches("d5bc768eac1d89357a051b24c84645c3634d1ef6673efbd6db8267e85cf145d6",Compatibility.methods(bytes).get(key)))throw new IOException("Unsupported exterior receiver mask");
         ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);int[] calls={0};
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){@Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){return new MethodVisitor(Opcodes.ASM9,super.visitMethod(a,n,d,s,e)){
             @Override public void visitMethodInsn(int op,String owner,String method,String desc,boolean itf){
