@@ -36,5 +36,8 @@
     "IGUI_PZOptPreloader_Setup_incompatible":  "These PZ_Optimization files cannot be used with this game version.",
     "IGUI_PZPeek_Visibility":  "Faded tree visibility",
     "IGUI_PZPeek_VisibilityTooltip":  "Visibility of ordinary faded trees: 0%% invisible, 100%% opaque. Applies indoors and outdoors. Jumbo tree crowns follow Peek a View. Default: 30%%.",
-    "IGUI_PZPeek_VisibilityHelp":  "Default: 30%%. 0%% = invisible, 100%% = opaque. Ordinary trees only."
+    "IGUI_PZPeek_VisibilityHelp":  "Default: 30%%. 0%% = invisible, 100%% = opaque. Ordinary trees only.",
+    "IGUI_PZOptPreloader_Setup_CompatibleVersions":  "Installed: %1\nNewest compatible version: %2",
+    "IGUI_PZOptPreloader_Setup_TryLatest":  "Try newest unverified version",
+    "IGUI_PZOptPreloader_Setup_Unverified":  "Newer release, compatibility unverified: %1\nIt may not load with this preloader. If validation fails, your installed version remains in use."
 }

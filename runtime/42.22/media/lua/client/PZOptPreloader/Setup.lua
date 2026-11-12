@@ -31,7 +31,7 @@ function SetupPanel:createChildren()
     local fontHeight = getTextManager():getFontHeight(UIFont.Small)
     local buttonHeight = math.max(30, fontHeight + 12)
     local row = buttonHeight + 6
-    local buttonsY = self.height - 16 - row * 5
+    local buttonsY = self.height - 16 - row * 6
     self.description = ISRichTextPanel:new(16, 46, self.width - 32, buttonsY - 92)
     self.description:initialise()
     self.description.autosetheight = false
@@ -52,8 +52,9 @@ function SetupPanel:createChildren()
     self.disableButton = button(0, self.updateMode and "Later" or "Disable", SetupPanel.onPrimary)
     self.manualButton = button(1, "ManualButton", SetupPanel.onManual)
     self.autoButton = button(2, self.updateMode and "UpdateButton" or "AutoButton", SetupPanel.onAutomatic)
-    self.keepButton = button(3, "KeepPrevious", SetupPanel.onKeepPrevious)
-    self.closeButton = button(4, "Close", SetupPanel.onClose)
+    self.unverifiedButton = button(3, "TryLatest", SetupPanel.onUnverified)
+    self.keepButton = button(4, "KeepPrevious", SetupPanel.onKeepPrevious)
+    self.closeButton = button(5, "Close", SetupPanel.onClose)
     self:refresh()
 end
 
@@ -65,7 +66,9 @@ function SetupPanel:refresh()
     local detail = bridge.detail()
     local canKeep = bridge.canKeepPrevious()
     local previousVersion = bridge.previousVersion()
-    local signature = state .. "\n" .. issue .. "\n" .. detail .. "\n" .. tostring(self.manual) .. tostring(canKeep) .. previousVersion
+    local compatibleVersion = bridge.compatibleVersion()
+    local unverifiedVersion = bridge.unverifiedVersion()
+    local signature = state .. "\n" .. issue .. "\n" .. detail .. "\n" .. tostring(self.manual) .. tostring(canKeep) .. previousVersion .. compatibleVersion .. unverifiedVersion
     if signature ~= self.lastContent then
         self.lastContent = signature
         local key = state == "idle" and issue or state
@@ -77,7 +80,10 @@ function SetupPanel:refresh()
             text = text .. " <BR> " .. plainText(getText(prefix .. (self.updateMode and "UpdateIntro" or "Intro")))
         end
         if self.updateMode then
-            text = text .. " <BR> " .. plainText(getText(prefix .. "Versions", bridge.installedVersion(), bridge.offeredVersion()))
+            text = text .. " <BR> " .. plainText(getText(prefix .. "CompatibleVersions", bridge.installedVersion(), compatibleVersion))
+            if unverifiedVersion ~= "" then
+                text = text .. " <BR> " .. plainText(getText(prefix .. "Unverified", unverifiedVersion))
+            end
         end
         text = text .. " <BR> " .. plainText(getText(prefix .. "Target")) .. " <LINE> " .. plainText(self.targetPath)
         if canKeep then text = text .. " <BR> " .. plainText(getText(prefix .. "PreviousAvailable", previousVersion)) end
@@ -107,6 +113,8 @@ function SetupPanel:refresh()
     end
     self.manualButton:setEnable(not busy and state ~= "disabled")
     self.autoButton:setEnable(not busy and state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback")
+    self.unverifiedButton:setVisible(self.updateMode and unverifiedVersion ~= "")
+    self.unverifiedButton:setEnable(not busy and state ~= "complete" and state ~= "disabled" and state ~= "retained" and state ~= "rollback")
     self.keepButton:setVisible(canKeep)
     self.keepButton:setEnable(canKeep and not busy)
     self.closeButton:setEnable(true)
@@ -159,6 +167,11 @@ function SetupPanel:onKeepPrevious()
     self:refresh()
 end
 
+function SetupPanel:onUnverified()
+    self.bridge.startUnverifiedDownload()
+    self:refresh()
+end
+
 function SetupPanel:onClose()
     dismissedThisSession = true
     self.bridge.dismiss()
@@ -198,3 +211,16 @@ local function onMainMenuEnter()
 end
 
 Events.OnMainMenuEnter.Add(onMainMenuEnter)
+
+-- WIP-only preview factory; closing it must not dismiss the real update offer.
+function PZOptPreloader.openWipUpdatePreview(bridge)
+    local panel = SetupPanel:new(bridge)
+    panel.title = panel.title .. " [UI TEST]"
+    panel.onClose = function(self) self:removeFromUIManager() end
+    panel:initialise()
+    panel:addToUIManager()
+    panel.closeButton.onclick = panel.onClose
+    panel:setCapture(false)
+    panel:setAlwaysOnTop(true)
+    return panel
+end

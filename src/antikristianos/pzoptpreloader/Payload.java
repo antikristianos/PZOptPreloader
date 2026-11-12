@@ -77,6 +77,7 @@ public final class Payload {
 
     public Payload(Path directory) throws IOException {
         root = directory.toRealPath();
+        SourcePolicy.requireAllowed(root);
         build = new Properties();
         try (InputStream input = Files.newInputStream(root.resolve("pzopt/build-info.properties"))) { build.load(input); }
         String list = build.getProperty("overrides", "");
@@ -196,11 +197,11 @@ public final class Payload {
         for (String entry : System.getProperty("java.class.path", "").split(File.pathSeparator)) {
             if (!entry.isBlank()) anchors.add(Path.of(entry).toAbsolutePath());
         }
-        return discover(SourcePaths.workshopCandidates(anchors), SourcePaths.installationDirectory(), revision);
+        return discover(List.of(), SourcePaths.installationDirectory(), revision);
     }
 
     public static Path discover(Collection<Path> workshopCandidates, Path configSource, String revision) throws IOException {
-        LinkedHashSet<Path> candidates = new LinkedHashSet<>(workshopCandidates);
+        LinkedHashSet<Path> candidates = new LinkedHashSet<>();
         candidates.add(configSource);
         SourceUnavailable failure = new SourceUnavailable("missing", "No PZ Optimization payload found; install the matching GitHub release in " + configSource);
         List<SourceUnavailable> rejected=new ArrayList<>();

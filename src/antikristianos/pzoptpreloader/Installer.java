@@ -24,6 +24,7 @@ public final class Installer {
     }
     interface Transport { Response get(URI uri) throws Exception; }
     record Release(URI uri, String digest, long size, String tag, String commit, long published) { }
+    record Choices(Release compatible, Release unverified) { }
     public static final class Failure extends IOException {
         public final String reason;
         Failure(String reason, String detail) { super(detail); this.reason = reason; }
@@ -106,9 +107,27 @@ public final class Installer {
     }
 
     static Release findRelease(String revision, Transport transport, BooleanSupplier cancelled) throws Exception {
+        Release compatible=findChoices(revision,transport,cancelled).compatible();
+        if(compatible!=null)return compatible;
+        throw new Failure("noRelease", "No reviewed compatible release archive found for game revision " + revision);
+    }
+
+    static boolean reviewed(String revision,String sourceRevision,String commit){
+        if(commit==null||commit.isBlank())return false;
+        boolean legacy=commit.matches("(?:d1bbdcf[a-fA-F0-9]{0,33}|154126d0[a-fA-F0-9]{0,32})");
+        return Compatibility.LEGACY.equals(sourceRevision)&&legacy
+                &&(Compatibility.LEGACY.equals(revision)||Compatibility.isCurrent(revision))
+            ||NativeSource.REVISION.equals(revision)&&revision.equals(sourceRevision)&&commit.startsWith(NativeSource.COMMIT);
+    }
+
+    private static Release newest(Release previous,Release candidate){
+        return previous==null||candidate.published()>previous.published()?candidate:previous;
+    }
+
+    static Choices findChoices(String revision, Transport transport, BooleanSupplier cancelled) throws Exception {
         String expected = "pzopt-" + revision + "-classes.zip";
         String legacy = "pzopt-"+Compatibility.LEGACY+"-classes.zip";
-        Release fallback=null;
+        Release compatible=null,unverified=null;
         for (int page = 1; page <= 10; page++) {
             checkCancelled(cancelled);
             try (Response response = transport.get(URI.create(API + page))) {
@@ -129,6 +148,10 @@ public final class Installer {
                         boolean knownLegacy=Compatibility.isCurrent(revision)&&legacy.equals(name)
                             && releaseTag.matches(".*-(?:d1bbdcf[a-fA-F0-9]{0,33}|154126d0[a-fA-F0-9]{0,32})$");
                         if(!nativeAsset&&!knownLegacy)continue;
+                        var commitSuffix=java.util.regex.Pattern.compile("-([a-fA-F0-9]{7,40})$").matcher(releaseTag);
+                        String sourceCommit=commitSuffix.find()?commitSuffix.group(1).toLowerCase(Locale.ROOT):"";
+                        boolean compatibleAsset=reviewed(revision,nativeAsset?revision:Compatibility.LEGACY,sourceCommit);
+                        try {
                         URI uri = URI.create(asset.getString("browser_download_url"));
                         if (!"https".equals(uri.getScheme()) || !"github.com".equals(uri.getHost())
                                 || !uri.getPath().startsWith("/xD3I/PZ_Optimization/releases/download/")
@@ -144,20 +167,29 @@ public final class Installer {
                         String published = release.optString("published_at", "");
                         long epoch = published.isBlank() ? 0 : Instant.parse(published).getEpochSecond();
                         Release selected=new Release(uri,digest.substring(7).toLowerCase(Locale.ROOT),size,tag,commit,epoch);
-                        if(nativeAsset)return selected;
-                        if(fallback==null)fallback=selected;
+                        if(reviewed(revision,nativeAsset?revision:Compatibility.LEGACY,commit))compatible=newest(compatible,selected);
+                        else if(nativeAsset)unverified=newest(unverified,selected);
+                        } catch(IOException|RuntimeException invalid) {
+                            if(compatibleAsset)throw invalid;
+                            System.err.println("[PZOptPreloader] Ignoring unusable unverified release "+releaseTag+": "+invalid.getMessage());
+                        }
                     }
                 }
                 if (releases.length() < 30) break;
             }
         }
-        if(fallback!=null)return fallback;
-        throw new Failure("noRelease", "No compatible release archive found for game revision " + revision);
+        if(compatible!=null&&unverified!=null&&unverified.published()<=compatible.published())unverified=null;
+        return new Choices(compatible,unverified);
     }
 
     static Release checkUpdate(Payload installed) throws Exception {
         String actual=String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
         return findRelease(actual, Installer::request, () -> false);
+    }
+
+    static Choices checkChoices() throws Exception {
+        String actual=String.valueOf(Class.forName("zombie.GitVersion").getField("REVISION").get(null));
+        return findChoices(actual,Installer::request,()->false);
     }
 
     static boolean isNewer(Payload installed, Release release) throws IOException {
