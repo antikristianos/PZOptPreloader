@@ -144,6 +144,7 @@ public final class Payload {
         byte[] source=baseClassBytes(name);
         if(source==null)throw new IOException("Missing prepared definition: "+name);
         if(!server&&NativeSource.is(this))source=IssueSafetyRepair.patch(name,source);
+        if(!server&&NativeSource.is(this))source=ViewpointAnimationRepair.patch(name,source);
         if(!server&&manualAdp==ManualAdpCompatibility.Kind.STANDARD)source=ManualAdpCompatibility.keepManualPhysics(name,source);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
         if(server)return bytes;

@@ -573,12 +573,12 @@
     {
       "Path": "antikristianos/pzoptpreloader/Payload$SourceUnavailable.class",
       "Size": 642,
-      "Sha256": "C23440887775A408FAF17014FF82B4099614013C03CF31B54DE3AAA75FE9943F"
+      "Sha256": "F5DFFC71E9E6D85D80CF518C10EAB262EDB7EF510A0F61E05D81723AD34E9786"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Payload.class",
-      "Size": 20740,
-      "Sha256": "0B8750102772FA572A221C68FDAF6E544ACCA82C727112519E92415715CD4189"
+      "Size": 20829,
+      "Sha256": "CB5685C6784B3DDDDBB1A0171E495B79414AA0F698BF0FDD0BC8950C4EBCA39B"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PayloadFile.class",
@@ -587,8 +587,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/PeekIntegration.class",
-      "Size": 6746,
-      "Sha256": "100F670B045E865601E64754100891ED8F2B21FE061F1F9B2C0B4D2BEE007C5D"
+      "Size": 6887,
+      "Sha256": "BA655232C9B0285D9B3D7D3C6A9277CE17A71753D7B690B5B6B9C5EFFC89E60E"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PeekNativeApi$1$1.class",
@@ -1409,6 +1409,26 @@
       "Path": "antikristianos/pzoptpreloader/VehicleZoneRepair.class",
       "Size": 3945,
       "Sha256": "9B4DAE807321B712C5EB349D4A03F234850B7B6D81BEA4B2191886283A5F37C3"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointAnimationCompatibility.class",
+      "Size": 1407,
+      "Sha256": "8C3412C7AB5A4311201C446757C5E263ED81F41AEC56C1528B3AD4D559E8159E"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointAnimationRepair$1$1.class",
+      "Size": 3235,
+      "Sha256": "0FAEB273588D058282338CB9C4E922D0D2B9D7818EE8D830376A479F4BB30DCE"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointAnimationRepair$1.class",
+      "Size": 1205,
+      "Sha256": "FE56618852B7F135B2A02CBA79E762BF4C6A3C1783DB5EF8F599F3610F32443E"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointAnimationRepair.class",
+      "Size": 2233,
+      "Sha256": "BDCBCF5BB33371973F51597971BD4BD1CE19A07282CCF427A7EFB966EE5ECF89"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VisualExclusions$1.class",
