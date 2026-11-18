@@ -573,12 +573,12 @@
     {
       "Path": "antikristianos/pzoptpreloader/Payload$SourceUnavailable.class",
       "Size": 642,
-      "Sha256": "F5DFFC71E9E6D85D80CF518C10EAB262EDB7EF510A0F61E05D81723AD34E9786"
+      "Sha256": "29567C9D81C594E741CC256B597A2273B4DE07CBF2B61FBEC148BCA621443CB0"
     },
     {
       "Path": "antikristianos/pzoptpreloader/Payload.class",
-      "Size": 20829,
-      "Sha256": "CB5685C6784B3DDDDBB1A0171E495B79414AA0F698BF0FDD0BC8950C4EBCA39B"
+      "Size": 20916,
+      "Sha256": "8D6CE20672464098FB2BC86E67F3F7D8EEDF717FB404BC4EC87BF9E465B40361"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PayloadFile.class",
@@ -587,8 +587,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/PeekIntegration.class",
-      "Size": 6887,
-      "Sha256": "BA655232C9B0285D9B3D7D3C6A9277CE17A71753D7B690B5B6B9C5EFFC89E60E"
+      "Size": 7040,
+      "Sha256": "08521BBB762450404CF44182543F7F2EC2FFE27E62A29B8F459160C04269D65D"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PeekNativeApi$1$1.class",
@@ -1429,6 +1429,96 @@
       "Path": "antikristianos/pzoptpreloader/ViewpointAnimationRepair.class",
       "Size": 2233,
       "Sha256": "BDCBCF5BB33371973F51597971BD4BD1CE19A07282CCF427A7EFB966EE5ECF89"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameCompatibility$1.class",
+      "Size": 1214,
+      "Sha256": "CCCC9CA6674DA0DA99DF5FBC17C0429AA7075E919279DAD763C21A7132EFD381"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameCompatibility$2.class",
+      "Size": 1974,
+      "Sha256": "1DD0102D42B789B462B7CE843E666905E6F25C75B64861B5B10D80CF41347A9D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameCompatibility.class",
+      "Size": 8252,
+      "Sha256": "073F1E6588F9401FE7AD18851051ACA8E5AB6E0B08E7A4AE85939F92C399A8BA"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameRepair$1.class",
+      "Size": 595,
+      "Sha256": "41FE997ECBB55C96248C70E7A2DBD68306D9588B7A3357911919F19BCCAFAB4C"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameRepair$2$1.class",
+      "Size": 1732,
+      "Sha256": "BBA0B287A13860D8D14BE6E8B2188F5E4AB45514CDE85C13EC80A7BA9C0D002D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameRepair$2$2.class",
+      "Size": 2123,
+      "Sha256": "AB00F3F76F79A3BEAFBFA17E27607E2752480313E29A5D35F77AEEE775D4CAEC"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameRepair$2$3.class",
+      "Size": 1507,
+      "Sha256": "7F57AD36A18DE2CDEEE54F94209CF2D5C419ED24C20B349389F1AC626155B57D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameRepair$2.class",
+      "Size": 1653,
+      "Sha256": "C878E6B67CD5D2E33D768C58A00FBAF33203040FF0BA10F469E5C61A125D97FD"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointFrameRepair.class",
+      "Size": 5070,
+      "Sha256": "CE9B938177547C90894C3B83CE2669E80962311EF7EFCFE7568BB55958F65FC4"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureCompatibility$1.class",
+      "Size": 1127,
+      "Sha256": "B272E03FA04A8A62DE9CB9F85FEB712C285DBF651B9A13AA3D7DCE032F23B203"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureCompatibility$2.class",
+      "Size": 1868,
+      "Sha256": "5AFD2F52A684729CD1564D2C39AAF137ABB4FF92CFBCC8E6F6626038EABACB06"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureCompatibility.class",
+      "Size": 5994,
+      "Sha256": "876C12437BBEE9BDABD143A326E105418BA90AADCE7622F7AD325CD77D8B4A2E"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureRepair$1$1.class",
+      "Size": 2269,
+      "Sha256": "B565255B873280AE447C29BE0D29EE83169670AA41E57497517CDB527F8A01EF"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureRepair$1.class",
+      "Size": 1189,
+      "Sha256": "C121F981139DDA739C206898E73CF38AC367756A8C04F49E20275CBA18A69245"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureRepair$2.class",
+      "Size": 586,
+      "Sha256": "D8CD58E350DEB0E7458C29351CD6008C49EDE27532157F502A334656A81C79FD"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureRepair$3$1.class",
+      "Size": 2127,
+      "Sha256": "BB360D218E1787FBBFBC74F18363898BDA1172BAEE2211E3624F20A69B0B3CF3"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureRepair$3.class",
+      "Size": 1169,
+      "Sha256": "C87713D193F8490B20D4632FA7C0DCBA3BFEC6C1846655B2CC01E910A0AE308D"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointTextureRepair.class",
+      "Size": 2870,
+      "Sha256": "0D4E86B30F847D724B77AF33165387241720B1D100F75139C7CE8BE4F4844B28"
     },
     {
       "Path": "antikristianos/pzoptpreloader/VisualExclusions$1.class",

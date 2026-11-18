@@ -48,6 +48,8 @@ public final class PeekIntegration {
         // First activation may install this lifecycle hook inside the already running loadMods call.
         // Lua initialization is the next final-list event, not a polling/retry loop.
         if(!ready)captureFinalMods();
+        ViewpointFrameCompatibility.afterJavaMods();
+        ViewpointTextureCompatibility.afterJavaMods();
         if(!selected || attemptedEpoch==epoch)return;
         attemptedEpoch=epoch;
         try {
