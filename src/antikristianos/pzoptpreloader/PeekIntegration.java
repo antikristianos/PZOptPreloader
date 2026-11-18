@@ -50,6 +50,7 @@ public final class PeekIntegration {
         if(!ready)captureFinalMods();
         ViewpointFrameCompatibility.afterJavaMods();
         ViewpointTextureCompatibility.afterJavaMods();
+        ViewpointPacingCompatibility.afterJavaMods();
         if(!selected || attemptedEpoch==epoch)return;
         attemptedEpoch=epoch;
         try {
