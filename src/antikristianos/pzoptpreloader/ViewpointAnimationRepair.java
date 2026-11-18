@@ -53,8 +53,7 @@ public final class ViewpointAnimationRepair {
                         gatePending=false;checks[0]++;
                         Label nativePath=new Label();
                         super.visitVarInsn(Opcodes.ALOAD,0);
-                        super.visitMethodInsn(Opcodes.INVOKEVIRTUAL,TARGET,"hasActiveModel","()Z",false);
-                        super.visitMethodInsn(Opcodes.INVOKESTATIC,HELPER,"serialModelUpdate","(Z)Z",false);
+                        super.visitMethodInsn(Opcodes.INVOKESTATIC,HELPER,"serialModelUpdate","(L"+TARGET+";)Z",false);
                         super.visitJumpInsn(Opcodes.IFEQ,nativePath);
                         super.visitVarInsn(Opcodes.ALOAD,1);
                         super.visitInsn(Opcodes.ICONST_1);

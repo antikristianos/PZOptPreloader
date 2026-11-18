@@ -20,6 +20,7 @@ public final class PeekIntegration {
     public static synchronized void beforeModSet(Object[] arguments) {
         if(!supported() || arguments.length!=1 || !(arguments[0] instanceof List<?> || arguments[0] instanceof String))return;
         ready=false;selected=false;stairs=false;
+        ViewpointCoreCompatibility.beforeModSelection();
         ViewpointAnimationCompatibility.beginSelection();
         if(bridgeLoaded)antikristianos.pzpeek42.Main.active=false;
     }
@@ -51,6 +52,9 @@ public final class PeekIntegration {
         ViewpointFrameCompatibility.afterJavaMods();
         ViewpointTextureCompatibility.afterJavaMods();
         ViewpointPacingCompatibility.afterJavaMods();
+        ViewpointCoreCompatibility.afterJavaMods();
+        ViewpointSkeletonCompatibility.afterJavaMods();
+        ViewpointHotpathCompatibility.afterJavaMods();
         if(!selected || attemptedEpoch==epoch)return;
         attemptedEpoch=epoch;
         try {
