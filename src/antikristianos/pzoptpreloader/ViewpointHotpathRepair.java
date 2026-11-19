@@ -12,7 +12,7 @@ public final class ViewpointHotpathRepair {
         "viewpoint/game/HotPaths","dbc78de8624b59a9279c57988becaa9d25ddfb486dc3860e22c68bd49ce4886f",
         "viewpoint/game/HotPaths$1","2f2731ef33cb8dacfa9b3c54c3ee9d6e11f0517c9f803bdf74f74792df195a80");
     private static final String HELPER="antikristianos/pzoptpreloader/ViewpointHotpathCompatibility";
-    private static final Map<String,Integer> BITS=Map.of("skipStatsGet",1,"statsGet",1,"skipEcsClass",2,"ecsClass",2,"skipMinimumLevel",4,"minimumLevel",4,"skipBoneReparented",8,"boneReparented",8,"skipHeadReach",16);
+    private static final Map<String,Integer> BITS=Map.of("skipStatsGet",1,"statsGet",1,"skipEcsClass",2,"ecsClass",2,"skipMinimumLevel",4,"minimumLevel",4,"skipBoneReparented",8,"boneReparented",8,"skipHeadReach",16,"skipFishNoise",32);
     private ViewpointHotpathRepair(){ }
     public static void verifyResource(String name,byte[] code)throws IOException{if(!Compatibility.hash(code).equals(RESOURCES.get(name)))throw new IOException("Unreviewed Viewpoint hotpath resource: "+name);}
     public static byte[] patch(byte[] code)throws IOException{
@@ -28,6 +28,6 @@ public final class ViewpointHotpathRepair {
                 else {super.visitVarInsn(Opcodes.ALOAD,1);super.visitInsn(Opcodes.ARETURN);}
                 super.visitLabel(original);super.visitFrame(Opcodes.F_SAME,0,null,0,null);
             }};
-        }},0);if(sites[0]!=9)throw new IOException("Hotpath instruction boundary differs");return writer.toByteArray();
+        }},0);if(sites[0]!=10)throw new IOException("Hotpath instruction boundary differs");return writer.toByteArray();
     }
 }

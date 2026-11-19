@@ -59,6 +59,18 @@ public final class OffscreenReflectionState {
         long frame=SpriteRenderer.instance.states.getPopulating().time;if(c.frame!=frame){c.frame=frame;c.queued=false;c.next=0;}return c;
     }
     public static void queueBegin(int player){if(!enabled())return;Commands c=commands(player);SpriteRenderer.instance.drawGeneric(c.begin);}
+    /** Recover missing per-player light data through native preparation; ready lighting retains its owner. */
+    static ModelSlotRenderData snapshotSource(ModelManager.ModelSlot slot){
+        ModelSlotRenderData data=ModelSlotRenderData.alloc();slot.renderRefCount++;
+        try{
+            data.modelSlot=slot;OffscreenReflectionAccess.get().resetSource(data);
+            int player=IsoCamera.frameState.playerIndex;
+            if(slot.character!=null&&(slot.model.playerData==null||slot.model.playerData[player]==null))slot.model.updateLights();
+            data.initModel(slot);data.init(slot);data.renderToTexture=false;return data;
+        }catch(Throwable error){
+            try{data.postRender();modelReleases++;}catch(Throwable suppressed){error.addSuppressed(suppressed);}throw error;
+        }
+    }
     public static void queueSources(Object cell,int player){
         if(!enabled())return;Commands c=commands(player);if(c.queued)return;c.queued=true;
         OffscreenReflectionAccess a=OffscreenReflectionAccess.get();Object f=a.gameFrame();int puddles=0;
@@ -74,13 +86,13 @@ public final class OffscreenReflectionState {
                 ModelManager.ModelSlot slot=character!=null?(character.legsSprite==null?null:character.legsSprite.modelSlot):(object.getSprite()==null?null:object.getSprite().modelSlot);
                 if(slot==null||!slot.active||slot.remove){track(object,false);index--;continue;}
                 if(slot.model==null||slot.model.model==null||!slot.model.model.isReady())continue;
-                ActorDraw draw=c.actor();ModelSlotRenderData data=ModelSlotRenderData.alloc();ModelCameraRenderData camera=null;slot.renderRefCount++;
+                ActorDraw draw=c.actor();ModelSlotRenderData data=null;ModelCameraRenderData camera=null;
                 try{
-                    data.modelSlot=slot;a.resetSource(data);data.initModel(slot);data.init(slot);data.renderToTexture=false;
+                    data=snapshotSource(slot);
                     camera=ModelCameraRenderData.s_pool.alloc();camera.init(character!=null?CharacterModelCamera.instance:VehicleModelCamera.instance,slot);
                     draw.data=data;draw.camera=camera;SpriteRenderer.instance.drawGeneric(draw);modelSnapshots++;
                 }catch(Throwable error){
-                    if(camera!=null)camera.postRender();try{data.postRender();modelReleases++;}catch(Throwable suppressed){error.addSuppressed(suppressed);}warn(error);
+                    if(camera!=null)camera.postRender();if(data!=null)try{data.postRender();modelReleases++;}catch(Throwable suppressed){error.addSuppressed(suppressed);}warn(error);
                 }
             }
         }

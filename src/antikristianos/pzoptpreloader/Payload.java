@@ -152,7 +152,7 @@ public final class Payload {
         if(server)return bytes;
         if(shoreLighting)bytes=StartupScreens.patch(name,bytes);
         if(shoreLighting)bytes=PhysicalShadowSources.patch(name,ShoreCloudRepair.patch(name,StandingObjectCutaway.patch(name,SchedulerProgressRepair.patch(name,ShoreWeatherRepair.patch(name,bytes)))));
-        if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes))))));
+        if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes,NativeSource.is(this)))))));
         if(shoreLighting)bytes=StandingObjectCutaway.depthScope(name,bytes);
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
         if(shoreLighting)bytes=OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes))));
