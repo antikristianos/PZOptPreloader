@@ -128,13 +128,13 @@ final class OffscreenReflectionGpu {
     private static void rectangle(float x,float y,float r,float t){GL11.glVertex2f(x,y);GL11.glVertex2f(r,y);GL11.glVertex2f(r,t);GL11.glVertex2f(x,t);}
     static void surfaceUniforms(){
         try{int p=OffscreenReflectionAccess.get().program();if(p<=0)return;Uniforms u=uniforms(p);if(u.size<0)return;Target t=current;
-            if(t==null||!finished||!OffscreenReflectionState.enabled()){GL20.glUniform4f(u.size,0,0,0,0);return;}
-            GL20.glUniform4f(u.view,t.vp[0],t.vp[1],t.vp[2],t.vp[3]);GL20.glUniform4f(u.size,t.pad,t.top,t.w,t.h);GL20.glUniform1i(u.colour,COLOUR_UNIT);int active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);bind(COLOUR_UNIT,t.colour);GL13.glActiveTexture(active);
+            if(t==null||!finished||!OffscreenReflectionState.enabled()){GL20.glUniform4f(u.size,0,0,0,0);GL20.glUniform1i(u.depthOn,0);return;}
+            GL20.glUniform4f(u.view,t.vp[0],t.vp[1],t.vp[2],t.vp[3]);GL20.glUniform4f(u.size,t.pad,t.top,t.w,t.h);GL20.glUniform1i(u.colour,COLOUR_UNIT);GL20.glUniform1i(u.depth,DEPTH_UNIT);GL20.glUniform1i(u.depthOn,1);int active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);bind(COLOUR_UNIT,t.colour);bind(DEPTH_UNIT,t.depth);GL13.glActiveTexture(active);
         }catch(Throwable error){OffscreenReflectionState.fail(error);}
     }
-    private record Uniforms(int clip,int pass,int origin,int view,int size,int colour){ }
-    static void shadersChanged(){shaderGeneration++;}
-    private static Uniforms uniforms(int p){long generation=shaderGeneration;if(cachedGeneration!=generation){PROGRAMS.clear();EXTRA.clear();cachedGeneration=generation;}return PROGRAMS.computeIfAbsent(p,id->new Uniforms(loc(id,OffscreenReflectionShaders.CLIP),loc(id,OffscreenReflectionShaders.PASS),loc(id,OffscreenReflectionShaders.ORIGIN),loc(id,OffscreenReflectionShaders.VIEW),loc(id,OffscreenReflectionShaders.SIZE),loc(id,OffscreenReflectionShaders.COLOUR)));}
+    private record Uniforms(int clip,int pass,int origin,int view,int size,int colour,int depth,int depthOn){ }
+    static void shadersChanged(){shaderGeneration++;TreeReflectionLighting.shadersChanged();}
+    private static Uniforms uniforms(int p){long generation=shaderGeneration;if(cachedGeneration!=generation){PROGRAMS.clear();EXTRA.clear();cachedGeneration=generation;}return PROGRAMS.computeIfAbsent(p,id->new Uniforms(loc(id,OffscreenReflectionShaders.CLIP),loc(id,OffscreenReflectionShaders.PASS),loc(id,OffscreenReflectionShaders.ORIGIN),loc(id,OffscreenReflectionShaders.VIEW),loc(id,OffscreenReflectionShaders.SIZE),loc(id,OffscreenReflectionShaders.COLOUR),loc(id,OffscreenReflectionShaders.DEPTH),loc(id,OffscreenReflectionShaders.DEPTH_ON)));}
     private static final Map<Integer,Map<String,Integer>> EXTRA=new HashMap<>();
     private static int loc(int p,String n){return GL20.glGetUniformLocation(p,n);}
     private static int loc(String n){return EXTRA.computeIfAbsent(resolveProgram,p->new HashMap<>()).computeIfAbsent(n,k->loc(resolveProgram,k));}

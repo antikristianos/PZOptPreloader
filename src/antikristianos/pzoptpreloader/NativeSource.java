@@ -31,6 +31,7 @@ public final class NativeSource {
     }
     public static boolean enter(Payload p){boolean previous=REPAIR.get();REPAIR.set(is(p));return previous;}
     public static void leave(boolean previous){REPAIR.set(previous);}
+    static boolean currentRepair(){return REPAIR.get();}
     public static boolean repairPin(String previous,String actual){
         if(!REPAIR.get()||actual==null)return false;
         try{return actual.equals(profile().getJSONObject("repairAliases").optString(previous));}

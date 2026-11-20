@@ -11,19 +11,21 @@ public final class WallReflectionLighting {
     private WallReflectionLighting() { }
     private record Term(Object gl,int index,long key,int w,int h,int depth) { }
     public static void after(Object gl,Object job){
-        if(applying)return;
+        if(applying||TreeReflectionLighting.applying())return;
         try{
             Access a=Access.INSTANCE;int[] source=(int[])a.src.get(job);if(a.n.getInt(job)<=0||source[0]<=0)return;
             if(TERMS.size()>8192)TERMS.clear();
             TERMS.put(source[0],new Term(gl,a.index.getInt(job),a.key.getLong(job),a.w.getInt(job),a.h.getInt(job),source[0]));
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Physical wall lighting metadata",error);}
     }
+    public static void afterCompute(Object gl,Object job){after(gl,job);if(!applying&&!TreeReflectionLighting.applying())try{TreeReflectionLighting.computed(gl,job);}catch(Throwable error){WallReflectionSource.lightingFailed(error);}}
     public static void drawArrays(int mode,int first,int count,Object gl,Object job){
-        PhysicalShadowSources.draw(mode,first,count,job);if(applying)return;
+        PhysicalShadowSources.draw(mode,first,count,job);if(applying||TreeReflectionLighting.applying())return;
         try{WallReflectionSource.mirrorLighting(mode,first,count,Access.INSTANCE.colour.getInt(job));}
         catch(IllegalAccessException error){throw new IllegalStateException(error);}
     }
     public static void finish(int originalDepth,int framebuffer,int physicalDepth){
+        if(TreeReflectionLighting.reapply(originalDepth))return;
         Term term=TERMS.get(originalDepth);if(term==null||applying)return;
         int fbo=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING),read=GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);applying=true;
         try{
@@ -34,8 +36,8 @@ public final class WallReflectionLighting {
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Physical wall kept lighting",error);}
         finally{GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,fbo);GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,read);applying=false;}
     }
-    public static void remove(int originalDepth){TERMS.remove(originalDepth);if(Access.created)Access.INSTANCE.jobs.remove(originalDepth);}
-    public static void clear(){TERMS.clear();if(Access.created)Access.INSTANCE.jobs.clear();}
+    public static void remove(int originalDepth){TreeReflectionLighting.remove(originalDepth);TERMS.remove(originalDepth);if(Access.created)Access.INSTANCE.jobs.remove(originalDepth);}
+    public static void clear(){TreeReflectionLighting.clear();TERMS.clear();if(Access.created)Access.INSTANCE.jobs.clear();}
     private static final class Access {
         static boolean created;
         static final Access INSTANCE=new Access();
