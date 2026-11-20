@@ -60,11 +60,15 @@ final class OffscreenReflectionGpu {
     }
     static void chunkDraw(TextureDraw draw){chunk=false;if(current!=null&&!finished&&draw!=null&&draw.tex1!=null)try{chunk=OffscreenReflectionAccess.get().relevant(frame,draw.tex1);}catch(Throwable e){OffscreenReflectionState.fail(e);}}
     static void compositeElements(int mode,int start,int end,int count,int type,long offset){
+        compositeElements(mode,start,end,count,type,offset,false);
+    }
+    /** The already scheduled physical replay also fills the unused centre for tree colour lookup. */
+    static void compositeElements(int mode,int start,int end,int count,int type,long offset,boolean physicalTrees){
         if(!chunk||current==null||source||finished)return;
         int program=OffscreenReflectionAccess.get().program();if(program<=0||uniforms(program).clip<0)return;
         int fbo=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT|GL11.GL_ENABLE_BIT|GL11.GL_VIEWPORT_BIT|GL11.GL_SCISSOR_BIT);
-        try{enter();GL11.glDisable(GL11.GL_BLEND);GL11.glDepthMask(true);GL11.glColorMask(true,true,true,true);GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glDepthFunc(GL11.GL_LEQUAL);GL12.glDrawRangeElements(mode,start,end,count,type,offset);chunkCopies++;}
+        try{enter();if(physicalTrees)GL20.glUniform1f(uniforms(program).pass,2);GL11.glDisable(GL11.GL_BLEND);GL11.glDepthMask(true);GL11.glColorMask(true,true,true,true);GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glDepthFunc(GL11.GL_LEQUAL);GL12.glDrawRangeElements(mode,start,end,count,type,offset);chunkCopies++;}
         catch(Throwable error){OffscreenReflectionState.fail(error);}finally{leave(program);GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,fbo);GL11.glPopAttrib();}
     }
     static void cameraBegin(){if(source&&current!=null)GL11.glViewport(0,0,current.w,current.h);}

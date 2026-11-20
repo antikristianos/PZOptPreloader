@@ -31,7 +31,7 @@ public final class OffscreenReflectionShaders {
         String body=source.substring(start,end);
         Pattern sample=Pattern.compile("r\\s*=\\s*texture2D\\(pzSsrColor,\\s*\\((src.+?)\\)\\s*/\\s*vec2\\(textureSize\\(pzSsrColor,\\s*0\\)\\)\\)\\.rgb;",Pattern.DOTALL);
         Matcher match=sample.matcher(body);if(!match.find())throw new IllegalStateException("Unknown original reflection colour sample");
-        String replacement="r = pzOptReflectionSample("+match.group(1)+");";
+        String replacement="r = pzOptReflectionSample("+match.group(1)+", pk);";
         body=body.substring(0,match.start())+replacement+body.substring(match.end());
         if(sample.matcher(body).find())throw new IllegalStateException("Ambiguous reflection colour sample");
         String fade="clamp((pzSsrQ.y - src.y) / 48.0, 0.0, 1.0)";
@@ -44,6 +44,12 @@ public final class OffscreenReflectionShaders {
             +"  if(any(lessThan(q,vec2(0.0))) || any(greaterThanEqual(q,"+SIZE+".zw))) return vec3(10000.0);\n"
             +"  vec4 c=texture2D("+COLOUR+",q/"+SIZE+".zw);\n  return c.a>=0.5 ? c.rgb : vec3(10000.0);\n }\n"
             +" return texture2D(pzSsrColor,p/vec2(textureSize(pzSsrColor,0))).rgb;\n}\n"
+            +"vec3 pzOptReflectionSample(vec2 p,vec3 keyColour) {\n"
+            +" if("+SIZE+".y>0.0 && all(greaterThanEqual(p,"+VIEW+".xy)) && all(lessThan(p,"+VIEW+".xy+"+VIEW+".zw))) {\n"
+            +"  vec2 q=p-"+VIEW+".xy+vec2("+SIZE+".x,0.0);vec4 c=texture2D("+COLOUR+",q/"+SIZE+".zw);\n"
+            +"  vec3 bits=vec3(31.0,31.0,15.0);vec3 keyRGB=floor(clamp(c.rgb,0.0,1.0)*bits+0.5)/bits;\n"
+            +"  if(c.a>=0.5 && all(lessThan(abs(keyRGB-keyColour),vec3(0.0001)))) return c.rgb;\n }\n"
+            +" return pzOptReflectionSample(p);\n}\n"
             +"float pzOptReflectionFade(float y) {\n"
             +" float top="+SIZE+".y>0.0 ? "+VIEW+".y+"+VIEW+".w+"+SIZE+".y : pzSsrQ.y;\n"
             +" return clamp((top-y)/48.0,0.0,1.0);\n}\n";
@@ -63,7 +69,7 @@ public final class OffscreenReflectionShaders {
             +"vec4 pzOptReflectionFragment(){return gl_FragCoord+vec4("+ORIGIN+",0.0,0.0);}\n";
         source=source.substring(0,first.start())+helper+source.substring(first.start());
         return source+"\nvoid main(){\n vec2 p=pzOptReflectionFragment().xy;\n"
-            +" if("+PASS+">0.5 && all(greaterThanEqual(p,"+VIEW+".xy)) && all(lessThan(p,"+VIEW+".xy+"+VIEW+".zw))) discard;\n"
+            +" if("+PASS+">0.5 && "+PASS+"<1.5 && all(greaterThanEqual(p,"+VIEW+".xy)) && all(lessThan(p,"+VIEW+".xy+"+VIEW+".zw))) discard;\n"
             +" pzOptReflectionCameraMain();\n}\n";
     }
     /** Receiver writes remain inside the original image and this player's visible viewport. */

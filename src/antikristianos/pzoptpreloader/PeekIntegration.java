@@ -58,6 +58,7 @@ public final class PeekIntegration {
         ViewpointVehicleCompatibility.afterJavaMods();
         ViewpointPresentationCompatibility.afterJavaMods();
         AttachedWeaponCompatibility.afterJavaMods();
+        ViewpointWeatherCompatibility.afterJavaMods();
         if(!selected || attemptedEpoch==epoch)return;
         attemptedEpoch=epoch;
         try {
