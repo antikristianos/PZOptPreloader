@@ -39,6 +39,9 @@ public final class DrawPaths {
                               || owner.equals("zombie/core/math/PZMath") && (method+type).equals("fastfloor(F)I")
                               || owner.equals("zombie/iso/IsoDepthHelper") && Set.of("getSquareDepthData(IIFFF)Lzombie/iso/IsoDepthHelper$Results;","getChunkDepthData(IIIII)Lzombie/iso/IsoDepthHelper$Results;").contains(method+type)
                               || owner.equals("pzmod/peekaview/PeekAViewMod") && (method+type).equals("jumboLayerDepthOffset(Ljava/lang/Object;Z)F");
+                        // Our pinned physical-source repair is constant for the existing per-draw depth scope.
+                        known|=depth && opcode==Opcodes.INVOKESTATIC && !itf
+                            && owner.equals("antikristianos/pzoptpreloader/WallReflectionSource") && (method+type).equals("treeDepthBias(F)F");
                         if(!known && !own)throw changed(name+" call "+owner+"."+method+type);
                         if(quad && (method.equals("addElement") || own && method.equals("append")))vertices[0]++;
                     }

@@ -50,6 +50,7 @@ public final class PeekIntegration {
         // Lua initialization is the next final-list event, not a polling/retry loop.
         if(!ready)captureFinalMods();
         ViewpointFrameCompatibility.afterJavaMods();
+        ViewpointNativePresentationCompatibility.afterJavaMods();
         ViewpointTextureCompatibility.afterJavaMods();
         ViewpointPacingCompatibility.afterJavaMods();
         ViewpointCoreCompatibility.afterJavaMods();

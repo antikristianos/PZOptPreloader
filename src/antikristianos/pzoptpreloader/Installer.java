@@ -117,7 +117,7 @@ public final class Installer {
         boolean legacy=commit.matches("(?:d1bbdcf[a-fA-F0-9]{0,33}|154126d0[a-fA-F0-9]{0,32})");
         return Compatibility.LEGACY.equals(sourceRevision)&&legacy
                 &&(Compatibility.LEGACY.equals(revision)||Compatibility.isCurrent(revision))
-            ||NativeSource.REVISION.equals(revision)&&revision.equals(sourceRevision)&&commit.startsWith(NativeSource.COMMIT);
+            ||NativeSource.REVISION.equals(revision)&&revision.equals(sourceRevision)&&NativeSource.reviewedCommit(commit);
     }
 
     private static Release newest(Release previous,Release candidate){

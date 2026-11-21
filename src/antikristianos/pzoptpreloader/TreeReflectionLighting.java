@@ -120,6 +120,7 @@ final class TreeReflectionLighting {
                 Object dest=f.get(to);int length=Array.getLength(value);
                 if(dest==null||Array.getLength(dest)!=length){dest=Array.newInstance(f.getType().getComponentType(),length);f.set(to,dest);}System.arraycopy(value,0,dest,0,length);
             }else f.set(to,value);}
+            ShoreFloorLighting.copyMask(from,to);
         }
         static Field field(Class<?> type,String name)throws ReflectiveOperationException{Field f=type.getDeclaredField(name);f.setAccessible(true);return f;}
         static Method method(Class<?> type,String name,Class<?> argument)throws ReflectiveOperationException{Method m=type.getDeclaredMethod(name,argument);m.setAccessible(true);return m;}

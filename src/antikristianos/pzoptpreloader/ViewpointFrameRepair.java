@@ -13,7 +13,12 @@ public final class ViewpointFrameRepair {
     public static final Map<String,Map<String,String>> METHODS=Map.of(BETWEEN,Map.of("check(Lzombie/core/sprite/SpriteRenderState;)Z","1b788e44e41a7bbbc54411e600f9c079c01caae18261c34ae4f614880947c5d4","play(Lzombie/core/sprite/SpriteRenderState;)V","4a93116f42f7707ec1ead7b28bac2e37af1dc009384d7dfe20551c0c019ff065"),UPKEEP,Map.of("render()V","266fd00fd78fe1e776aa6abe4cbe2801c91fdc8363ad8865500221d130d4218d"),SHADOW,Map.of("render()V","b441afdaf59c3b1940dbe7faf0f543b00f5efdf8eb49d09bb979b365994e7b3a"),DARKNESS,Map.of("render()V","b34bf6b1a28440b1c8d667922a3b6ca299b152d270662d68f5ea00bc14c64085"));
     // EarlyClassAdapter rewrites constant pools even when these helpers need no schema calls.
     private static final Map<String,String> EMITTED_RESOURCES=Map.of(SHADOW,"9f57d02ee4d3b678a4fcb267bb79ad2bdd984f635b0fc9249a8d21d97278c063",DARKNESS,"08751decc7767115d8340a7c1394364cc8f9ef908075d02e5b5a61b5024e7258");
-    public static boolean resourceMatches(String name,byte[] bytes){String hash=Compatibility.hash(bytes);return hash.equals(RESOURCES.get(name))||hash.equals(EMITTED_RESOURCES.get(name));}
+    public static boolean resourceMatches(String name,byte[] bytes){
+        String hash=Compatibility.hash(bytes);
+        if(hash.equals(RESOURCES.get(name))||hash.equals(EMITTED_RESOURCES.get(name)))return true;
+        return DARKNESS.equals(name)&&NativeSource.is(RuntimeState.payload)&&NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(RuntimeState.payload))
+            &&(hash.equals("8200cb7f0df67f8d9dff6cfc04c47d3d24a4d5c8bcf87853384a6f7adf18f6e5")||hash.equals("e63dbb6fda2d0d02743f17861ce5a16e6125c8d6e220eb7c95581131fd69abe5"));
+    }
     private ViewpointFrameRepair(){ }
     public static void verify(String name,byte[] bytes)throws IOException{
         if(!METHODS.containsKey(name)||!name.equals(new ClassReader(bytes).getClassName()))throw new IOException("Unreviewed Viewpoint frame class: "+name);

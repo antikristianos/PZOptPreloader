@@ -12,6 +12,8 @@ public final class WallReflectionRepair {
     private static final String OBJECT="zombie/iso/IsoObject",INFO="Lzombie/iso/fboRenderChunk/ObjectRenderInfo;";
     private static final String LEVEL="(Lzombie/iso/IsoChunk;ILzombie/iso/IsoCell$PerPlayerRender;IJLzombie/core/opengl/Shader;Lzombie/core/opengl/Shader;)V";
     private static final String TREE_BAKE="pzoptBakeTrees(Lzombie/iso/IsoChunk;IF)V";
+    public static final String TREES="zombie/iso/fboRenderChunk/FBORenderTrees";
+    private static final String TREE_DEPTH="(Lzombie/iso/fboRenderChunk/FBORenderTrees$Tree;ZZZ)F";
     private static final Map<String,Map<String,String>> PINS=Map.of(
         CELL,Map.of("renderOneLevel"+LEVEL,"45fdd97b5d63f4600a676cb219e2b2c9e8df27a884e1587971af6eb9d4954a96",
             "renderMinusFloor_DoorOrWall(Lzombie/iso/IsoObject;)V","bebeadaa4263143db5f50e98e1196d2493d7a06ca03556fecc0a6e2bdc4c63a8",
@@ -25,6 +27,7 @@ public final class WallReflectionRepair {
             "drawMultiply(Lpzopt/ChunkAo$Job;Lpzopt/ChunkAo$Entry;FII)V","17b07104bc722055f7c93ac9c8d21c49c9c54612263d0443374deb314f62af78"));
     private WallReflectionRepair() { }
     public static byte[] patch(String name,byte[] bytes)throws IOException {
+        if(name.equals(TREES)&&NativeSource.currentRepair())return treeDepth(bytes);
         if(name.equals(OBJECT))return isolateObject(bytes);
         Map<String,String> pins=PINS.get(name);if(pins==null)return bytes;
         ClassReader reader=new ClassReader(bytes);if(!reader.getClassName().equals(name))throw new IOException("Physical wall class identity: "+name);
@@ -97,6 +100,26 @@ public final class WallReflectionRepair {
         },0);
         if(name.equals(CELL)?hits[0]<1||hits[2]!=5||hits[3]!=1||hits[6]!=1||cachedTrees&&(hits[7]!=1||hits[8]!=1||hits[9]!=1):name.equals(RING)?hits[1]!=1:name.equals(AO)?hits[4]<1||hits[5]<2:hits[3]<1)
             throw new IOException("Unsupported physical-wall call shape: "+name+" "+Arrays.toString(hits));
+        return writer.toByteArray();
+    }
+    /** Native bottom-strip ordering is a camera bias, not physical height above a reflective receiver. */
+    private static byte[] treeDepth(byte[] bytes)throws IOException {
+        ClassReader reader=new ClassReader(bytes);
+        if(!TREES.equals(reader.getClassName())||!"b2c5b806b0e10fe0cbc53c322464d23e0d400cf73f5d472143de99522131db56".equals(Compatibility.methods(bytes).get("calculateDepth"+TREE_DEPTH)))
+            throw new IOException("Unsupported physical tree base-depth boundary");
+        int[] hits={0};ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
+        reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
+            @Override public MethodVisitor visitMethod(int access,String name,String descriptor,String signature,String[] exceptions){
+                MethodVisitor target=super.visitMethod(access,name,descriptor,signature,exceptions);
+                if(!name.equals("calculateDepth")||!descriptor.equals(TREE_DEPTH))return target;
+                return new MethodVisitor(Opcodes.ASM9,target){
+                    @Override public void visitLdcInsn(Object value){super.visitLdcInsn(value);if(value instanceof Float f&&Float.floatToIntBits(f)==Float.floatToIntBits(.0015f)){
+                        super.visitMethodInsn(Opcodes.INVOKESTATIC,SOURCE,"treeDepthBias","(F)F",false);hits[0]++;
+                    }}
+                };
+            }
+        },0);
+        if(hits[0]!=1)throw new IOException("Unsupported physical tree base-depth shape");
         return writer.toByteArray();
     }
     private static byte[] isolateObject(byte[] bytes)throws IOException {

@@ -14,8 +14,9 @@ public final class ShoreReflectionRepair {
     public static byte[] patch(String name,byte[] bytes)throws IOException {
         if(!TARGET.equals(name))return bytes;
         ClassReader reader=new ClassReader(bytes);
-        if(!TARGET.equals(reader.getClassName())||!RepairProfiles.matches(HASH,Compatibility.methods(bytes).get(NAME+DESCRIPTOR)))
-            throw new IOException("Unsupported late-shore reflection boundary: "+name);
+        String actual=Compatibility.methods(bytes).get(NAME+DESCRIPTOR);
+        if(!TARGET.equals(reader.getClassName())||!RepairProfiles.matches(HASH,actual))
+            throw new IOException("Unsupported late-shore reflection boundary: "+name+" actual="+actual);
         int[] hits=new int[4];
         ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){

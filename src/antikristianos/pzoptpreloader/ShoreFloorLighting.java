@@ -53,6 +53,12 @@ public final class ShoreFloorLighting {
         if(location<0)throw new IllegalStateException("Shore receiver mask absent from active AO kernel");
         int[] mask=MASKS.get(job);GL30.glUniform1uiv(location,mask==null?EMPTY_MASK:mask);
     }
+    /** Job fields do not contain this separately captured receiver geometry. */
+    static void copyMask(Object from,Object to){
+        int[] mask=MASKS.get(from);
+        if(mask==null){MASKS.remove(to);return;}
+        if(!Arrays.equals(mask,MASKS.get(to)))MASKS.put(to,mask.clone());
+    }
     public static int vertexCloud(int abgr,float x,float y,float z){
         Context context=CURRENT.get();if(context!=null&&context.pixelCloud)return abgr;
         try{return (int)Access.get().shoreVertex.invokeExact(abgr,x,y,z);}catch(Throwable error){throw new IllegalStateException("Native shore vertex cloud fallback unavailable",error);}

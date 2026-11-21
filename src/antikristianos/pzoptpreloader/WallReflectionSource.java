@@ -39,6 +39,8 @@ public final class WallReflectionSource {
     public static int cutaway(int value){return sourcePass()?0:value;}
     public static boolean translucentTree(boolean value){return !sourcePass()&&value;}
     public static boolean sourcePass(){return ACTIVE_CPU.get()!=0&&CPU.get().active;}
+    /** Retain native camera/root ordering; only the private physical raster must use unbiased geometry. */
+    public static float treeDepthBias(float original){return sourceGpu?0f:original;}
     /** Physical geometry is not evidence that its mirror receiver is camera-visible. */
     public static void mirrorWallDrawn(IsoObject object,int cutaway){if(!sourcePass())Access.mirrorWallDrawn(object,cutaway);}
     private static final class CaptureContext {
