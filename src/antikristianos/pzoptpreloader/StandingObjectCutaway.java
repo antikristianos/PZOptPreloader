@@ -114,6 +114,7 @@ public final class StandingObjectCutaway {
     }
     public static ObjectRenderLayer layer(ObjectRenderLayer original,IsoObject object){
         if(WallReflectionSource.sourcePass())return original;
+        ObjectRenderLayer sink=SinkRenderOrder.layer(original,object);if(sink!=original)return sink;
         IsoGridSquare camera=IsoCamera.frameState.camCharacterSquare;
         boolean upperTank=object!=null&&object.square!=null&&camera!=null&&object.square.z>camera.z&&tankRole(object.getSprite())>=0;
         if(!depthReceiver(object)&&!upperTank)return original;

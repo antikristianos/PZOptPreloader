@@ -24,6 +24,9 @@ public final class ShoreFloorRepair {
         "zombie/core/opengl/ShaderUnit",Map.of("compile()Z","b841076222dbbde924b79a4c378e18aa4c3ad1eb7e102867f0b685a1d6e36cda"));
     private ShoreFloorRepair() { }
     public static byte[] patch(String name,byte[] bytes)throws IOException {
+        return patch(name,bytes,false);
+    }
+    public static byte[] patch(String name,byte[] bytes,boolean sinkOrder)throws IOException {
         if(!TARGETS.contains(name))return bytes;
         ClassReader reader=new ClassReader(bytes);
         if(!reader.getClassName().equals(name))throw new IOException("Shore lighting class identity: "+name);
@@ -45,6 +48,13 @@ public final class ShoreFloorRepair {
                     private void call(String owner,String method,String desc){super.visitMethodInsn(Opcodes.INVOKESTATIC,owner,method,desc,false);}
                     @Override public void visitCode(){
                         super.visitCode();
+                        if(sinkOrder&&name.equals("zombie/iso/sprite/IsoSprite")&&n.equals("startTileDepthShader")&&d.equals("(Lzombie/iso/IsoObject;FFFFZ)V")){
+                            hits[3]++;super.visitVarInsn(Opcodes.ALOAD,1);super.visitVarInsn(Opcodes.ALOAD,0);
+                            call("zombie/iso/fboRenderChunk/FBORenderCell","pzoptTranslucentOnly","()Z");super.visitVarInsn(Opcodes.FLOAD,4);
+                            call("antikristianos/pzoptpreloader/SinkRenderOrder","shift","(Lzombie/iso/IsoObject;Lzombie/iso/sprite/IsoSprite;ZF)F");
+                            super.visitInsn(Opcodes.DUP);super.visitVarInsn(Opcodes.FLOAD,4);super.visitInsn(Opcodes.FADD);super.visitVarInsn(Opcodes.FSTORE,4);
+                            super.visitVarInsn(Opcodes.FLOAD,5);super.visitInsn(Opcodes.FADD);super.visitVarInsn(Opcodes.FSTORE,5);
+                        }
                         if(name.equals("pzopt/CloudShadow")&&n.equals("waterUniforms")&&d.equals("()V")){
                             hits[0]++;call(LIGHT,"waterCloudBind","()V");
                         }
@@ -95,7 +105,7 @@ public final class ShoreFloorRepair {
         },0);
         boolean valid=switch(name){
             case "pzopt/ChunkAo" -> hits[0]==1&&hits[1]==1;
-            case "zombie/iso/sprite/IsoSprite" -> hits[0]==2&&hits[2]==3;
+            case "zombie/iso/sprite/IsoSprite" -> hits[0]==2&&hits[2]==3&&hits[3]==(sinkOrder?1:0);
             default -> hits[0]==1;
         };
         if(!valid)throw new IOException("Unsupported shore lighting boundary: "+name+" ("+java.util.Arrays.toString(hits)+")");

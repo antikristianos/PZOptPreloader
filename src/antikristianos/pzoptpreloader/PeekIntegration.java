@@ -20,6 +20,8 @@ public final class PeekIntegration {
     public static synchronized void beforeModSet(Object[] arguments) {
         if(!supported() || arguments.length!=1 || !(arguments[0] instanceof List<?> || arguments[0] instanceof String))return;
         ready=false;selected=false;stairs=false;
+        ViewpointCoreCompatibility.beforeModSelection();
+        ViewpointAnimationCompatibility.beginSelection();
         if(bridgeLoaded)antikristianos.pzpeek42.Main.active=false;
     }
     public static synchronized void afterModSet(Object[] arguments) {
@@ -34,6 +36,7 @@ public final class PeekIntegration {
     private static void captureFinalMods() {
         List<String> loaded=ZomboidFileSystem.instance.getModIDs();
         Set<String> ids=zombie.core.Core.optionModsEnabled && loaded!=null?Set.copyOf(loaded):Set.of();
+        ViewpointAnimationCompatibility.captureFinalMods(ids);
         selected=ids.contains("PeekAView");
         stairs=ids.contains("Staircast") || ids.contains("StaircastRP");
         if(ids.contains("PZPeek") || ids.contains("PZPeek_WIP")) {
@@ -46,6 +49,17 @@ public final class PeekIntegration {
         // First activation may install this lifecycle hook inside the already running loadMods call.
         // Lua initialization is the next final-list event, not a polling/retry loop.
         if(!ready)captureFinalMods();
+        ViewpointFrameCompatibility.afterJavaMods();
+        ViewpointNativePresentationCompatibility.afterJavaMods();
+        ViewpointTextureCompatibility.afterJavaMods();
+        ViewpointPacingCompatibility.afterJavaMods();
+        ViewpointCoreCompatibility.afterJavaMods();
+        ViewpointSkeletonCompatibility.afterJavaMods();
+        ViewpointHotpathCompatibility.afterJavaMods();
+        ViewpointVehicleCompatibility.afterJavaMods();
+        ViewpointPresentationCompatibility.afterJavaMods();
+        AttachedWeaponCompatibility.afterJavaMods();
+        ViewpointWeatherCompatibility.afterJavaMods();
         if(!selected || attemptedEpoch==epoch)return;
         attemptedEpoch=epoch;
         try {
