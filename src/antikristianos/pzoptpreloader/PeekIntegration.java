@@ -57,6 +57,7 @@ public final class PeekIntegration {
         ViewpointSkeletonCompatibility.afterJavaMods();
         ViewpointHotpathCompatibility.afterJavaMods();
         ViewpointVehicleCompatibility.afterJavaMods();
+        ViewpointSeatedHeightCompatibility.afterJavaMods();
         ViewpointPresentationCompatibility.afterJavaMods();
         AttachedWeaponCompatibility.afterJavaMods();
         ViewpointWeatherCompatibility.afterJavaMods();

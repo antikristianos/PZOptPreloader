@@ -647,8 +647,8 @@
     },
     {
       "Path": "antikristianos/pzoptpreloader/PeekIntegration.class",
-      "Size": 7782,
-      "Sha256": "728C04175264A5C536615F07D843A08B8FC4A9158F8FFBA13DE167EFBC83295F"
+      "Size": 7866,
+      "Sha256": "43B00BF5FD2B680A48308067A3F95B5B8EA431B110DF5A12B85EB3D13941EA5D"
     },
     {
       "Path": "antikristianos/pzoptpreloader/PeekNativeApi$1$1.class",
@@ -1849,6 +1849,26 @@
       "Path": "antikristianos/pzoptpreloader/ViewpointPresentationRepair.class",
       "Size": 4940,
       "Sha256": "7B01CE377E8FBBF4512A0B3DD20B4F96F05A2D133A6B93EA6AFFA404ED820A22"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointSeatedHeightCompatibility.class",
+      "Size": 3667,
+      "Sha256": "00C453BE6EA0D7CD0646CD8BBD72A91990EB3D47FEADD1B5DF18769768EF70AA"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointSeatedHeightRepair$1$1.class",
+      "Size": 1533,
+      "Sha256": "B0AF355F2E76D247522BE865942D6C15C9924804BE6D0FA05F2726F957641356"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointSeatedHeightRepair$1.class",
+      "Size": 1795,
+      "Sha256": "F09ED4C6D3DF589BC3A5CC3C6F35D15F8EBE237DED4751EAC6D54C0F06DEA4BD"
+    },
+    {
+      "Path": "antikristianos/pzoptpreloader/ViewpointSeatedHeightRepair.class",
+      "Size": 2295,
+      "Sha256": "4B489160B0F0A28DF97957A646959A2884688B9C708E33629F1BB195AED348F0"
     },
     {
       "Path": "antikristianos/pzoptpreloader/ViewpointSkeletonCompatibility$1.class",
