@@ -1,0 +1,418 @@
+{
+  "fad57862": {
+    "pzopt/Ssr": {
+      "beforeWater(I)V": {
+        "leases": {},
+        "sha256": "844cdc40e8b5010616b6bb1e56f81e97772165eda9b2a08950d137417ce5fc9b",
+        "sites": {
+          "0": {
+            "component": "pzopt/Ssr$View",
+            "role": "VIEWS"
+          },
+          "1": {
+            "component": "pzopt/Ssr$Before",
+            "role": "BEFORES"
+          },
+          "2": {
+            "component": "pzopt/Ssr$Before",
+            "role": "BEFORES",
+            "reuseOf": 1
+          }
+        }
+      },
+      "beforeComposite(ILjava/util/ArrayList;)V": {
+        "leases": {},
+        "sha256": "b59f351f63e39ee0ca281e408465b8b28221b8c0366bec6a1c5c93039c3ab33d",
+        "sites": {"0": {
+          "component": "pzopt/Ssr$Frame",
+          "role": "FRAMES"
+        }}
+      }
+    },
+    "pzopt/Sway": {"beforeComposite(I)V": {
+      "leases": {},
+      "sha256": "f03814d6e291778e5fbe738e860f16686725f77bce87abfbaf7da4da7638bead",
+      "sites": {"0": {
+        "component": "pzopt/Sway$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/BloodDecals$PlantLayer": {"begin(Lzombie/iso/fboRenderChunk/FBORenderChunk;)Lzombie/core/textures/TextureDraw$GenericDrawer;": {
+      "singleton": {
+        "component": "pzopt/BloodDecals$PlantLayer$Begin",
+        "field": "BEGIN"
+      },
+      "leases": {},
+      "sha256": "d57654b8bc056f5c18bab4efb6b969711bff71fa06338edb6a7a9ac613748fc7",
+      "sites": {}
+    }},
+    "pzopt/SpriteFilter": {"queue(IILjava/lang/String;)V": {
+      "leases": {},
+      "sha256": "514d3461f428e8c30fe547a3f6e97c3224dba93af311a5c59accec74f68b3fab",
+      "sites": {"0": {
+        "component": "pzopt/SpriteFilter$Frame",
+        "role": "ring"
+      }}
+    }},
+    "pzopt/AmbientOcclusion": {"queue(I)V": {
+      "leases": {},
+      "sha256": "dff990a8d5e2a0d1802cdc8135aaebfb5ad9d9e18aab8773bd15b11f186ba718",
+      "sites": {"0": {
+        "component": "pzopt/AmbientOcclusion$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/CloudShadow": {"beforeComposite(I)V": {
+      "leases": {},
+      "sha256": "33f16795263cf147df12cac3208bb01e82e986ac0f3b4189d2ef1538af942c72",
+      "sites": {"0": {
+        "component": "pzopt/CloudShadow$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/ShadowAtlas": {"begin(FFFZ)Lpzopt/ShadowAtlas$Begin;": {
+      "leases": {},
+      "sha256": "a5fdab3a9eff97751a486e27dd76ab25a9b2612e0790f44fc7e1ad8948135e3f",
+      "sites": {"0": {
+        "component": "pzopt/ShadowAtlas$Begin",
+        "role": "BEGINS"
+      }}
+    }},
+    "pzopt/CapsuleShadow": {"queue(I)V": {
+      "leases": {},
+      "sha256": "6075dc746ea956ae1a940299944961304ff985fe6f4b95d7a1afabd0b5eadbb1",
+      "sites": {"0": {
+        "component": "pzopt/CapsuleShadow$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/CarOccupant": {"queue(Lpzopt/CarGlass$Frame;I)V": {
+      "leases": {},
+      "sha256": "868c67d68e324d51f3de04a7d0b516fac8ffd272cf397feb6ee70fd1357eaef1",
+      "sites": {"0": {
+        "component": "[Lpzopt/CarOccupant$Begin;",
+        "role": "BEGINS"
+      }}
+    }},
+    "pzopt/GrassBlades": {"afterComposite(I)V": {
+      "leases": {},
+      "sha256": "7d06f53107b64f10b58925a4e146bbd211d7b696b040fdcedb33db2ddb58051c",
+      "sites": {"0": {
+        "component": "pzopt/GrassBlades$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/PreloaderSceneData": {"occupancyOnly(I)V": {
+      "leases": {},
+      "sha256": "449fb027110edf794de8b74ea72187aebc7c94e067bb81e426c6c65a4770ef41",
+      "sites": {"0": {
+        "component": "pzopt/PreloaderSceneData$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/Ripples": {"build(I)Lpzopt/Ripples$Frame;": {
+      "leases": {},
+      "sha256": "ffe132387f3ec49656df51b9feb70651533915f1177cd6a3bc388847b06594de",
+      "sites": {"1": {
+        "component": "pzopt/Ripples$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/Glints": {
+      "build(ILjava/util/List;Ljava/lang/String;)V": {
+        "leases": {},
+        "sha256": "79960876bf41c74af7afb3adc9a18218d23d268758911d561ef45c4698e09f8c",
+        "sites": {"1": {
+          "component": "pzopt/Glints$Frame",
+          "role": "FRAMES"
+        }}
+      },
+      "queueHdr()V": {
+        "leases": {"0": {
+          "owner": "pzopt/Glints$Pass",
+          "field": "frame",
+          "descriptor": "Lpzopt/Glints$Frame;"
+        }},
+        "sha256": "52c91a455336514428c455e255810620b4de86c55fe39bf0a5255c3c69583a6e",
+        "sites": {"0": {
+          "component": "pzopt/Glints$Pass",
+          "role": "PASSES"
+        }}
+      },
+      "queuePass(Lpzopt/Glints$Frame;IIII)V": {
+        "leases": {"0": {
+          "owner": "pzopt/Glints$Pass",
+          "field": "frame",
+          "descriptor": "Lpzopt/Glints$Frame;"
+        }},
+        "sha256": "67fca67fce0c4072927a384c21d698582821f1d44bceb081d91e5c763c175482",
+        "sites": {"0": {
+          "component": "pzopt/Glints$Pass",
+          "role": "PASSES"
+        }}
+      }
+    },
+    "pzopt/CarGlass": {"beforeMoving(I)V": {
+      "leases": {},
+      "sha256": "95124e13bbf7fb99d90be703a3074a1416d6b8866cf88a25d1d910f211824de3",
+      "sites": {"0": {
+        "component": "pzopt/CarGlass$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/BloodWet": {
+      "collectSplats(ILjava/util/List;)V": {
+        "leases": {},
+        "sha256": "a58a3b20747596f9bb03ae6e591807927c247a7040714ba4fb54154feaeafb0a",
+        "sites": {"3": {
+          "component": "pzopt/BloodWet$Frame",
+          "role": "FRAMES"
+        }}
+      },
+      "pass(Lpzopt/BloodWet$Frame;Z)Lpzopt/BloodWet$Pass;": {
+        "leases": {"0": {
+          "owner": "pzopt/BloodWet$Pass",
+          "field": "frame",
+          "descriptor": "Lpzopt/BloodWet$Frame;"
+        }},
+        "sha256": "156607e0a75941b21917170d38a57b2ac66d89bc9cca6a565ec34f4742783852",
+        "sites": {"0": {
+          "component": "pzopt/BloodWet$Pass",
+          "role": "PASSES"
+        }}
+      }
+    },
+    "pzopt/EntityShadow": {
+      "frameStartInner(I)V": {
+        "leases": {},
+        "sha256": "2b823455a99b64259f06d7dff314e8b793856ba5524a8c18d43c90957579742b",
+        "sites": {
+          "0": {
+            "component": "pzopt/EntityShadow$FrameState",
+            "role": "FRAMES"
+          },
+          "1": {
+            "component": "pzopt/EntityShadow$FrameState",
+            "role": "FRAMES"
+          }
+        }
+      },
+      "queueCompute()V": {
+        "leases": {},
+        "sha256": "87d9ce6c6fb6fa5d80c2f1e89c4894adade9116eb60f67fa1090b5433a8e78b0",
+        "sites": {"0": {
+          "component": "pzopt/EntityShadow$ComputeDrawer",
+          "role": "COMPUTES"
+        }}
+      }
+    }
+  },
+  "20f89d32": {
+    "pzopt/Ssr": {
+      "beforeWater(I)V": {
+        "leases": {},
+        "sha256": "844cdc40e8b5010616b6bb1e56f81e97772165eda9b2a08950d137417ce5fc9b",
+        "sites": {
+          "0": {
+            "component": "pzopt/Ssr$View",
+            "role": "VIEWS"
+          },
+          "1": {
+            "component": "pzopt/Ssr$Before",
+            "role": "BEFORES"
+          },
+          "2": {
+            "component": "pzopt/Ssr$Before",
+            "role": "BEFORES",
+            "reuseOf": 1
+          }
+        }
+      },
+      "beforeComposite(ILjava/util/ArrayList;)V": {
+        "leases": {},
+        "sha256": "b59f351f63e39ee0ca281e408465b8b28221b8c0366bec6a1c5c93039c3ab33d",
+        "sites": {"0": {
+          "component": "pzopt/Ssr$Frame",
+          "role": "FRAMES"
+        }}
+      }
+    },
+    "pzopt/Sway": {"beforeComposite(I)V": {
+      "leases": {},
+      "sha256": "f03814d6e291778e5fbe738e860f16686725f77bce87abfbaf7da4da7638bead",
+      "sites": {"0": {
+        "component": "pzopt/Sway$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/BloodDecals$PlantLayer": {"begin(Lzombie/iso/fboRenderChunk/FBORenderChunk;)Lzombie/core/textures/TextureDraw$GenericDrawer;": {
+      "singleton": {
+        "component": "pzopt/BloodDecals$PlantLayer$Begin",
+        "field": "BEGIN"
+      },
+      "leases": {},
+      "sha256": "d57654b8bc056f5c18bab4efb6b969711bff71fa06338edb6a7a9ac613748fc7",
+      "sites": {}
+    }},
+    "pzopt/SpriteFilter": {"queue(IILjava/lang/String;)V": {
+      "leases": {},
+      "sha256": "514d3461f428e8c30fe547a3f6e97c3224dba93af311a5c59accec74f68b3fab",
+      "sites": {"0": {
+        "component": "pzopt/SpriteFilter$Frame",
+        "role": "ring"
+      }}
+    }},
+    "pzopt/AmbientOcclusion": {"queue(I)V": {
+      "leases": {},
+      "sha256": "dff990a8d5e2a0d1802cdc8135aaebfb5ad9d9e18aab8773bd15b11f186ba718",
+      "sites": {"0": {
+        "component": "pzopt/AmbientOcclusion$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/CloudShadow": {"beforeComposite(I)V": {
+      "leases": {},
+      "sha256": "33f16795263cf147df12cac3208bb01e82e986ac0f3b4189d2ef1538af942c72",
+      "sites": {"0": {
+        "component": "pzopt/CloudShadow$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/ShadowAtlas": {"begin(FFFZ)Lpzopt/ShadowAtlas$Begin;": {
+      "leases": {},
+      "sha256": "a5fdab3a9eff97751a486e27dd76ab25a9b2612e0790f44fc7e1ad8948135e3f",
+      "sites": {"0": {
+        "component": "pzopt/ShadowAtlas$Begin",
+        "role": "BEGINS"
+      }}
+    }},
+    "pzopt/CapsuleShadow": {"queue(I)V": {
+      "leases": {},
+      "sha256": "6075dc746ea956ae1a940299944961304ff985fe6f4b95d7a1afabd0b5eadbb1",
+      "sites": {"0": {
+        "component": "pzopt/CapsuleShadow$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/CarOccupant": {"queue(Lpzopt/CarGlass$Frame;I)V": {
+      "leases": {},
+      "sha256": "868c67d68e324d51f3de04a7d0b516fac8ffd272cf397feb6ee70fd1357eaef1",
+      "sites": {"0": {
+        "component": "[Lpzopt/CarOccupant$Begin;",
+        "role": "BEGINS"
+      }}
+    }},
+    "pzopt/GrassBlades": {"afterComposite(I)V": {
+      "leases": {},
+      "sha256": "7d06f53107b64f10b58925a4e146bbd211d7b696b040fdcedb33db2ddb58051c",
+      "sites": {"0": {
+        "component": "pzopt/GrassBlades$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/PreloaderSceneData": {"occupancyOnly(I)V": {
+      "leases": {},
+      "sha256": "449fb027110edf794de8b74ea72187aebc7c94e067bb81e426c6c65a4770ef41",
+      "sites": {"0": {
+        "component": "pzopt/PreloaderSceneData$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/Ripples": {"build(I)Lpzopt/Ripples$Frame;": {
+      "leases": {},
+      "sha256": "ffe132387f3ec49656df51b9feb70651533915f1177cd6a3bc388847b06594de",
+      "sites": {"1": {
+        "component": "pzopt/Ripples$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/Glints": {
+      "build(ILjava/util/List;Ljava/lang/String;)V": {
+        "leases": {},
+        "sha256": "79960876bf41c74af7afb3adc9a18218d23d268758911d561ef45c4698e09f8c",
+        "sites": {"1": {
+          "component": "pzopt/Glints$Frame",
+          "role": "FRAMES"
+        }}
+      },
+      "queueHdr()V": {
+        "leases": {"0": {
+          "owner": "pzopt/Glints$Pass",
+          "field": "frame",
+          "descriptor": "Lpzopt/Glints$Frame;"
+        }},
+        "sha256": "52c91a455336514428c455e255810620b4de86c55fe39bf0a5255c3c69583a6e",
+        "sites": {"0": {
+          "component": "pzopt/Glints$Pass",
+          "role": "PASSES"
+        }}
+      },
+      "queuePass(Lpzopt/Glints$Frame;IIII)V": {
+        "leases": {"0": {
+          "owner": "pzopt/Glints$Pass",
+          "field": "frame",
+          "descriptor": "Lpzopt/Glints$Frame;"
+        }},
+        "sha256": "67fca67fce0c4072927a384c21d698582821f1d44bceb081d91e5c763c175482",
+        "sites": {"0": {
+          "component": "pzopt/Glints$Pass",
+          "role": "PASSES"
+        }}
+      }
+    },
+    "pzopt/CarGlass": {"beforeMoving(I)V": {
+      "leases": {},
+      "sha256": "95124e13bbf7fb99d90be703a3074a1416d6b8866cf88a25d1d910f211824de3",
+      "sites": {"0": {
+        "component": "pzopt/CarGlass$Frame",
+        "role": "FRAMES"
+      }}
+    }},
+    "pzopt/BloodWet": {
+      "collectSplats(ILjava/util/List;)V": {
+        "leases": {},
+        "sha256": "a58a3b20747596f9bb03ae6e591807927c247a7040714ba4fb54154feaeafb0a",
+        "sites": {"3": {
+          "component": "pzopt/BloodWet$Frame",
+          "role": "FRAMES"
+        }}
+      },
+      "pass(Lpzopt/BloodWet$Frame;Z)Lpzopt/BloodWet$Pass;": {
+        "leases": {"0": {
+          "owner": "pzopt/BloodWet$Pass",
+          "field": "frame",
+          "descriptor": "Lpzopt/BloodWet$Frame;"
+        }},
+        "sha256": "156607e0a75941b21917170d38a57b2ac66d89bc9cca6a565ec34f4742783852",
+        "sites": {"0": {
+          "component": "pzopt/BloodWet$Pass",
+          "role": "PASSES"
+        }}
+      }
+    },
+    "pzopt/EntityShadow": {
+      "frameStartInner(I)V": {
+        "leases": {},
+        "sha256": "2b823455a99b64259f06d7dff314e8b793856ba5524a8c18d43c90957579742b",
+        "sites": {
+          "0": {
+            "component": "pzopt/EntityShadow$FrameState",
+            "role": "FRAMES"
+          },
+          "1": {
+            "component": "pzopt/EntityShadow$FrameState",
+            "role": "FRAMES"
+          }
+        }
+      },
+      "queueCompute()V": {
+        "leases": {},
+        "sha256": "87d9ce6c6fb6fa5d80c2f1e89c4894adade9116eb60f67fa1090b5433a8e78b0",
+        "sites": {"0": {
+          "component": "pzopt/EntityShadow$ComputeDrawer",
+          "role": "COMPUTES"
+        }}
+      }
+    }
+  }
+}

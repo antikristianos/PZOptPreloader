@@ -24,7 +24,8 @@ public final class WallReflectionSource {
     private static final Map<Integer,Source> BY_DEPTH=new HashMap<>();
     private record TreeMaterial(Texture trunk,Texture foliage,int r,int g,int b){ }
     private static final class TreeHolders {
-        TreeMaterial material;final Set<Source> sources=Collections.newSetFromMap(new IdentityHashMap<>());
+        TreeMaterial material;final Map<Integer,TreeMaterial> playerMaterials=new HashMap<>();
+        final Set<Source> sources=Collections.newSetFromMap(new IdentityHashMap<>());
     }
     private static final Map<IsoTree,TreeHolders> TREE_HOLDERS=new IdentityHashMap<>(); // render thread only
     private static final java.util.concurrent.ConcurrentHashMap<Texture,Boolean> WANTED=new java.util.concurrent.ConcurrentHashMap<>(); // render thread
@@ -362,12 +363,18 @@ public final class WallReflectionSource {
         }
         for(var item:materials.entrySet()){
             TreeHolders holders=TREE_HOLDERS.computeIfAbsent(item.getKey(),tree->new TreeHolders());
-            if(!item.getValue().equals(holders.material)){
-                holders.material=item.getValue();
-                for(Source other:holders.sources)if(other!=source)request(other);
-            }
+            int player=sourcePlayer(source);TreeMaterial next=item.getValue(),previous=holders.playerMaterials.put(player,next);
+            // Sprite identity is shared; square lighting is native per-player state.
+            boolean textureChanged=holders.material!=null&&(holders.material.trunk()!=next.trunk()||holders.material.foliage()!=next.foliage());
+            boolean lightChanged=previous!=null&&!previous.equals(next);
+            holders.material=next;
+            if(textureChanged||lightChanged)for(Source other:holders.sources)
+                if(other!=source&&(textureChanged||sourcePlayer(other)==player))request(other);
             holders.sources.add(source);source.treeMaterials.add(item.getKey());
         }
+    }
+    private static int sourcePlayer(Source source){
+        FBORenderLevels levels=source.owner.getRenderLevels();return levels==null?-1:levels.getPlayerIndex();
     }
     /** Drain only this cache's missing-source requests, never scan the world or continuously invalidate. */
     public static void drainRebuilds(){

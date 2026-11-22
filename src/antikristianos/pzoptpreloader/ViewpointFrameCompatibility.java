@@ -18,10 +18,10 @@ public final class ViewpointFrameCompatibility {
     private ViewpointFrameCompatibility(){ }
     public static boolean active(){return active&&ViewpointAnimationCompatibility.selected();}
     public static String status(){return status;}
-    public static boolean admitted(Object drawer){return active()&&drawer!=null&&(drawer.getClass()==types.get(ViewpointFrameRepair.DARKNESS)||drawer.getClass()==types.get(ViewpointFrameRepair.SHADOW)||drawer.getClass()==types.get(ViewpointFrameRepair.UPKEEP));}
+    public static boolean admitted(Object drawer){return active()&&drawer!=null&&(drawer.getClass()==types.get(ViewpointFrameRepair.DARKNESS)||drawer.getClass()==types.get(ViewpointFrameRepair.SHADOW)||drawer.getClass()==types.get(ViewpointFrameRepair.UPKEEP)||drawer.getClass()==SplitScreenHdrContext.PlayerPass.class);}
     public static int enterReplay(){if(!active())return -1;int previous=REPLAY.get();REPLAY.set(previous+1);return previous;}
     public static void exitReplay(int previous){if(previous>=0)REPLAY.set(previous);}
-    public static boolean skipOnce(Object drawer){return REPLAY.get()>0&&drawer!=null&&(drawer.getClass()==types.get(ViewpointFrameRepair.SHADOW)||drawer.getClass()==types.get(ViewpointFrameRepair.UPKEEP));}
+    public static boolean skipOnce(Object drawer){return REPLAY.get()>0&&drawer!=null&&(drawer.getClass()==types.get(ViewpointFrameRepair.SHADOW)||drawer.getClass()==types.get(ViewpointFrameRepair.UPKEEP)||drawer.getClass()==SplitScreenHdrContext.PlayerPass.class);}
     public static synchronized void afterJavaMods(){
         if(!ViewpointAnimationCompatibility.selected()){active=false;status="inactive: Viewpoint not selected";return;}
         if(failed)return;if(installed){active=true;status="ready";return;}if(attempted)return;attempted=true;active=false;
