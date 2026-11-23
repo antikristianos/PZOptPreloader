@@ -6,7 +6,7 @@ import java.util.Set;
 public final class ViewpointAnimationCompatibility {
     private static volatile boolean ready,selected;
     private ViewpointAnimationCompatibility(){ }
-    public static void beginSelection(){ready=false;selected=false;ViewpointNativePresentationCompatibility.selectionReset();ViewpointSkeletonCompatibility.beginSelection();ViewpointHotpathCompatibility.beginSelection();ViewpointVehicleCompatibility.selectionReset();ViewpointPresentationCompatibility.selectionReset();ViewpointWeatherCompatibility.reset();}
+    public static void beginSelection(){ready=false;selected=false;SeatedIsoDepth.reset();ViewpointNativePresentationCompatibility.selectionReset();ViewpointSkeletonCompatibility.beginSelection();ViewpointHotpathCompatibility.beginSelection();ViewpointVehicleCompatibility.selectionReset();ViewpointPresentationCompatibility.selectionReset();ViewpointWeatherCompatibility.reset();}
     public static void captureFinalMods(Set<String> ids){
         selected=!RuntimeState.server&&RuntimeState.payload!=null&&NativeSource.is(RuntimeState.payload)&&ids.contains("Viewpoint");
         ready=true;
