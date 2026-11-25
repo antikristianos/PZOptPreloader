@@ -2,6 +2,17 @@ package antikristianos.pzoptpreloader;
 import me.zed_0xff.zombie_buddy.Patch;
 
 public final class PatchHooks {
+    @Patch(className="zombie.characters.IsoGameCharacter",methodName="setVehicle",strictMatch=true)
+    public static final class VehicleLookEntry {
+        @Patch.OnEnter public static void before(@Patch.This zombie.characters.IsoGameCharacter actor,
+                @Patch.Argument(0) zombie.vehicles.BaseVehicle vehicle,@Patch.Local("vehicleLookChanged") boolean changed){
+            changed=actor.getVehicle()!=vehicle;
+        }
+        @Patch.OnExit public static void after(@Patch.This zombie.characters.IsoGameCharacter actor,
+                @Patch.Argument(0) zombie.vehicles.BaseVehicle vehicle,@Patch.Local("vehicleLookChanged") boolean changed){
+            if(changed)ViewpointVehicleCompatibility.vehicleSet(actor,vehicle);
+        }
+    }
     @Patch(className="zombie.ZomboidFileSystem", methodName="loadMods")
     public static final class MountMedia {
         @Patch.OnExit public static void after(@Patch.AllArguments Object[] args) { Resources.mount(); }

@@ -147,6 +147,9 @@ public final class Payload {
         if(!server&&NativeSource.is(this))source=ViewpointAnimationRepair.patch(name,source);
         if(!server&&NativeSource.is(this))source=ViewpointSkeletonRepair.patch(name,source);
         if(!server&&NativeSource.is(this))source=ViewpointTextureRepair.patch(name,source);
+        if(!server&&NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(this)))source=SeatedIsoDepthRepair.patch(name,source);
+        if(!server&&NativeSource.is(this))source=SsrHashExtentRepair.patch(name,source);
+        if(!server&&NativeSource.is(this))source=FogDepthCopyRepair.patch(name,source);
         if(!server&&manualAdp==ManualAdpCompatibility.Kind.STANDARD)source=ManualAdpCompatibility.keepManualPhysics(name,source);
         byte[] bytes = VehicleZoneRepair.patch(name,source);
         if(server)return bytes;
@@ -155,9 +158,13 @@ public final class Payload {
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes,NativeSource.is(this)))))));
         if(shoreLighting)bytes=StandingObjectCutaway.depthScope(name,bytes);
         if(shoreLighting)bytes=BushGroundCoverage.patch(name,bytes);
+        if(NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(this)))bytes=VehicleVegetationRepair.patch(name,bytes);
         if(shoreLighting&&NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(this)))bytes=ViewpointNativePresentationRepair.patch(name,bytes);
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
         if(shoreLighting)bytes=OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes))));
+        if(NativeSource.is(this))bytes=SplitScreenPacketRepair.patch(name,bytes,NativeSource.sourceCommit(this));
+        if(!server&&NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(this)))bytes=NativeVehicleCharactersRepair.patch(name,bytes);
+        if(NativeSource.is(this))bytes=SplitScreenHdrRepair.patch(name,bytes,NativeSource.sourceCommit(this));
         return uiStencil?UiStencilRepair.patch(name,bytes):bytes;
         } finally {NativeSource.leave(previousNative);}
     }

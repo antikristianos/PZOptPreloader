@@ -13,7 +13,7 @@ public final class PatchShoreLifecycle {
     @Patch(className="zombie.iso.fboRenderChunk.FBORenderCell",methodName="Reset",strictMatch=true)
     public static final class WorldReset {
         @Patch.OnExit public static void exit(){
-            if(Compatibility.developmentRuntime()){ShoreReceiverState.reset();ShoreWeatherState.reset();}
+            if(Compatibility.developmentRuntime()){ShoreReceiverState.reset();ShoreWeatherState.reset();VehicleVegetation.clear();}
         }
     }
 }

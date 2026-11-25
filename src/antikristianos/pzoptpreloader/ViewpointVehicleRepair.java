@@ -23,13 +23,13 @@ public final class ViewpointVehicleRepair {
         int[] sites={0,0};ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){@Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e){MethodVisitor out=super.visitMethod(a,n,d,s,e);
             if(n.equals("framePresented")&&d.equals("()V"))return new MethodVisitor(Opcodes.ASM9,out){@Override public void visitCode(){super.visitCode();sites[1]++;super.visitFieldInsn(Opcodes.GETSTATIC,"viewpoint/core/View","enabled","Z");super.visitMethodInsn(Opcodes.INVOKESTATIC,"antikristianos/pzoptpreloader/ViewpointVehicleCompatibility","viewMode","(Z)V",false);}};
-            if(!n.equals("readBeforeDrawing")||!d.equals("()V"))return out;
+            if(!(n.equals("readBeforeDrawing")&&d.equals("()V")||n.equals("onUpdateMouseCursor")&&d.equals("()Z")))return out;
             return new MethodVisitor(Opcodes.ASM9,out){@Override public void visitCode(){super.visitCode();sites[0]++;
                 super.visitFieldInsn(Opcodes.GETSTATIC,TARGET,"yaw","F");super.visitFieldInsn(Opcodes.GETSTATIC,"viewpoint/core/View","enabled","Z");
                 super.visitMethodInsn(Opcodes.INVOKESTATIC,"viewpoint/input/FreeCam","centre","()Lviewpoint/input/FreeCam$Place;",false);
                 super.visitFieldInsn(Opcodes.GETSTATIC,"viewpoint/input/FreeCam","active","Z");super.visitFieldInsn(Opcodes.GETSTATIC,TARGET,"followed","J");super.visitFieldInsn(Opcodes.GETSTATIC,TARGET,"addonFollowed","J");
                 super.visitMethodInsn(Opcodes.INVOKESTATIC,"antikristianos/pzoptpreloader/ViewpointVehicleCompatibility","yaw","(FZLjava/lang/Object;ZJJ)F",false);super.visitFieldInsn(Opcodes.PUTSTATIC,TARGET,"yaw","F");
             }};
-        }},0);if(sites[0]!=1||sites[1]!=1)throw new IOException("Vehicle look boundary differs");return writer.toByteArray();
+        }},0);if(sites[0]!=2||sites[1]!=1)throw new IOException("Vehicle look boundary differs");return writer.toByteArray();
     }
 }
