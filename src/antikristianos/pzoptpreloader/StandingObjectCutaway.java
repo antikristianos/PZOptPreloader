@@ -114,6 +114,7 @@ public final class StandingObjectCutaway {
     }
     public static ObjectRenderLayer layer(ObjectRenderLayer original,IsoObject object){
         if(WallReflectionSource.sourcePass())return original;
+        ObjectRenderLayer vegetation=VehicleVegetation.layer(original,object);if(vegetation!=original)return vegetation;
         ObjectRenderLayer sink=SinkRenderOrder.layer(original,object);if(sink!=original)return sink;
         IsoGridSquare camera=IsoCamera.frameState.camCharacterSquare;
         boolean upperTank=object!=null&&object.square!=null&&camera!=null&&object.square.z>camera.z&&tankRole(object.getSprite())>=0;
@@ -190,6 +191,7 @@ public final class StandingObjectCutaway {
     }
     public static float alpha(float nativeValue,IsoObject object,Object cell){
         if(WallReflectionSource.sourcePass()||CACHE.get().nativeAlpha||object==null||object.getSquare()==null)return nativeValue;
+        float vegetation=VehicleVegetation.alpha(nativeValue,object);if(vegetation!=nativeValue)return vegetation;
         int player=IsoCamera.frameState.playerIndex;ObjectRenderLayer layer=object.getRenderInfo(player).layer;
         if(layer!=ObjectRenderLayer.MinusFloor&&layer!=ObjectRenderLayer.MinusFloorSE&&layer!=ObjectRenderLayer.Translucent&&layer!=ObjectRenderLayer.TranslucentSE)return nativeValue;
         int family=kind(object.getSprite());
@@ -207,11 +209,12 @@ public final class StandingObjectCutaway {
         return square.isCanSee(player)?.4f:0;
     }
     public static float lateAlpha(float nativeValue,IsoObject object,Object cell){
+        float vegetation=VehicleVegetation.alpha(nativeValue,object);if(vegetation!=nativeValue)return vegetation;
         int family=object==null?0:kind(object.getSprite());
         // Keep the user-accepted dish/boiler draw path and unrelated native objects unchanged.
         return family==PILLAR||family==TANK?alpha(nativeValue,object,cell):nativeValue;
     }
-    public static void clear(){CACHE.remove();}
+    public static void clear(){CACHE.remove();VehicleVegetation.clear();}
     private static final class Cache {
         final WeakHashMap<IsoSprite,Integer> sprites=new WeakHashMap<>();boolean nativeAlpha;int depth;IsoObject[] depthObjects=new IsoObject[8];boolean[] depthWrites=new boolean[8];
     }

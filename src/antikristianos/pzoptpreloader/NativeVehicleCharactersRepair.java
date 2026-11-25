@@ -16,6 +16,7 @@ public final class NativeVehicleCharactersRepair {
             "DrawVehicle(Lzombie/core/skinnedmodel/model/ModelSlotRenderData;Lzombie/core/skinnedmodel/model/ModelInstanceRenderData;)V","4c3c415736504c03e02d7a8b0daea1837d3a3b4ebfa4a30e46c658265884e746",
             "pzoptDrawGlass(Lzombie/core/skinnedmodel/shader/Shader;Lzombie/core/skinnedmodel/model/ModelSlotRenderData;Lzombie/core/skinnedmodel/model/ModelInstanceRenderData;Lzombie/core/skinnedmodel/model/VehicleModelInstance;FFFFFFF)V","a5e13e18d7c402a22c72b2c94aa1fd6bea0533dfd44c5dc8d6d2d7911e12665f"),
         GLASS,Map.of("patchShader(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;","d667f566b40c772336adcdc9c6c051ab7a4fb0e5d94fe148b4af83c27dff6995",
+            "compiles(ILjava/lang/String;Ljava/lang/String;)Z","7a2e9c995eece69d8c9b2cdccf4b65458b68b5e8339b3054f25c449112faf5e0",
             "drawUniforms(Lzombie/core/skinnedmodel/shader/Shader;Lzombie/core/skinnedmodel/model/ModelSlotRenderData;Lzombie/core/skinnedmodel/model/ModelInstanceRenderData;Lzombie/core/skinnedmodel/model/VehicleModelInstance;FFFFFF)V","92e25aa7f4276d4cc755d59dbe6fa7abeb3d3053ff918800991221cbe3466bcc"));
     private NativeVehicleCharactersRepair(){ }
     public static byte[] patch(String name,byte[] bytes)throws IOException {
@@ -24,11 +25,19 @@ public final class NativeVehicleCharactersRepair {
         var methods=Compatibility.methods(bytes);for(var pin:pins.entrySet())if(!pin.getValue().equals(methods.get(pin.getKey())))throw new IOException("Unreviewed native character material boundary: "+name+"."+pin.getKey());
         if(name.equals(MODEL))return model(reader);
         if(name.equals(SLOT))return snapshot(reader);
-        int[] sites={0,0};ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
+        int[] sites={0,0,0};ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int a,String n,String d,String s,String[] e) {
                 MethodVisitor out=super.visitMethod(a,n,d,s,e);if(!pins.containsKey(n+d))return out;
                 return new MethodVisitor(Opcodes.ASM9,out){
+                    @Override public void visitCode(){
+                        super.visitCode();
+                        if(name.equals(GLASS)&&n.equals("compiles")){
+                            sites[2]++;super.visitVarInsn(Opcodes.ALOAD,2);super.visitVarInsn(Opcodes.ALOAD,1);
+                            super.visitMethodInsn(Opcodes.INVOKESTATIC,"antikristianos/pzoptpreloader/NativeVehicleReflections","prepare","(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",false);
+                            super.visitVarInsn(Opcodes.ASTORE,1);
+                        }
+                    }
                     @Override public void visitInsn(int op) {
                         if(name.equals(OCC)&&n.equals("showStock")&&op==Opcodes.IRETURN){
                             sites[0]++;super.visitVarInsn(Opcodes.ALOAD,0);super.visitMethodInsn(Opcodes.INVOKESTATIC,OCC,"impostor","()Z",false);
@@ -57,7 +66,7 @@ public final class NativeVehicleCharactersRepair {
             }
         },0);
         // Return counts and the two material consumers are tied to the reviewed method bodies.
-        if(name.equals(OCC)?sites[0]!=1||sites[1]<1:sites[0]<1||sites[1]!=2)throw new IOException("Native character material sites differ");
+        if(name.equals(OCC)?sites[0]!=1||sites[1]<1:sites[0]<1||sites[1]!=2||sites[2]!=1)throw new IOException("Native character material sites differ");
         return writer.toByteArray();
     }
     private static byte[] model(ClassReader reader)throws IOException{

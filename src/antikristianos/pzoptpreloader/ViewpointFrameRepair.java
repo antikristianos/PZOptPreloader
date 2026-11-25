@@ -26,7 +26,7 @@ public final class ViewpointFrameRepair {
     }
     public static byte[] patch(String name,byte[] bytes)throws IOException{
         if(!METHODS.containsKey(name))return bytes;verify(name,bytes);if(name.equals(DARKNESS))return bytes;
-        ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_FRAMES|ClassWriter.COMPUTE_MAXS){@Override protected ClassLoader getClassLoader(){return ViewpointFrameRepair.class.getClassLoader();}};int[] sites={0,0,0};
+        ClassReader reader=new ClassReader(bytes);ClassWriter writer=new ClassWriter(reader,ClassWriter.COMPUTE_FRAMES|ClassWriter.COMPUTE_MAXS){@Override protected ClassLoader getClassLoader(){return ViewpointFrameRepair.class.getClassLoader();}};int[] sites={0,0,0,0};
         reader.accept(new ClassVisitor(Opcodes.ASM9,writer){
             @Override public MethodVisitor visitMethod(int access,String method,String descriptor,String signature,String[] exceptions){
                 MethodVisitor out=super.visitMethod(access,method,descriptor,signature,exceptions);
@@ -39,6 +39,12 @@ public final class ViewpointFrameRepair {
                     final Label start=new Label(),end=new Label(),handler=new Label();
                     // Verified original play(state) uses only local 0 and its caught exception in local 1.
                     @Override public void visitCode(){super.visitCode();super.visitMethodInsn(Opcodes.INVOKESTATIC,HELPER,"enterReplay","()I",false);super.visitVarInsn(Opcodes.ISTORE,2);super.visitLabel(start);sites[1]++;}
+                    @Override public void visitMethodInsn(int opcode,String owner,String method,String desc,boolean face){
+                        super.visitMethodInsn(opcode,owner,method,desc,face);
+                        if(opcode==Opcodes.INVOKESTATIC&&owner.equals("org/lwjglx/opengl/Display")&&method.equals("update")&&desc.equals("(Z)V")){
+                            super.visitMethodInsn(Opcodes.INVOKESTATIC,HELPER,"replayedSwap","()V",false);sites[3]++;
+                        }
+                    }
                     @Override public void visitInsn(int opcode){if(opcode==Opcodes.RETURN){super.visitVarInsn(Opcodes.ILOAD,2);super.visitMethodInsn(Opcodes.INVOKESTATIC,HELPER,"exitReplay","(I)V",false);}super.visitInsn(opcode);}
                     @Override public void visitMaxs(int stack,int locals){if(locals!=2)throw new IllegalStateException("Viewpoint play local layout changed");super.visitLabel(end);super.visitTryCatchBlock(start,end,handler,"java/lang/Throwable");super.visitLabel(handler);super.visitVarInsn(Opcodes.ASTORE,3);super.visitVarInsn(Opcodes.ILOAD,2);super.visitMethodInsn(Opcodes.INVOKESTATIC,HELPER,"exitReplay","(I)V",false);super.visitVarInsn(Opcodes.ALOAD,3);super.visitInsn(Opcodes.ATHROW);super.visitMaxs(stack,locals);}
                 };
@@ -46,7 +52,7 @@ public final class ViewpointFrameRepair {
                 return out;
             }
         },ClassReader.EXPAND_FRAMES);
-        if(name.equals(BETWEEN)?sites[0]!=1||sites[1]!=1||sites[2]!=0:sites[0]!=0||sites[1]!=0||sites[2]!=1)throw new IOException("Viewpoint replay instruction inventory changed: "+name);
+        if(name.equals(BETWEEN)?sites[0]!=1||sites[1]!=1||sites[2]!=0||sites[3]!=1:sites[0]!=0||sites[1]!=0||sites[2]!=1||sites[3]!=0)throw new IOException("Viewpoint replay instruction inventory changed: "+name);
         return writer.toByteArray();
     }
 }

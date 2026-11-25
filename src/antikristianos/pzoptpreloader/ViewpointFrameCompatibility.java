@@ -2,6 +2,7 @@ package antikristianos.pzoptpreloader;
 
 import java.io.*;
 import java.lang.instrument.*;
+import java.lang.invoke.*;
 import java.lang.reflect.*;
 import java.security.ProtectionDomain;
 import java.util.*;
@@ -15,12 +16,22 @@ public final class ViewpointFrameCompatibility {
     private static volatile String status="waiting for final Java mod selection";
     private static volatile Map<String,Class<?>> types=Map.of();
     private static final ThreadLocal<Integer> REPLAY=ThreadLocal.withInitial(()->0);
+    private static volatile boolean overlayFailed;
+    private static final class OverlaySink {
+        static final MethodHandle SWAP=resolve();
+        static MethodHandle resolve(){try{return MethodHandles.publicLookup().unreflect(Class.forName("pzopt.Overlay").getMethod("onSwap"));}catch(ReflectiveOperationException|LinkageError unavailable){return null;}}
+    }
     private ViewpointFrameCompatibility(){ }
     public static boolean active(){return active&&ViewpointAnimationCompatibility.selected();}
     public static String status(){return status;}
     public static boolean admitted(Object drawer){return active()&&drawer!=null&&(drawer.getClass()==types.get(ViewpointFrameRepair.DARKNESS)||drawer.getClass()==types.get(ViewpointFrameRepair.SHADOW)||drawer.getClass()==types.get(ViewpointFrameRepair.UPKEEP)||drawer.getClass()==SplitScreenHdrContext.PlayerPass.class);}
     public static int enterReplay(){if(!active())return -1;int previous=REPLAY.get();REPLAY.set(previous+1);return previous;}
     public static void exitReplay(int previous){if(previous>=0)REPLAY.set(previous);}
+    public static void replayedSwap(){
+        if(!active()||REPLAY.get()==0||overlayFailed||RuntimeState.server||RuntimeState.payload==null||!NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(RuntimeState.payload)))return;
+        try{if(OverlaySink.SWAP!=null)OverlaySink.SWAP.invokeExact();}
+        catch(Throwable error){overlayFailed=true;System.err.println("[PZOptPreloader/Viewpoint] optional overlay frame counter inactive: "+error);}
+    }
     public static boolean skipOnce(Object drawer){return REPLAY.get()>0&&drawer!=null&&(drawer.getClass()==types.get(ViewpointFrameRepair.SHADOW)||drawer.getClass()==types.get(ViewpointFrameRepair.UPKEEP)||drawer.getClass()==SplitScreenHdrContext.PlayerPass.class);}
     public static synchronized void afterJavaMods(){
         if(!ViewpointAnimationCompatibility.selected()){active=false;status="inactive: Viewpoint not selected";return;}

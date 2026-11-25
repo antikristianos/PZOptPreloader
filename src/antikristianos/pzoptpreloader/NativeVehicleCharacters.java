@@ -21,6 +21,9 @@ public final class NativeVehicleCharacters {
     public static Object tile(Object original,Object vehicle,boolean ordinary){return ordinary&&vehicle instanceof BaseVehicle v&&vehicle(v)?null:original;}
     public static float proxy(float original,Object vehicle,boolean ordinary){return ordinary&&vehicle instanceof BaseVehicle v&&vehicle(v)?1f:original;}
     public static String shader(String name,String code,boolean active){
+        return NativeVehicleReflections.shader(name,panes(name,code,active),NativeVehicleReflections.enabled());
+    }
+    private static String panes(String name,String code,boolean active){
         if(!active||name==null||code==null||!name.endsWith(".frag")||code.contains("/* preloader native panes */"))return code;
         String base=name.replace('\\','/');base=base.substring(base.lastIndexOf('/')+1,base.length()-5);
         boolean pane=base.startsWith("pzopt_glass_");String material=pane?base.substring(12):base;

@@ -62,12 +62,11 @@ public final class NativeVehicleSurfaces {
     private static boolean isoProjection(){Matrix4f projection=Core.getInstance().projectionMatrixStack.peek();return projection!=null&&projection.isAffine();}
     private static boolean world(ModelSlotRenderData slot,boolean ordinary){return ordinary&&slot!=null&&slot.object instanceof BaseVehicle&&ModelCamera.instance==VehicleModelCamera.instance;}
     public static void body(Shader shader,ModelSlotRenderData slot,ModelInstanceRenderData data,boolean ordinary){
-        if(!world(slot,ordinary)||shader==null||!NativeVehicleCharacters.material(shader.getName()))return;
+        if(!world(slot,true)||shader==null||!NativeVehicleCharacters.material(shader.getName()))return;
         Scope scope=scopes.get();scope.cull=GL11.glIsEnabled(GL11.GL_CULL_FACE);scope.body=true;
-        if(failed)return;
         int program=shader.getShaderProgram().getShaderID();Uniforms u=uniforms.get(shader);
         if(u==null||u.program!=program){u=new Uniforms(program,GL20.glGetUniformLocation(program,"preloaderNativeGlassReady"),GL20.glGetUniformLocation(program,"preloaderNativeGlassClass"));uniforms.put(shader,u);}
-        if(u.ready<0||u.classes<0)return;GL20.glUniform1f(u.ready,0);
+        if(u.ready<0||u.classes<0)return;GL20.glUniform1f(u.ready,0);if(failed||!NativeVehicleReflections.enabled())return;
         ModelInstance model=data.modelInstance;VehicleModelInstance vmi=model instanceof VehicleModelInstance v?v:model instanceof VehicleSubModelInstance&&model.parent instanceof VehicleModelInstance v?v:null;if(vmi==null)return;
         try{
             if(glassMap==null){

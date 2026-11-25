@@ -158,6 +158,7 @@ public final class Payload {
         if(shoreLighting)bytes=PuddleFootprintRepair.patch(name,PuddleMatrixRepair.patch(name,WallReflectionRepair.patch(name,ShoreReceiverRepair.patch(name,TextureSamplingRepair.patch(name,ShoreFloorRepair.patch(name,bytes,NativeSource.is(this)))))));
         if(shoreLighting)bytes=StandingObjectCutaway.depthScope(name,bytes);
         if(shoreLighting)bytes=BushGroundCoverage.patch(name,bytes);
+        if(NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(this)))bytes=VehicleVegetationRepair.patch(name,bytes);
         if(shoreLighting&&NativeSource.NEXT_COMMIT.equals(NativeSource.sourceCommit(this)))bytes=ViewpointNativePresentationRepair.patch(name,bytes);
         bytes=UiMoveReplayRepair.patch(name, RainTileRepair.patch(name, RainRippleRepair.patch(name, bytes)));
         if(shoreLighting)bytes=OffscreenReflectionRepair.patch(name,DoorShadowRepair.patch(name,ShoreReflectionRepair.patch(name,UiDependencyRepair.patch(name,bytes))));
