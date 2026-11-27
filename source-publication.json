@@ -3,16 +3,16 @@
   "Project": "PZOptPreloader",
   "Repository": "antikristianos/PZOptPreloader",
   "Branch": "wip",
-  "Tag": "wip-1.124",
-  "ModVersion": "1.10.5",
-  "CollectionVersion": "1.124",
+  "Tag": "wip-1.125",
+  "ModVersion": "1.11.1",
+  "CollectionVersion": "1.125",
   "WorkshopId": 3802764936,
   "WorkshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=3802764936",
-  "UploadManifestSha256": "2A727DEF4C62047F8DC272BD12B71501B6F45ED35558A1CB1EC0FF86A5AD0AF5",
+  "UploadManifestSha256": "15335EE93CDE462BC7CC4BC1D5D93A420A793B58FDFEC307EF37633911E4D620",
   "Artifact": {
     "Path": "mods/PZOptPreloader_WIP/42.22/media/java/PZOptPreloader.jar",
-    "Size": 4490958,
-    "Sha256": "A6A734A068CBA2A2B48AADF964BB4AE3EF8E0A21F0FE7A0A361C9F3692DE8342"
+    "Size": 4481837,
+    "Sha256": "45FDF6F9DD4F7BE4406F15AD5D63BC8CA7465C52434C9E7C809B5D8A0284C23A"
   },
   "AdditionalArtifacts": [],
   "Sources": [
@@ -24,12 +24,12 @@
     {
       "Path": "MANIFEST.MF",
       "Size": 118,
-      "Sha256": "1709538ABA4993B98A8D96553A9842678DDB6658F13B1EC620E22A58077EB68E"
+      "Sha256": "5AEBFF9440FA1DAC5AC4453D17FA2A6BC487CD21767442C8FCE3E5744B354E5D"
     },
     {
       "Path": "README.md",
       "Size": 1490,
-      "Sha256": "DC45025A4B3E401D56A03E83DDE5A7C22FE95B21551F64FBAE271A2A715AB571"
+      "Sha256": "AB0294CDFE7B3FA6A80D2F1DC9F23F02AD30AB31BBA23B790982F0868922231A"
     },
     {
       "Path": "build.json",
@@ -112,6 +112,11 @@
       "Sha256": "21AF04AE7DAF46A1F5093950A2FE100CD57C0919005C8F0D5FCBCF095D8C7A18"
     },
     {
+      "Path": "runtime/42.22/media/lua/client/PZOptPreloader/PauseMenuCompatibility.lua",
+      "Size": 3246,
+      "Sha256": "66280E61BD2C82A93D4A62A47AB3739DE57BC9B915AFD463449C1688AE74BDC3"
+    },
+    {
       "Path": "runtime/42.22/media/lua/client/PZOptPreloader/PeekOptions.lua",
       "Size": 3147,
       "Sha256": "F79BB4F85353A551DAA4EC2C62DA8A78DD443C4D6B8880A81166416D8D9D228F"
@@ -139,7 +144,7 @@
     {
       "Path": "runtime/42.22/mod.info",
       "Size": 720,
-      "Sha256": "A23FD5583B97A84A750066E3274F7139C31937292447AD1F11CB7442C66EDCDA"
+      "Sha256": "B7D564D9A9A3F65428BBA8FC1D3672F18F9A35A4374659069A01B73D9DC8D4E4"
     },
     {
       "Path": "src/antikristianos/pzoptpreloader/AotBridge.java",
